@@ -1,0 +1,16 @@
+# Shared profile defaults (not a CLI profile; loaded via extends only).
+tools: [read_file, write_file, run_tests, linter]
+auto_generate_tests: false
+validation:
+  spec:
+    enabled: true
+    block_on: error
+    require_hitl: false
+  design:
+    enabled: true
+    block_on: error
+    require_hitl: false
+    validate_mermaid: false
+    require_hitl_if_flags: [touches_production]
+hitl:
+  flags: [touches_production]

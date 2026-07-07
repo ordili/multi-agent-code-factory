@@ -17,7 +17,7 @@ from tests.conftest import load_snippet_json
 
 @pytest.fixture
 def default_profile():
-    return load_profile("default")
+    return load_profile("python")
 
 
 @pytest.fixture

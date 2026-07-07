@@ -12,7 +12,7 @@ from multi_agent_code_factory.schemas.run_meta import RunMeta, RunStatus
 
 @pytest.fixture
 def default_profile():
-    return load_profile("default")
+    return load_profile("python")
 
 
 def _read_meta(run_dir: Path) -> RunMeta:

@@ -1,8 +1,8 @@
-id: rust-cli
+id: rust
+extends: _base/common
 language: rust
-code_root: ../generated/rust-cli
-prompts_dir: multi_agent_code_factory/profiles/rust-cli/prompts
-tools: [read_file, write_file, run_tests, linter]
+code_root: ../generated/rust
+prompts_dir: multi_agent_code_factory/profiles/rust/prompts
 toolchain:
   setup: cargo fetch
   build: cargo build
@@ -20,8 +20,6 @@ context_schema:
     edition:
       type: string
       default: "2021"
-auto_generate_tests: false
 hitl:
   sensitive_globs:
     - "**/benches/**"
-  flags: [touches_production]

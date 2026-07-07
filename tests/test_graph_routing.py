@@ -39,7 +39,7 @@ def limits() -> LoopLimits:
 
 @pytest.fixture
 def default_profile() -> ProfileConfig:
-    return load_profile("default")
+    return load_profile("python")
 
 
 def _failed_validation(target: ValidationTarget) -> ValidationReport:
@@ -115,7 +115,7 @@ def test_route_after_spec_validate_limit_exceeded(
 def test_route_after_spec_validate_require_hitl(
     limits: LoopLimits,
 ) -> None:
-    profile = load_profile("default")
+    profile = load_profile("python")
     profile = profile.model_copy(
         update={
             "validation": ValidationConfig(

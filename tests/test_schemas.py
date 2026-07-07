@@ -30,7 +30,7 @@ from tests.conftest import load_snippet_json
 def test_spec_default_fixture(snippets_dir: Path) -> None:
     data = load_snippet_json(snippets_dir, "spec-default.json")
     spec = SpecArtifact.model_validate(data)
-    assert spec.profile == "default"
+    assert spec.profile == "python"
     assert spec.context["language"] == "python"
 
 
@@ -162,7 +162,7 @@ def test_run_meta_example() -> None:
         {
             "version": "1",
             "task_id": "todo-cli",
-            "profile": {"id": "default", "language": "python"},
+            "profile": {"id": "python", "language": "python"},
             "loop_limits": {
                 "max_impl_retries": 3,
                 "max_design_revisions": 2,

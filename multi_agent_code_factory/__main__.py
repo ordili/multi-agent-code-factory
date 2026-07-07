@@ -7,6 +7,7 @@ import sys
 from collections.abc import Sequence
 
 from multi_agent_code_factory.config import load_factory_config
+from multi_agent_code_factory.env import load_env_file
 from multi_agent_code_factory.graph import run_pipeline
 from multi_agent_code_factory.llm import LlmConfigError, resolve_stub_mode
 from multi_agent_code_factory.profiles import ProfileLoadError, load_profile
@@ -111,6 +112,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    load_env_file()
     parser = build_parser()
     args = parser.parse_args(list(argv) if argv is not None else None)
     if args.command == "run":

@@ -19,6 +19,7 @@ from multi_agent_code_factory.profiles import (
 def test_v1_matrix_profiles_load(profile_id: str) -> None:
     profile = load_profile(profile_id)
     assert profile.id == profile_id
+    assert profile.language == profile_id
     assert profile.toolchain.test_command
     assert profile.toolchain.test_parser
     assert profile.prompts_dir.is_absolute()
@@ -26,17 +27,27 @@ def test_v1_matrix_profiles_load(profile_id: str) -> None:
     assert_code_root_outside_repo(profile.code_root, repo_root())
 
 
-def test_default_profile_normalizes_toolchain() -> None:
-    profile = load_profile("default")
+def test_python_profile_extends_common() -> None:
+    profile = load_profile("python")
     assert profile.language == "python"
     assert profile.toolchain.test_parser == "junit_xml"
     assert "junit.xml" in profile.toolchain.test_artifacts[0]
     assert profile.validation.design.validate_mermaid is False
+    assert profile.validation.spec.enabled is True
+    assert "read_file" in profile.tools
 
 
-def test_list_profile_ids_includes_default() -> None:
+@pytest.mark.parametrize("legacy_id", ["default", "go-cli", "java-maven", "rust-cli"])
+def test_legacy_profile_ids_are_not_loadable(legacy_id: str) -> None:
+    with pytest.raises(ProfileLoadError, match="profile not found"):
+        load_profile(legacy_id)
+
+
+def test_list_profile_ids_includes_python() -> None:
     ids = list_profile_ids()
-    assert "default" in ids
+    assert "python" in ids
+    assert "_base" not in ids
+    assert "common" not in ids
 
 
 def test_rejects_code_root_inside_factory_repo(tmp_path: Path) -> None:
@@ -47,7 +58,7 @@ def test_rejects_code_root_inside_factory_repo(tmp_path: Path) -> None:
             {
                 "id": "bad",
                 "code_root": str(bad_root),
-                "prompts_dir": "multi_agent_code_factory/profiles/default/prompts",
+                "prompts_dir": "multi_agent_code_factory/profiles/python/prompts",
                 "tools": ["read_file"],
                 "toolchain": {"test_command": "true"},
             }
@@ -59,8 +70,8 @@ def test_rejects_code_root_inside_factory_repo(tmp_path: Path) -> None:
 
 
 def test_resolve_relative_code_root() -> None:
-    profile = load_profile("default")
-    expected = (repo_root() / "../generated/default").resolve()
+    profile = load_profile("python")
+    expected = (repo_root() / "../generated/python").resolve()
     assert profile.code_root == expected
 
 
@@ -80,7 +91,7 @@ def test_expand_env_vars_for_code_root(
             {
                 "id": "env-root",
                 "code_root": "${FACTORY_CODE_ROOT}/custom",
-                "prompts_dir": "multi_agent_code_factory/profiles/default/prompts",
+                "prompts_dir": "multi_agent_code_factory/profiles/python/prompts",
                 "tools": ["read_file"],
                 "toolchain": {"test_command": "true", "test_parser": "exit_code_only"},
             }
@@ -109,7 +120,7 @@ def test_top_level_test_command_shorthand(tmp_path: Path) -> None:
             {
                 "id": "shorthand",
                 "code_root": str(out_dir),
-                "prompts_dir": "multi_agent_code_factory/profiles/default/prompts",
+                "prompts_dir": "multi_agent_code_factory/profiles/python/prompts",
                 "tools": [],
                 "test_command": "pytest -q",
             }
@@ -125,5 +136,33 @@ def test_top_level_test_command_shorthand(tmp_path: Path) -> None:
     assert profile.toolchain.test_parser == "exit_code_only"
 
 
+def test_extends_merge_in_custom_profile(tmp_path: Path) -> None:
+    base_dir = tmp_path / "profiles" / "_base"
+    base_dir.mkdir(parents=True)
+    (base_dir / "common.yaml").write_text(
+        yaml.safe_dump({"tools": ["read_file"], "validation": {"spec": {"enabled": True}}}),
+        encoding="utf-8",
+    )
+    profiles_root = tmp_path / "profiles"
+    out_dir = tmp_path / "out"
+    out_dir.mkdir()
+    (profiles_root / "child.yaml").write_text(
+        yaml.safe_dump(
+            {
+                "id": "child",
+                "extends": "_base/common",
+                "code_root": str(out_dir),
+                "prompts_dir": "multi_agent_code_factory/profiles/python/prompts",
+                "toolchain": {"test_command": "true"},
+                "tools": ["write_file"],
+            }
+        ),
+        encoding="utf-8",
+    )
+    profile = load_profile("child", profiles_root=profiles_root, factory_repo=repo_root())
+    assert profile.tools == ["write_file"]
+    assert profile.validation.spec.enabled is True
+
+
 def test_profiles_dir_points_at_package() -> None:
-    assert (profiles_dir() / "default.yaml").is_file()
+    assert (profiles_dir() / "python.yaml").is_file()

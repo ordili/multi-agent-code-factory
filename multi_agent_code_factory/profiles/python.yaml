@@ -1,0 +1,14 @@
+id: python
+extends: _base/common
+language: python
+code_root: ../generated/python
+prompts_dir: multi_agent_code_factory/profiles/python/prompts
+toolchain:
+  setup: pip install -e ".[dev]"
+  test_command: python -m pytest -q --junitxml=reports/junit.xml
+  test_parser: junit_xml
+  test_artifacts: ["reports/junit.xml"]
+  lint_command: python -m ruff check . && python -m ruff format --check .
+  test_dir_glob: "tests/**"
+hitl:
+  sensitive_globs: ["**/auth/**", "**/deploy/**"]

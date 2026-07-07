@@ -8,6 +8,27 @@
 
 ---
 
+## 0. 配置分层（Profile vs `.env` vs 其它）
+
+三类配置**不要混用**。选错位置会导致密钥进 Git、或团队无法共享同一技术栈默认值。
+
+| 层级 | 载体 | 是否进 Git | 职责 | 典型内容 |
+|------|------|------------|------|----------|
+| **Profile** | `profiles/<id>.yaml` + `profiles/<id>/prompts/` | ✅ 是 | **技术栈与质量门**（可版本化、团队共享） | `language`、`toolchain`、`validation`、`hitl`、`prompts_dir`；`code_root` **路径约定**（推荐相对路径如 `../generated/<id>`） |
+| **运行环境** | `.env`（本机）或 shell / CI 密钥 | ❌ `.env` 不进 | **密钥与本机/环境差异** | `DEEPSEEK_API_KEY`、可选 `DEEPSEEK_MODEL`；本机路径占位如 `FACTORY_CODE_ROOT`（仅当 Profile 写 `${FACTORY_CODE_ROOT}/…` 时需要） |
+| **工厂全局策略** | `config/autonomy_policy.yaml` | ✅ 是 | **回路上限等团队默认** | `loop_limits`、`max_hitl_rounds`；可用 `FACTORY_*` env **覆盖**，默认仍以 YAML 为准 |
+| **单次 run** | CLI 参数 | — | **本次任务** | `--task-id`、`user_request`、`--live`/`--stub`、`--code-root`（单次覆盖 Profile） |
+
+**Profile 禁止：** API Key、token、私钥、个人绝对路径（除非团队统一约定且可接受）、自然语言需求、单次 `task-id`。
+
+**`.env` 禁止：** `test_command`、校验规则、语言选择、Profile id——这些属于 Profile；应通过 `--profile` 选择栈，而不是在 env 里“换语言”。
+
+**桥接约定：** Profile 可写 `code_root: ${FACTORY_CODE_ROOT}/java-maven`——**模式在 Profile（进 Git）**，**值在 `.env`（本机）**。更简单时直接在 Profile 用 `../generated/<id>`，则无需在 `.env` 配置 `FACTORY_CODE_ROOT`。
+
+配置优先级（高 → 低）：**CLI → `FACTORY_*` / LLM env → `autonomy_policy.yaml` → Profile 内建默认 → 代码默认**。
+
+---
+
 ## 1. 配置字段
 
 | 字段 | 说明 |

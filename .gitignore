@@ -25,3 +25,4 @@ docs/runs/*/
 # Env
 .env
 .env.*
+!.env.example

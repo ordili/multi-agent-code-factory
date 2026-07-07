@@ -29,7 +29,7 @@ from tests.conftest import load_snippet_json
 
 @pytest.fixture
 def default_profile():
-    return load_profile("default")
+    return load_profile("python")
 
 
 def test_resolve_watch_uses_defaults(default_profile) -> None:

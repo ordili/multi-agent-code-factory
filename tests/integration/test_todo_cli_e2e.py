@@ -1,4 +1,4 @@
-"""Live LLM end-to-end test for default Todo CLI profile."""
+"""Live LLM end-to-end test for python Todo CLI profile."""
 
 from __future__ import annotations
 
@@ -17,9 +17,9 @@ pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def live_profile(tmp_path: Path):
-    code_root = tmp_path / "generated" / "default"
+    code_root = tmp_path / "generated" / "python"
     code_root.mkdir(parents=True)
-    return load_profile("default", code_root_override=code_root)
+    return load_profile("python", code_root_override=code_root)
 
 
 def test_todo_cli_live_e2e(tmp_path: Path, live_profile) -> None:
@@ -67,7 +67,7 @@ def test_todo_cli_live_e2e(tmp_path: Path, live_profile) -> None:
     meta = RunMeta.model_validate_json(
         (run_dir / "run_meta.json").read_text(encoding="utf-8")
     )
-    assert meta.profile.get("id") == "default"
+    assert meta.profile.get("id") == "python"
     assert meta.loop_limits.get("max_impl_retries") == 2
     assert meta.budget is None or (meta.budget.used_llm_calls or 0) > 0
 

@@ -1,35 +1,42 @@
 ﻿# Profile 配置
 
-每个 Profile 一个 YAML 文件；**V1 以本目录下 `*.yaml` 为准**；字段说明见 [docs/design/pipeline/profiles.md](../../docs/design/pipeline/profiles.md)。Python Profile 另见 [python-style.md](../../docs/design/pipeline/python-style.md)。
+每个 **语言** 一个可加载 Profile（`python`、`go`、`java`、`rust`、`solidity`）；公共字段在 `_base/common.yaml`，经 `extends` 合并。字段说明见 [docs/design/pipeline/profiles.md](../../docs/design/pipeline/profiles.md)。
 
-| `gates` | 已废弃；使用 **`validation`** |
+## Profile 与 `.env` 的分工
 
-## V1 内置 Profile
+| 放 **Profile**（本目录 YAML） | 放 **`.env`**（仓库根，不进 Git） |
+|------------------------------|-----------------------------------|
+| 语言、`toolchain`、测试/ lint 命令 | `DEEPSEEK_API_KEY` 等 LLM 密钥 |
+| `validation`、`hitl`、角色 prompts | 本机可选：`DEEPSEEK_MODEL`、`FACTORY_CHAT_MODEL` |
+| `code_root` 路径**约定**（如 `../generated/python`） | 仅当 YAML 用 `${FACTORY_CODE_ROOT}/…` 时，在此设 `FACTORY_CODE_ROOT` |
+| `tools` 列表 | 可选：覆盖 `FACTORY_MAX_*` 回路上限 |
 
-| 文件 | id | language | 说明 |
-|------|-----|----------|------|
-| `default.yaml` | default | python | MVP；pytest + JUnit XML |
-| `go-cli.yaml` | go-cli | go | P1 |
-| `java-maven.yaml` | java-maven | java | P1 |
-| `java-gradle.yaml` | java-gradle | java | P1 |
-| `rust-cli.yaml` | rust-cli | rust | P1 |
-| `solidity-foundry.yaml` | solidity-foundry | solidity | P1；推荐 |
-| `solidity-hardhat.yaml` | solidity-hardhat | solidity | P2 |
+**具体项目**（计算器、Todo）不是 Profile：用 `--profile python` + `--code-root ../generated/<project>` + `--task-id`。
 
-## V2 领域 Profile
-
-领域 Profile 位于仓库根 [`domains/`](../../domains/README.md)（如 [`domains/arb/profile/arb.yaml`](../../domains/arb/profile/arb.yaml)），**不纳入 V1 加载路径与验收**。
+详见 [profiles.md §0](../../docs/design/pipeline/profiles.md#0-配置分层profile-vs-env-vs-其它)。
 
 ## 目录约定
 
 ```text
-profiles/                    # V1 通用 Profile
-├── <id>.yaml
-└── <id>/prompts/
-
-domains/<name>/profile/      # V2 领域 Profile
-├── <id>.yaml
-└── prompts/
+profiles/
+├── _base/common.yaml       # 公共默认（不可 --profile）
+├── python.yaml             # extends common
+├── go.yaml / java.yaml / …
+└── python/prompts/         # 按语言放 prompt（python 已有完整集）
 ```
 
-新增 V1 Profile：复制最接近的 YAML，改 `id`、`code_root`（**须在 multi-agent-code-factory 仓库外**）、`toolchain`，并在 [profiles.md](../../docs/design/pipeline/profiles.md) 矩阵中登记。
+## V1 语言 Profile
+
+| 文件 | id | language | 说明 |
+|------|-----|----------|------|
+| `python.yaml` | python | python | MVP；pytest + JUnit XML |
+| `go.yaml` | go | go | P1 |
+| `java.yaml` | java | java | P1；默认 Maven |
+| `rust.yaml` | rust | rust | P1 |
+| `solidity.yaml` | solidity | solidity | P1；默认 Foundry |
+
+## V2 领域 Profile
+
+领域 Profile 位于仓库根 [`domains/`](../../domains/README.md)，**不纳入 V1 加载路径与验收**。
+
+新增语言 Profile：在 `_base/common.yaml` 上 `extends`，改 `id`、`language`、`toolchain`、`code_root`，并登记 [profiles.md](../../docs/design/pipeline/profiles.md) 矩阵。

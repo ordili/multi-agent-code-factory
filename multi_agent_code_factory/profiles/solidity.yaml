@@ -1,8 +1,8 @@
-id: solidity-foundry
+id: solidity
+extends: _base/common
 language: solidity
-code_root: ../generated/solidity-foundry
-prompts_dir: multi_agent_code_factory/profiles/solidity-foundry/prompts
-tools: [read_file, write_file, run_tests, linter]
+code_root: ../generated/solidity
+prompts_dir: multi_agent_code_factory/profiles/solidity/prompts
 toolchain:
   setup: forge build --skip test
   test_command: forge test --json
@@ -22,7 +22,6 @@ context_schema:
     test_framework:
       enum: [forge-std]
       default: forge-std
-auto_generate_tests: false
 hitl:
   sensitive_globs:
     - "**/script/**"

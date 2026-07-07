@@ -6,6 +6,9 @@ from typing import Any
 
 import pytest
 from multi_agent_code_factory._paths import repo_root
+from multi_agent_code_factory.env import load_env_file
+
+load_env_file()
 
 
 @pytest.fixture

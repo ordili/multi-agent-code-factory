@@ -15,4 +15,4 @@ def test_render_spec_md_contains_sections(snippets_dir: Path) -> None:
     assert "# CLI Todo App" in md
     assert "## 验收标准" in md
     assert "**AC-1**" in md
-    assert "task_profile: `default`" in md
+    assert "task_profile: `python`" in md

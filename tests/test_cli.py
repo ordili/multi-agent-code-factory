@@ -12,7 +12,7 @@ def test_cli_run_default_profile() -> None:
             "multi_agent_code_factory",
             "run",
             "--profile",
-            "default",
+            "python",
             "--task-id",
             "todo-cli",
             "实现命令行 Todo",
@@ -22,7 +22,7 @@ def test_cli_run_default_profile() -> None:
         text=True,
     )
     assert result.returncode == 0, result.stderr
-    assert "profile=default" in result.stdout
+    assert "profile=python" in result.stdout
     assert "task_id=todo-cli" in result.stdout
     assert "mode=stub" in result.stdout
     assert "status=completed" in result.stdout

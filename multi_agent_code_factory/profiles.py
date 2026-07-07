@@ -16,12 +16,11 @@ _ENV_VAR_PATTERN = re.compile(r"\$\{([^}]+)\}")
 
 V1_PROFILE_IDS = frozenset(
     {
-        "default",
-        "go-cli",
-        "java-maven",
-        "java-gradle",
-        "rust-cli",
-        "solidity-foundry",
+        "python",
+        "go",
+        "java",
+        "rust",
+        "solidity",
     }
 )
 
@@ -118,6 +117,64 @@ def assert_code_root_outside_repo(code_root: Path, factory_repo: Path) -> None:
     raise ProfileLoadError(msg)
 
 
+def _deep_merge(base: dict[str, Any], override: dict[str, Any]) -> dict[str, Any]:
+    merged: dict[str, Any] = dict(base)
+    for key, value in override.items():
+        if key == "extends":
+            continue
+        existing = merged.get(key)
+        if isinstance(existing, dict) and isinstance(value, dict):
+            merged[key] = _deep_merge(existing, value)
+        else:
+            merged[key] = value
+    return merged
+
+
+def _extends_yaml_path(extends: str, *, profiles_root: Path) -> Path:
+    relative = extends.removesuffix(".yaml")
+    return profiles_root / f"{relative}.yaml"
+
+
+def _read_profile_mapping(
+    path: Path,
+    *,
+    profiles_root: Path,
+    _stack: list[str] | None = None,
+) -> dict[str, Any]:
+    stack = list(_stack or [])
+    with path.open(encoding="utf-8") as handle:
+        raw = yaml.safe_load(handle)
+    if not isinstance(raw, dict):
+        msg = f"expected mapping in profile file: {path}"
+        raise ProfileLoadError(msg)
+
+    data = dict(raw)
+    extends = data.pop("extends", None)
+    if extends is None:
+        return data
+
+    if not isinstance(extends, str) or not extends.strip():
+        msg = f"invalid extends in profile file: {path}"
+        raise ProfileLoadError(msg)
+
+    extends_key = extends.strip()
+    if extends_key in stack:
+        msg = f"circular extends in profile chain: {' -> '.join([*stack, extends_key])}"
+        raise ProfileLoadError(msg)
+
+    parent_path = _extends_yaml_path(extends_key, profiles_root=profiles_root)
+    if not parent_path.is_file():
+        msg = f"extends profile not found: {extends_key!r} ({parent_path})"
+        raise ProfileLoadError(msg)
+
+    parent = _read_profile_mapping(
+        parent_path,
+        profiles_root=profiles_root,
+        _stack=[*stack, path.stem],
+    )
+    return _deep_merge(parent, data)
+
+
 def _normalize_raw_profile(raw: dict[str, Any]) -> dict[str, Any]:
     data = dict(raw)
     profile_id = data.get("id")
@@ -165,13 +222,9 @@ def load_profile(
 ) -> ProfileConfig:
     """Load and validate a profile by id."""
     factory = (factory_repo or repo_root()).resolve()
-    yaml_path = _profile_yaml_path(profile_id, root_profiles_dir=profiles_root)
-    with yaml_path.open(encoding="utf-8") as handle:
-        raw = yaml.safe_load(handle)
-    if not isinstance(raw, dict):
-        msg = f"expected mapping in profile file: {yaml_path}"
-        raise ProfileLoadError(msg)
-
+    profiles_root_path = profiles_root or profiles_dir()
+    yaml_path = _profile_yaml_path(profile_id, root_profiles_dir=profiles_root_path)
+    raw = _read_profile_mapping(yaml_path, profiles_root=profiles_root_path)
     normalized = _normalize_raw_profile(raw)
     if normalized.get("id") != profile_id:
         msg = (

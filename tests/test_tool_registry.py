@@ -10,7 +10,7 @@ def test_available_tools() -> None:
 
 
 def test_build_registry_for_default_profile() -> None:
-    profile = load_profile("default")
+    profile = load_profile("python")
     registry = build_tool_registry(profile)
     assert set(registry) == set(profile.tools)
     assert callable(registry["read_file"])

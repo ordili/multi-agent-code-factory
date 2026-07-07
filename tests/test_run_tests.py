@@ -44,7 +44,7 @@ def test_run_tests_with_pytest_junit(tmp_path: Path) -> None:
 def test_run_artifact_writer(tmp_path: Path) -> None:
     writer = RunArtifactWriter("demo-task", base_dir=tmp_path / "runs" / "demo-task")
     profile = ProfileConfig(
-        id="default",
+        id="python",
         language="python",
         code_root=tmp_path / "generated",
         code_root_raw=str(tmp_path / "generated"),
@@ -55,7 +55,7 @@ def test_run_artifact_writer(tmp_path: Path) -> None:
     limits = LoopLimits()
     meta = writer.init_run_meta(profile, limits)
     assert meta.task_id == "demo-task"
-    assert meta.profile["id"] == "default"
+    assert meta.profile["id"] == "python"
     assert (writer.directory / "run_meta.json").is_file()
 
     updated = writer.update_meta(impl_retry_count=1)

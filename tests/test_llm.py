@@ -52,13 +52,13 @@ def test_llm_available_reads_env(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_normalize_spec_sets_profile_and_language(
     snippets_dir: Path,
 ) -> None:
-    profile = load_profile("default")
+    profile = load_profile("python")
     raw = load_snippet_json(snippets_dir, "spec-default.json")
     raw["profile"] = "wrong"
     spec = SpecArtifact.model_validate(raw)
     state = PipelineState(user_request="todo")
     normalized = normalize_spec(spec, profile, state)
-    assert normalized.profile == "default"
+    assert normalized.profile == "python"
     assert normalized.context.get("language") == "python"
     assert normalized.revision == 1
 
@@ -104,7 +104,7 @@ def test_pm_live_invokes_llm_runner(
     tmp_path: Path,
     snippets_dir: Path,
 ) -> None:
-    profile = load_profile("default")
+    profile = load_profile("python")
     writer = RunArtifactWriter("t", base_dir=tmp_path)
     writer.init_run_meta(profile, LoopLimits())
     spec = SpecArtifact.model_validate(
@@ -121,5 +121,5 @@ def test_pm_live_invokes_llm_runner(
         llm_runner=llm_runner,
     )
     llm_runner.invoke_structured.assert_called_once()
-    assert result["spec"].profile == "default"
+    assert result["spec"].profile == "python"
     assert (tmp_path / "spec.json").is_file()
