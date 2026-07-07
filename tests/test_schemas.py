@@ -1,0 +1,187 @@
+from __future__ import annotations
+
+from pathlib import Path
+
+import pytest
+from multi_agent_code_factory.schemas import (
+    DesignArtifact,
+    DevManifest,
+    HitlDecision,
+    ReviewReport,
+    RunMeta,
+    SpecArtifact,
+    ValidationReport,
+)
+from multi_agent_code_factory.schemas.dev_manifest import ChangeType
+from multi_agent_code_factory.schemas.hitl import HitlStage
+from multi_agent_code_factory.schemas.review import ReviewNextStage
+from multi_agent_code_factory.schemas.run_meta import DeployStatus
+from multi_agent_code_factory.schemas.test_report import (
+    TestReport as TestReportArtifact,
+)
+from multi_agent_code_factory.schemas.validation_report import (
+    ValidationTarget,
+)
+from pydantic import ValidationError
+
+from tests.conftest import load_snippet_json
+
+
+def test_spec_default_fixture(snippets_dir: Path) -> None:
+    data = load_snippet_json(snippets_dir, "spec-default.json")
+    spec = SpecArtifact.model_validate(data)
+    assert spec.profile == "default"
+    assert spec.context["language"] == "python"
+
+
+def test_spec_rejects_missing_title(snippets_dir: Path) -> None:
+    data = load_snippet_json(snippets_dir, "spec-default.json")
+    data.pop("title")
+    with pytest.raises(ValidationError):
+        SpecArtifact.model_validate(data)
+
+
+def test_design_todo_excerpt_fixture(snippets_dir: Path) -> None:
+    data = load_snippet_json(snippets_dir, "design-todo-excerpt.json")
+    design = DesignArtifact.model_validate(data)
+    assert design.spec_ref == "CLI Todo App"
+    assert len(design.modules) == 2
+
+
+def test_design_rejects_bad_version(snippets_dir: Path) -> None:
+    data = load_snippet_json(snippets_dir, "design-todo-excerpt.json")
+    data["version"] = "2"
+    with pytest.raises(ValidationError):
+        DesignArtifact.model_validate(data)
+
+
+def test_test_report_example() -> None:
+    report = TestReportArtifact.model_validate(
+        {
+            "version": "1",
+            "passed": False,
+            "exit_code": 1,
+            "summary": {"total": 12, "passed": 11, "failed": 1, "skipped": 0},
+            "failures": [
+                {
+                    "test_id": "tests.test_todo.TestAdd::test_add",
+                    "file": "tests/test_todo.py",
+                    "line": 14,
+                    "message": "AssertionError: expected 2 items",
+                }
+            ],
+            "duration_sec": 1.23,
+            "command": "pytest -q --junitxml=reports/junit.xml",
+            "parser": "junit_xml",
+            "language": "python",
+        }
+    )
+    assert report.failures[0].line == 14
+
+
+def test_test_report_rejects_negative_duration() -> None:
+    with pytest.raises(ValidationError):
+        TestReportArtifact.model_validate(
+            {
+                "version": "1",
+                "passed": True,
+                "exit_code": 0,
+                "summary": {"total": 0, "passed": 0, "failed": 0, "skipped": 0},
+                "duration_sec": -1,
+                "command": "true",
+                "parser": "exit_code_only",
+            }
+        )
+
+
+def test_validation_report_example() -> None:
+    report = ValidationReport.model_validate(
+        {
+            "version": "1",
+            "target": "design",
+            "passed": False,
+            "error_count": 1,
+            "warn_count": 0,
+            "violations": [
+                {
+                    "rule_id": "DES-005",
+                    "severity": "error",
+                    "message": "dev_tasks dependency cycle",
+                    "path": "/dev_tasks",
+                }
+            ],
+        }
+    )
+    assert report.target == ValidationTarget.DESIGN
+
+
+def test_review_report_example() -> None:
+    review = ReviewReport.model_validate(
+        {
+            "version": "1",
+            "approved": True,
+            "next_stage": "deploy",
+            "summary": "AC met",
+            "acceptance_coverage": [{"id": "AC-1", "met": True}],
+        }
+    )
+    assert review.next_stage == ReviewNextStage.DEPLOY
+
+
+def test_dev_manifest_example() -> None:
+    manifest = DevManifest.model_validate(
+        {
+            "version": "1",
+            "tasks_completed": ["T1"],
+            "changed_files": [{"path": "src/todo_store.py", "change_type": "create"}],
+            "reflection": {
+                "attempt": 2,
+                "hypothesis": "flush missing",
+                "next_action": "fsync after save",
+            },
+        }
+    )
+    assert manifest.changed_files[0].change_type == ChangeType.CREATE
+
+
+def test_hitl_decision_example() -> None:
+    hitl = HitlDecision.model_validate(
+        {
+            "version": "1",
+            "stage": "design",
+            "required": True,
+            "reason": ["validation.design.require_hitl"],
+            "approved": True,
+        }
+    )
+    assert hitl.stage == HitlStage.DESIGN
+
+
+def test_run_meta_example() -> None:
+    meta = RunMeta.model_validate(
+        {
+            "version": "1",
+            "task_id": "todo-cli",
+            "profile": {"id": "default", "language": "python"},
+            "loop_limits": {
+                "max_impl_retries": 3,
+                "max_design_revisions": 2,
+                "max_spec_revisions": 1,
+            },
+            "deploy_status": "skipped",
+        }
+    )
+    assert meta.deploy_status == DeployStatus.SKIPPED
+
+
+def test_run_meta_rejects_invalid_deploy_status() -> None:
+    with pytest.raises(ValidationError):
+        RunMeta.model_validate(
+            {
+                "version": "1",
+                "task_id": "x",
+                "profile": {},
+                "loop_limits": {},
+                "deploy_status": "unknown",
+            }
+        )

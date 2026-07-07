@@ -11,6 +11,8 @@ requires-python = ">=3.11"
 dependencies = [
     "pydantic>=2",
     "pyyaml>=6",
+    "langgraph>=0.2",
+    "langchain-core>=0.3",
 ]
 
 [project.optional-dependencies]
@@ -19,11 +21,11 @@ dev = [
     "pytest>=8",
     "pytest-cov>=4",
     "ruff>=0.8",
+    "types-PyYAML>=6",
 ]
 
 [project.scripts]
-# CLI entry when __main__ is implemented:
-# multi-agent-code-factory = "multi_agent_code_factory.__main__:main"
+multi-agent-code-factory = "multi_agent_code_factory.__main__:main"
 
 [tool.setuptools.packages.find]
 include = ["multi_agent_code_factory*"]
@@ -46,6 +48,10 @@ python_version = "3.11"
 strict = true
 packages = ["multi_agent_code_factory"]
 warn_unused_configs = true
+
+[[tool.mypy.overrides]]
+module = ["yaml"]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

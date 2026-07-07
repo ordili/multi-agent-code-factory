@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<testsuites>
+  <testsuite name="pytest" tests="2" failures="1" errors="0" skipped="0">
+    <testcase classname="tests.test_sample" name="test_ok" file="tests/test_sample.py" line="1"/>
+    <testcase classname="tests.test_sample" name="test_fail" file="tests/test_sample.py" line="5">
+      <failure message="AssertionError: boom">assert 1 == 2</failure>
+    </testcase>
+  </testsuite>
+</testsuites>
