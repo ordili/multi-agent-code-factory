@@ -70,7 +70,7 @@ Code = SOP(Team)
 | **审查** | 审查易幻觉 | 独立 Reviewer + `acceptance_coverage` | 对齐 PM 验收项 |
 | **生产变更 HITL** | 无 | Profile.`hitl` + `design.hitl_flags` | 领域相关审批可配置 |
 | **回路上限** | 硬编码约 3 轮 | `loop_limits` 可配置 | 运维可调 |
-| **机器真源** | 以 MD / Message 为主 | JSON Schema 为节点交接真源 | 程序解析与路由 |
+| **节点交接** | 以 MD / Message 为主 | **以 JSON Schema 为准** | 程序解析与路由 |
 
 ## B.5 暂不需要借鉴
 

@@ -1,6 +1,6 @@
 ﻿# Profile 配置
 
-每个 Profile 一个 YAML 文件；**V1 真源**为本目录下的 `*.yaml`，说明文档见 [docs/design/pipeline/profiles.md](../../docs/design/pipeline/profiles.md)。Python Profile 另见 [python-style.md](../../docs/design/pipeline/python-style.md)。
+每个 Profile 一个 YAML 文件；**V1 以本目录下 `*.yaml` 为准**；字段说明见 [docs/design/pipeline/profiles.md](../../docs/design/pipeline/profiles.md)。Python Profile 另见 [python-style.md](../../docs/design/pipeline/python-style.md)。
 
 | `gates` | 已废弃；使用 **`validation`** |
 

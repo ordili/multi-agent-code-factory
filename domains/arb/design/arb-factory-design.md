@@ -2,7 +2,7 @@
 
 > **V2 — 不在 V1 实现范围。** 保留草案备查；V1 见 [pipeline 主线](../../../docs/design/pipeline/multi-agent-pipeline-design.md)。  
 > **依据：** [00-master-overview.md](../../../docs/design/00-master-overview.md)  
-> **Profile 真源：** [profile/arb.yaml](../profile/arb.yaml)  
+> **Profile 以：** [profile/arb.yaml](../profile/arb.yaml) **为准**  
 > **本文：** 套利 Profile 领域约束与 HITL 规则（V2）
 
 ---

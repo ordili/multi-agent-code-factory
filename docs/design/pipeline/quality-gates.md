@@ -273,4 +273,4 @@ multi_agent_code_factory/
 
 ## 8. 路由伪代码
 
-**程序真源：** [multi-agent-pipeline-design.md §4.3](./multi-agent-pipeline-design.md#路由伪代码程序真源)（`graph_routing.py`）。本节不再重复；实现须与主线伪代码一致，含 `loop_limits` 触顶判断与 `route_after_review` 对 `approved` 的守卫。
+**路由以实现为准：** [multi-agent-pipeline-design.md §4.3](./multi-agent-pipeline-design.md#路由伪代码以实现为准)（`graph_routing.py`）。本节不再重复；实现须与主线伪代码一致，含 `loop_limits` 触顶判断与 `route_after_review` 对 `approved` 的守卫。

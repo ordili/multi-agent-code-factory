@@ -1,7 +1,7 @@
 ﻿# design.md — Design Doc（人读格式）
 
 > **标准基线：** [Google Engineering Practices — Design Docs](https://google.github.io/eng-practices/)  
-> **机器真源：** [`../artifact-schemas/design.md`](../artifact-schemas/design.md)（`DesignArtifact` / `design.json`）  
+> **节点交接以：** [`../artifact-schemas/design.md`](../artifact-schemas/design.md)（`DesignArtifact` / `design.json`）**为准**；本模板为人读渲染目标。  
 > **Run 路径：** `docs/runs/<task_id>/design.md`  
 > **配套图：** [flow.md](./flow.md) → Run 的 `*.mmd`  
 > **校验：** JSON → [quality-gates.md §4](../quality-gates.md#4-design_validate--规则清单)；MD → §4.3（P1）
@@ -651,4 +651,4 @@ None
 
 - HITL 必读：**§4.3–§4.6（含 §4.4 API 入参/出参）、§6.1–§6.2、flow.mmd、附录 D**。
 - 渲染器：`multi_agent_code_factory/renderers/design_md.py`（P1）。
-- 真源：`design.json`。
+- **以 `design.json` 为准**（本文件为渲染摘要）。

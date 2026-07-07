@@ -4,7 +4,7 @@
 
 | 路径 | 内容 |
 |------|------|
-| [profile/arb.yaml](./profile/arb.yaml) | 套利 Profile 配置真源 |
+| [profile/arb.yaml](./profile/arb.yaml) | 套利 Profile（以该 YAML 为准） |
 | [profile/prompts/](./profile/prompts/) | 领域角色 prompt 片段 |
 | [design/arb-factory-design.md](./design/arb-factory-design.md) | 工厂侧：HITL、Profile 约束 |
 | [design/arb-core-design.md](./design/arb-core-design.md) | 运行时与 PROD 部署 |

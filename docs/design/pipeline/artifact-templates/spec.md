@@ -2,7 +2,7 @@
 
 
 
-> **机器真源：** [`../artifact-schemas/spec.md`](../artifact-schemas/spec.md)（`SpecArtifact` / `spec.json`）  
+> **节点交接以：** [`../artifact-schemas/spec.md`](../artifact-schemas/spec.md)（`SpecArtifact` / `spec.json`）**为准**；本模板为人读渲染目标。  
 
 > **Run 路径：** `docs/runs/<task_id>/spec.md`  
 
@@ -10,7 +10,7 @@
 
 
 
-借鉴主流 PRD（功能清单 + 成功指标/KPI + 用户故事 + 验收标准）与 MetaGPT WritePRD；字段与 `SpecArtifact` **一一对应**；JSON 为程序真源，本模板为渲染目标。
+借鉴主流 PRD（功能清单 + 成功指标/KPI + 用户故事 + 验收标准）与 MetaGPT WritePRD；字段与 `SpecArtifact` **一一对应**；**以 `spec.json` 为准**，本模板为渲染目标。
 
 
 

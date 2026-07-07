@@ -1,6 +1,6 @@
 ﻿# Profile 与 Toolchain
 
-> **配置真源：** [`multi_agent_code_factory/profiles/`](../../../multi_agent_code_factory/profiles/)（`*.yaml`）  
+> **配置以：** [`multi_agent_code_factory/profiles/`](../../../multi_agent_code_factory/profiles/) 下 `*.yaml` **为准**  
 > **主线：** [multi-agent-pipeline-design.md §1.1](./multi-agent-pipeline-design.md#11-profile领域配置)  
 > **V1 范围：** 本节矩阵与示例；**V2 领域 Profile** 见 [domains/](../../../domains/README.md)
 

@@ -1,6 +1,6 @@
 ﻿# review.md — Reviewer 人读摘要格式
 
-> **机器真源：** [`../artifact-schemas/review.md`](../artifact-schemas/review.md)（`ReviewReport` / `review.json`）  
+> **节点交接以：** [`../artifact-schemas/review.md`](../artifact-schemas/review.md)（`ReviewReport` / `review.json`）**为准**；本模板为人读渲染目标。  
 > **Run 路径：** `docs/runs/<task_id>/review.md`
 
 ---

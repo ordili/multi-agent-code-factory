@@ -21,3 +21,4 @@
 | **ValidationReport** | `spec_validate` / `design_validate` 程序校验输出 |
 | **产物校验** | PM/Architect 规则 + 可选 HITL |
 | **Structured Output** | LLM 输出须符合 Pydantic schema |
+| **以 X 为准** | 多份表述并存时，冲突与实现优先采纳的那一份（如配置以 YAML 为准、路由以代码为准） |

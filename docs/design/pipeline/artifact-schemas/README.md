@@ -2,7 +2,7 @@
 
 > **设计文档（非 run 落盘）。** 运行时实例见 `docs/runs/<task_id>/*.json`。  
 > **人读模板：** [`../artifact-templates/`](../artifact-templates/README.md)  
-> **实现真源：** [`multi_agent_code_factory/schemas/`](../../../../multi_agent_code_factory/schemas/)（Pydantic v2）  
+> **类型定义以：** [`multi_agent_code_factory/schemas/`](../../../../multi_agent_code_factory/schemas/)（Pydantic v2）**为准**；下文为设计说明。  
 > **校验规则：** [quality-gates.md](../quality-gates.md)
 
 ## 命名约定

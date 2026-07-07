@@ -1,7 +1,7 @@
 ﻿# Python 代码规范
 
 > **适用范围：** `language: python` 的 Profile（V1 主要为 `default`）  
-> **配置真源：** 仓库根 [`pyproject.toml`](../../../pyproject.toml) 中 `[tool.ruff]`、`[tool.mypy]`、`[tool.pytest]`  
+> **工具配置以：** 仓库根 [`pyproject.toml`](../../../pyproject.toml) 中 `[tool.ruff]`、`[tool.mypy]`、`[tool.pytest]` **为准**  
 > **Toolchain：** [profiles.md §2](./profiles.md#2-toolchain语言无关-test-层) · [`default.yaml`](../../../multi_agent_code_factory/profiles/default.yaml)
 
 ---
@@ -46,7 +46,7 @@ Developer / QA 节点通过 Profile.`toolchain.lint_command` 与 `test_command` 
 | **类型** | `python -m mypy multi_agent_code_factory`（引擎） |
 | **测试** | `python -m pytest -q --junitxml=reports/junit.xml` |
 
-**Profile 默认 lint（真源）：**
+**Profile 默认 lint（以 Profile.`toolchain.lint_command` 为准）：**
 
 ```bash
 python -m ruff check . && python -m ruff format --check .

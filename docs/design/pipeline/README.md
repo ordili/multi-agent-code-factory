@@ -8,7 +8,7 @@
 
 ## 文档地图
 
-| 文档 | 内容 | 实现真源 |
+| 文档 | 内容 | 代码落点（以实现为准） |
 |------|------|----------|
 | [profiles.md](./profiles.md) | Profile 字段、Toolchain、Parser、多语言矩阵 | [`multi_agent_code_factory/profiles/`](../../../multi_agent_code_factory/profiles/) |
 | [artifact-schemas/README.md](./artifact-schemas/README.md) | **机器可读** JSON 字段规格 | [`multi_agent_code_factory/schemas/`](../../../multi_agent_code_factory/schemas/) |

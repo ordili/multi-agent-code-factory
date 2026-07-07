@@ -1,6 +1,6 @@
 ﻿# 工厂 — JSON / 图 示例
 
-> **字段规格（真源）：** [../artifact-schemas/](../artifact-schemas/README.md)  
+> **字段规格以：** [../artifact-schemas/](../artifact-schemas/README.md) **为准**  
 > **人读模板与长样例：** [../artifact-templates/](../artifact-templates/README.md)  
 > **主线：** [multi-agent-pipeline-design.md](../../pipeline/multi-agent-pipeline-design.md) §5 索引
 
