@@ -17,16 +17,20 @@ dependencies = [
 
 [project.optional-dependencies]
 llm = [
-    "langchain-openai>=0.2",
+    "langchain>=1.0,<2",
+    "langchain-openai>=1.0,<2",
 ]
+
 dev = [
     "mypy>=1.8",
     "pytest>=8",
     "pytest-cov>=4",
     "ruff>=0.8",
     "types-PyYAML>=6",
-    "langchain-openai>=0.2",
+    "langchain>=1.0,<2",
+    "langchain-openai>=1.0,<2",
 ]
+
 
 [project.scripts]
 multi-agent-code-factory = "multi_agent_code_factory.__main__:main"
@@ -58,7 +62,14 @@ module = ["yaml"]
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-module = ["langchain_openai", "langchain_openai.*", "langchain_core", "langchain_core.*"]
+module = [
+    "langchain",
+    "langchain.*",
+    "langchain_openai",
+    "langchain_openai.*",
+    "langchain_core",
+    "langchain_core.*",
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

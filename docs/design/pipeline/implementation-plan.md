@@ -330,8 +330,9 @@ dependencies = [
     "pyyaml>=6",
     "langgraph>=0.2",
     "langchain-core>=0.3",
-    # LLM 提供商与 §9 环境变量一致，例如：
-    "langchain-openai>=0.2",
+    # LLM 客户端与 §9 环境变量一致（init_chat_model + OpenAI 兼容端点）
+    "langchain>=1.0,<2",
+    "langchain-openai>=1.0,<2",
 ]
 ```
 

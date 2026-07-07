@@ -9,7 +9,9 @@ from multi_agent_code_factory.agents.pm import run_pm
 from multi_agent_code_factory.config import LoopLimits
 from multi_agent_code_factory.llm import (
     LlmConfigError,
+    create_chat_model,
     llm_available,
+    resolve_chat_model_id,
     resolve_stub_mode,
 )
 from multi_agent_code_factory.profiles import load_profile
@@ -59,6 +61,43 @@ def test_normalize_spec_sets_profile_and_language(
     assert normalized.profile == "default"
     assert normalized.context.get("language") == "python"
     assert normalized.revision == 1
+
+
+def test_resolve_chat_model_id_defaults_to_openai_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("FACTORY_CHAT_MODEL", raising=False)
+    monkeypatch.setenv("DEEPSEEK_MODEL", "deepseek-chat")
+    assert resolve_chat_model_id() == "openai:deepseek-chat"
+
+
+def test_resolve_chat_model_id_factory_chat_model_override(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("FACTORY_CHAT_MODEL", "openai:gpt-4o-mini")
+    assert resolve_chat_model_id() == "openai:gpt-4o-mini"
+
+
+def test_create_chat_model_uses_init_chat_model(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+    fake_model = object()
+    calls: list[tuple[str, dict[str, object]]] = []
+
+    def fake_init_chat_model(model: str, **kwargs: object) -> object:
+        calls.append((model, kwargs))
+        return fake_model
+
+    monkeypatch.setattr(
+        "langchain.chat_models.init_chat_model",
+        fake_init_chat_model,
+    )
+    result = create_chat_model()
+    assert result is fake_model
+    assert calls[0][0] == "openai:deepseek-chat"
+    assert calls[0][1]["api_key"] == "sk-test"
+    assert calls[0][1]["base_url"] == "https://api.deepseek.com"
 
 
 def test_pm_live_invokes_llm_runner(
