@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "tasks_completed": ["T1"],
+  "changed_files": [
+    { "path": "src/todo_store.py", "change_type": "create" },
+    { "path": "src/cli.py", "change_type": "create" }
+  ],
+  "lint_passed": true
+}

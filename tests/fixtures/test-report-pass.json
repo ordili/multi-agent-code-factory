@@ -1,0 +1,11 @@
+{
+  "version": "1",
+  "passed": true,
+  "exit_code": 0,
+  "summary": { "total": 3, "passed": 3, "failed": 0, "skipped": 0 },
+  "failures": [],
+  "duration_sec": 0.12,
+  "command": "python -m pytest -q --junitxml=reports/junit.xml",
+  "parser": "junit_xml",
+  "language": "python"
+}

@@ -104,3 +104,15 @@ class RunArtifactWriter:
         updated = RunMeta.model_validate(payload)
         self.write_model("run_meta.json", updated)
         return updated
+
+    def mark_stale(self, filenames: list[str]) -> None:
+        if not filenames:
+            return
+        meta = self.read_meta()
+        if meta is None:
+            return
+        current = list(meta.stale_artifacts or [])
+        for name in filenames:
+            if name not in current:
+                current.append(name)
+        self.update_meta(stale_artifacts=current)

@@ -1,0 +1,17 @@
+{
+  "version": "1",
+  "approved": false,
+  "next_stage": "pm",
+  "summary": "Scope mismatch: missing delete command in spec.",
+  "findings": [
+    {
+      "id": "F-2",
+      "severity": "major",
+      "category": "correctness",
+      "message": "Spec scope does not include delete",
+      "blocking": true,
+      "routing": "pm_scope_change"
+    }
+  ],
+  "acceptance_coverage": [{ "id": "AC-1", "met": false }]
+}

@@ -1,0 +1,17 @@
+{
+  "version": "1",
+  "approved": false,
+  "next_stage": "architect",
+  "summary": "Design does not cover persistence edge cases.",
+  "findings": [
+    {
+      "id": "F-1",
+      "severity": "major",
+      "category": "correctness",
+      "message": "Missing error handling for corrupt JSON store",
+      "blocking": true,
+      "routing": "architect_redesign"
+    }
+  ],
+  "acceptance_coverage": [{ "id": "AC-1", "met": false, "note": "store errors untested" }]
+}

@@ -89,5 +89,6 @@ class DesignArtifact(BaseModel):
     file_plan: list[dict[str, Any]] = Field(default_factory=list)
     test_cases: list[dict[str, Any]] = Field(default_factory=list)
     cross_cutting: dict[str, Any] | None = None
+    non_functional: list[dict[str, Any]] | None = None
     transaction_constraints: list[dict[str, Any]] = Field(default_factory=list)
     notes: str | None = None

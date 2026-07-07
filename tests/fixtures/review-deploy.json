@@ -1,0 +1,8 @@
+{
+  "version": "1",
+  "approved": true,
+  "next_stage": "deploy",
+  "summary": "Acceptance criteria met; ready to deploy.",
+  "findings": [],
+  "acceptance_coverage": [{ "id": "AC-1", "met": true }]
+}

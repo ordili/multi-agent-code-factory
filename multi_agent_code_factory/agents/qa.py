@@ -1,0 +1,49 @@
+"""QA agent node."""
+
+from __future__ import annotations
+
+from multi_agent_code_factory.agents.base import (
+    StubScenario,
+    agent_context,
+    default_stub_fixtures,
+    load_json_fixture,
+)
+from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.schemas.test_report import TestReport
+from multi_agent_code_factory.state import PipelineState
+from multi_agent_code_factory.tools.run_tests import run_tests
+from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
+
+
+def run_qa(
+    state: PipelineState,
+    profile: ProfileConfig,
+    writer: RunArtifactWriter,
+    *,
+    stub: bool = True,
+    stub_scenario: StubScenario = StubScenario.HAPPY,
+) -> dict[str, object]:
+    _ = agent_context("qa", state, profile)
+
+    if stub:
+        fixtures = default_stub_fixtures()
+        if stub_scenario == StubScenario.QA_ALWAYS_FAIL:
+            report = TestReport.model_validate(
+                load_json_fixture(fixtures.test_report_fail)
+            )
+        elif stub_scenario == StubScenario.QA_FAIL_THEN_PASS:
+            if state.impl_retry_count == 0:
+                report = TestReport.model_validate(
+                    load_json_fixture(fixtures.test_report_fail)
+                )
+            else:
+                report = TestReport.model_validate(
+                    load_json_fixture(fixtures.test_report)
+                )
+        else:
+            report = TestReport.model_validate(load_json_fixture(fixtures.test_report))
+    else:
+        report = run_tests(profile)
+
+    writer.write_model("test_report.json", report)
+    return {"test_report": report}

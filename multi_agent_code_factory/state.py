@@ -32,6 +32,7 @@ class PipelineState:
     impl_retry_count: int = 0
     design_revision_count: int = 0
     spec_revision_count: int = 0
+    pipeline_route: str = ""
 
     def copy_with_counters(
         self,
@@ -66,4 +67,5 @@ class PipelineState:
                 if spec_revision_count is None
                 else spec_revision_count
             ),
+            pipeline_route=self.pipeline_route,
         )

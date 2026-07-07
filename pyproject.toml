@@ -16,12 +16,16 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+llm = [
+    "langchain-openai>=0.2",
+]
 dev = [
     "mypy>=1.8",
     "pytest>=8",
     "pytest-cov>=4",
     "ruff>=0.8",
     "types-PyYAML>=6",
+    "langchain-openai>=0.2",
 ]
 
 [project.scripts]
@@ -51,6 +55,10 @@ warn_unused_configs = true
 
 [[tool.mypy.overrides]]
 module = ["yaml"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = ["langchain_openai", "langchain_openai.*", "langchain_core", "langchain_core.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

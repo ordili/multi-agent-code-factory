@@ -24,7 +24,8 @@ def test_cli_run_default_profile() -> None:
     assert result.returncode == 0, result.stderr
     assert "profile=default" in result.stdout
     assert "task_id=todo-cli" in result.stdout
-    assert "status=not_implemented" in result.stdout
+    assert "mode=stub" in result.stdout
+    assert "status=completed" in result.stdout
 
 
 def test_cli_run_unknown_profile() -> None:
