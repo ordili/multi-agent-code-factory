@@ -632,39 +632,45 @@ multi-agent-code-factory/         # 【本仓库】仅引擎、配置、设计 S
 
 ### 6.2 `multi_agent_code_factory/` 详解
 
-MVP 阶段 **根目录平铺** Python 模块；文件增多后可拆 `core/`、`graph/`、`nodes/`（非 MVP 要求）。
+**MVP 布局：** **编排相关**（`graph` / `state` / `graph_routing` / `config` / `context` / `profiles` / `checkpoint`）放包根；**`agents/`、`nodes/`、`validators/`、`schemas/`、`tools/`、`renderers/`** 已按职责分子包。子包内文件继续增多时，再将包根编排模块迁入 `graph/`、`core/`（见 §6.3）。
+
+**配置区分：** 仓库根 [`config/autonomy_policy.yaml`](../../../config/autonomy_policy.yaml) 为全局策略；包内 **`config.py`** 负责加载并暴露 `FactoryConfig` / `ProfileConfig` / `LoopLimits`（可被 `FACTORY_*` 覆盖）。
 
 ```text
 multi_agent_code_factory/
 ├── __init__.py
-├── __main__.py                 # python -m multi_agent_code_factory run ...
-├── graph.py                    # LangGraph 主图装配
+├── __main__.py                 # python -m multi_agent_code_factory run | resume ...
+├── graph.py                    # LangGraph 主图装配（注册 agents/ + nodes/ 边）
 ├── state.py                    # 图状态（§7）
-├── graph_routing.py            # route_after_test / route_after_review
+├── graph_routing.py            # route_after_* ；§4.3 程序真源
 ├── config.py                   # FactoryConfig、ProfileConfig、LoopLimits
 ├── context.py                  # watch / RetryBundle / NodeContext
-├── profiles.py                 # 加载 profiles/*.yaml
-├── checkpoint.py               # save / resume（P1）
-├── nodes/                      # validate + HITL 图节点（非 LLM Agent）
+├── profiles.py                 # 加载 profiles/*.yaml（V2 再扫 domains/*/profile/）
+├── checkpoint.py               # save / resume（P1；MVP 可占位）
+├── nodes/                      # 非 LLM 图节点（validate / HITL / Deploy）
+│   ├── __init__.py
 │   ├── spec_validate.py
 │   ├── design_validate.py
 │   ├── spec_hitl.py            # P1
 │   ├── design_hitl.py          # P1
 │   ├── deploy_hitl.py
-│   └── escalation_hitl.py      # loop 触顶人工裁决（P1；MVP 默认 on_limit_exceeded=fail 可不实现）
-├── validators/                 # spec_validate / design_validate 规则
+│   ├── deploy.py               # 图末 Deploy（§4.3；写 run_meta.deploy_status）
+│   └── escalation_hitl.py      # loop 触顶（P1；on_limit_exceeded=fail 可不实现）
+├── validators/                 # 规则引擎（由 validate 节点调用）
+│   ├── __init__.py
 │   ├── spec_rules.py
+│   ├── spec_md_rules.py        # spec.md 格式（P1；quality-gates §3.3）
 │   ├── design_rules.py
 │   └── mermaid.py
-├── agents/
+├── agents/                     # 五 Agent（role_id = 模块名）
 │   ├── __init__.py
-│   ├── base.py                 # 共用：Structured Output 调用、watch 注入
+│   ├── base.py                 # Structured Output、watch 注入
 │   ├── pm.py
 │   ├── architect.py
 │   ├── developer.py
-│   ├── qa.py                   # 调用 run_tests Tool，不写 TestReport 文本
+│   ├── qa.py                   # 调用 run_tests Tool
 │   └── reviewer.py
-├── schemas/                    # 与 §5 Artifact 一一对应（Pydantic v2）
+├── schemas/                    # §5 Artifact（Pydantic v2）；__init__.py 统一导出
 │   ├── __init__.py
 │   ├── spec.py
 │   ├── design.py
@@ -672,15 +678,19 @@ multi_agent_code_factory/
 │   ├── test_report.py
 │   ├── review.py
 │   ├── hitl.py
-│   ├── validation_report.py    # spec_validation / design_validation
-│   └── run_meta.py             # run_meta.json（§4.4）
+│   ├── validation_report.py
+│   └── run_meta.py
+├── renderers/                  # Structured JSON → 人读 MD（与 artifact-templates 对齐）
+│   ├── __init__.py
+│   ├── spec_md.py              # spec.json → spec.md（P0）
+│   └── design_md.py            # design.json → design.md（P1）
 ├── tools/
 │   ├── __init__.py
 │   ├── registry.py             # 按 Profile.tools 挂载
 │   ├── read_file.py
 │   ├── write_file.py
 │   ├── write_artifact.py       # 写入 docs/runs/<task_id>/
-│   ├── run_tests.py            # setup → test_command → parser → TestReport
+│   ├── run_tests.py
 │   ├── linter.py
 │   └── test_parsers/
 │       ├── __init__.py
@@ -690,32 +700,29 @@ multi_agent_code_factory/
 │       ├── cargo_json.py       # P1
 │       ├── forge_json.py       # P1
 │       └── exit_code_only.py
-└── profiles/
+└── profiles/                   # V1 Profile 真源（YAML + 可选 prompts/）
     ├── default.yaml
     ├── go-cli.yaml
-    ├── java-maven.yaml         # [profiles.md §3](./profiles.md#3-profile-矩阵)
+    ├── java-maven.yaml         # 矩阵见 [profiles.md §3](./profiles.md#3-profile-矩阵-v1)
     ├── java-gradle.yaml
     ├── rust-cli.yaml
     ├── solidity-foundry.yaml
     ├── solidity-hardhat.yaml   # P2
-    ├── default/prompts/
-    ├── java-maven/prompts/
-    ├── java-gradle/prompts/
-    ├── rust-cli/prompts/
-    └── solidity-foundry/prompts/
+    └── <id>/prompts/           # 按需；如 default/prompts/python-style-snippet.txt
 ```
 
 V2 领域 Profile 见 [domains/](../../../domains/README.md)（如 `domains/arb/profile/arb.yaml`）；**不纳入 V1 目录约定与验收**。
 
-**CLI 入口：** 见 [§1.1](#11-profile领域配置)。
+**CLI：** 子命令少时逻辑放在 `__main__.py`；`run` / `resume` 增多后可抽 `cli.py`。入口示例见 [§1.1](#11-profile领域配置)。
 
 ### 6.3 扩展与 refactor 约定
 
 | 时机 | 动作 |
 |------|------|
-| Profile > ~8 个 | 可改为 `profiles/java/maven.yaml` 等子目录 |
-| `multi_agent_code_factory/` 模块 > ~15 个 | 可拆 `graph/`、`nodes/`、`core/` |
-| 新增语言 | 仅增 `profiles/*.yaml` + `test_parsers/*.py`，不改图 |
+| Profile > ~8 个 | `profiles/` 可改为 `profiles/java/maven.yaml` 等子目录；或迁出至 `domains/<name>/profile/`（V2） |
+| 包根 **编排** 模块 > ~8 个 | 迁入 `graph/`（`builder.py`、`routing.py`、`state.py`）、`core/`（`config.py`、`context.py`） |
+| `agents/` + `nodes/` 已分子包 | **无需** 为「模块数」再拆一层；按职责扩展文件即可 |
+| 新增语言 | 增 `profiles/<id>.yaml` + `test_parsers/*.py`（若需新 Parser），不改图 |
 
 ---
 

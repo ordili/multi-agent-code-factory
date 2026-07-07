@@ -255,16 +255,19 @@ LangGraph **`interrupt_before`**；[`HitlDecision.stage`](./artifact-schemas/hit
 
 ```text
 multi_agent_code_factory/
-├── validators/          # spec_rules.py, design_rules.py, mermaid.py
+├── validators/          # spec_rules.py, spec_md_rules.py (P1), design_rules.py, mermaid.py
 ├── nodes/
 │   ├── spec_validate.py
 │   ├── design_validate.py
 │   ├── spec_hitl.py
 │   ├── design_hitl.py
 │   ├── deploy_hitl.py
+│   ├── deploy.py
 │   └── escalation_hitl.py   # P1；MVP 默认 on_limit_exceeded=fail
 └── schemas/validation_report.py
 ```
+
+完整目录见主线 [§6.2](./multi-agent-pipeline-design.md#62-multi_agent_code_factory-详解)。
 
 ---
 
