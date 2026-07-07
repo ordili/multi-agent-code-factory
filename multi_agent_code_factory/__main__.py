@@ -97,6 +97,15 @@ def cmd_run(args: argparse.Namespace) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
+    if not stub:
+        from multi_agent_code_factory.llm import preflight_live_llm
+
+        try:
+            preflight_live_llm()
+        except LlmConfigError as exc:
+            print(f"error: {exc}", file=sys.stderr)
+            return 2
+
     result = run_pipeline(
         task_id=args.task_id,
         user_request=user_request,

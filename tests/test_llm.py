@@ -110,6 +110,30 @@ def test_resolve_chat_model_id_ollama_provider(
     assert resolve_chat_model_id() == "ollama:deepseek-r1:1.5b"
 
 
+def test_create_chat_model_ollama_passes_performance_env(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("FACTORY_LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("FACTORY_LLM_MODEL", "qwen3.5:9b")
+    monkeypatch.setenv("OLLAMA_NUM_CTX", "8192")
+    monkeypatch.setenv("OLLAMA_NUM_PREDICT", "4096")
+    monkeypatch.setenv("OLLAMA_REASONING", "false")
+    calls: list[tuple[str, dict[str, object]]] = []
+
+    def fake_init_chat_model(model: str, **kwargs: object) -> object:
+        calls.append((model, kwargs))
+        return object()
+
+    monkeypatch.setattr(
+        "langchain.chat_models.init_chat_model",
+        fake_init_chat_model,
+    )
+    create_chat_model()
+    assert calls[0][1]["num_ctx"] == 8192
+    assert calls[0][1]["num_predict"] == 4096
+    assert calls[0][1]["reasoning"] is False
+
+
 def test_create_chat_model_ollama_uses_env_base_url(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -128,8 +152,17 @@ def test_create_chat_model_ollama_uses_env_base_url(
     )
     create_chat_model()
     assert calls[0][0] == "ollama:deepseek-r1:1.5b"
-    assert calls[0][1]["base_url"] == "http://localhost:11434"
+    assert calls[0][1]["base_url"] == "http://127.0.0.1:11434"
     assert "api_key" not in calls[0][1]
+
+
+def test_resolve_provider_base_url_normalizes_localhost_for_ollama(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from multi_agent_code_factory.llm import resolve_provider_base_url
+
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    assert resolve_provider_base_url("ollama") == "http://127.0.0.1:11434"
 
 
 def test_resolve_chat_model_id_ignores_colon_in_model_name(

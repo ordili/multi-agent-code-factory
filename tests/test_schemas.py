@@ -41,6 +41,61 @@ def test_spec_rejects_missing_title(snippets_dir: Path) -> None:
         SpecArtifact.model_validate(data)
 
 
+def test_spec_coerces_llm_simplified_shapes() -> None:
+    """LLM often returns strings/dicts that differ from the strict schema."""
+    spec = SpecArtifact.model_validate(
+        {
+            "version": "1",
+            "title": "Calculator CLI",
+            "summary": "Divide two numbers safely",
+            "success_metrics": [
+                {
+                    "id": "KPI-1",
+                    "name": "Tests pass",
+                    "description": "pytest green",
+                    "target": "all pass",
+                    "verifiable_by": "automated_test",
+                }
+            ],
+            "features": [
+                {
+                    "id": "FEAT-1",
+                    "name": "Division",
+                    "description": "Safe divide",
+                    "priority": "P0",
+                }
+            ],
+            "user_stories": [
+                "As a user, I want to divide two numbers safely if the divisor is zero.",
+            ],
+            "requirement_pool": {
+                "functional": ["Support division", "Reject zero divisor"],
+                "non_functional": ["No hardcoded secrets"],
+            },
+            "scope_in": ["CLI divide command"],
+            "operational_profile": {
+                "user_scale": "personal",
+                "deployment": "local_dev_and_run",
+            },
+            "consistency_profile": "local_only",
+            "acceptance_criteria": [
+                {
+                    "id": "AC-1",
+                    "description": "pytest passes",
+                    "verifiable_by": "automated_test",
+                }
+            ],
+        }
+    )
+    assert spec.profile == "unknown"
+    assert spec.revision == 1
+    assert spec.user_stories[0].want.startswith("to divide")
+    assert len(spec.requirement_pool) == 3
+    assert spec.operational_profile.high_concurrency is False
+    assert spec.operational_profile.performance.tier.value == "best_effort"
+    assert spec.consistency_profile.consistency_model.value == "local_only"
+
+
 def test_design_todo_excerpt_fixture(snippets_dir: Path) -> None:
     data = load_snippet_json(snippets_dir, "design-todo-excerpt.json")
     design = DesignArtifact.model_validate(data)

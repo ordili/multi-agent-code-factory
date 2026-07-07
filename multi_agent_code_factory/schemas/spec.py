@@ -2,12 +2,18 @@
 
 from __future__ import annotations
 
+import re
 from enum import StrEnum
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from multi_agent_code_factory.schemas._base import ARTIFACT_VERSION
+
+_USER_STORY_RE = re.compile(
+    r"^As an?\s+(?P<as_a>.+?),\s+I want\s+(?P<want>.+?)(?:\s+so that\s+(?P<so_that>.+))?\.$",
+    re.IGNORECASE | re.DOTALL,
+)
 
 
 class VerifiableBy(StrEnum):
@@ -122,6 +128,133 @@ class ConsistencyProfile(BaseModel):
     notes: str | None = None
 
 
+def _parse_user_story_text(text: str, index: int) -> dict[str, str]:
+    stripped = text.strip()
+    match = _USER_STORY_RE.match(stripped)
+    if match:
+        return {
+            "id": f"US-{index}",
+            "as_a": match.group("as_a").strip(),
+            "want": match.group("want").strip(),
+            "so_that": (match.group("so_that") or "deliver the requested behavior").strip(),
+        }
+    return {
+        "id": f"US-{index}",
+        "as_a": "user",
+        "want": stripped,
+        "so_that": "deliver the requested behavior",
+    }
+
+
+def _coerce_user_stories(value: Any) -> list[Any]:
+    if not isinstance(value, list):
+        return []
+    coerced: list[Any] = []
+    for index, item in enumerate(value, start=1):
+        if isinstance(item, str):
+            coerced.append(_parse_user_story_text(item, index))
+        else:
+            coerced.append(item)
+    return coerced
+
+
+def _coerce_requirement_pool(value: Any) -> list[Any]:
+    if isinstance(value, list):
+        return value
+    if not isinstance(value, dict):
+        return []
+    items: list[Any] = []
+    counter = 1
+    for descriptions in value.values():
+        if isinstance(descriptions, str):
+            descriptions = [descriptions]
+        if not isinstance(descriptions, list):
+            continue
+        for description in descriptions:
+            if isinstance(description, str):
+                items.append(
+                    {
+                        "id": f"REQ-{counter}",
+                        "description": description,
+                        "priority": "P0",
+                    }
+                )
+                counter += 1
+            elif isinstance(description, dict):
+                items.append(description)
+    return items
+
+
+def _coerce_operational_profile(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        value = {}
+    profile = dict(value)
+    profile.setdefault("user_scale", "personal")
+    profile.setdefault("high_concurrency", False)
+    performance = profile.get("performance")
+    if isinstance(performance, str):
+        profile["performance"] = {"tier": performance}
+    elif not isinstance(performance, dict):
+        profile["performance"] = {
+            "tier": "best_effort",
+            "notes": "coerced default for local CLI",
+        }
+    else:
+        performance = dict(performance)
+        performance.setdefault("tier", "best_effort")
+        profile["performance"] = performance
+    return profile
+
+
+def _coerce_consistency_profile(value: Any) -> dict[str, Any]:
+    if isinstance(value, str):
+        return {
+            "consistency_model": value,
+            "delivery": "best_effort",
+            "multi_writer": False,
+            "idempotency_required": False,
+            "conflict_strategy": "not_applicable",
+        }
+    if not isinstance(value, dict):
+        return {
+            "consistency_model": "local_only",
+            "delivery": "best_effort",
+            "multi_writer": False,
+            "idempotency_required": False,
+            "conflict_strategy": "not_applicable",
+        }
+    profile = dict(value)
+    profile.setdefault("consistency_model", "local_only")
+    profile.setdefault("delivery", "best_effort")
+    profile.setdefault("multi_writer", False)
+    profile.setdefault("idempotency_required", False)
+    profile.setdefault("conflict_strategy", "not_applicable")
+    return profile
+
+
+def coerce_spec_payload(data: Any) -> Any:
+    """Normalize common LLM JSON shapes before SpecArtifact validation."""
+    if not isinstance(data, dict):
+        return data
+    payload = dict(data)
+    payload.setdefault("version", "1")
+    payload.setdefault("profile", "unknown")
+    payload.setdefault("revision", 1)
+    if "user_stories" in payload:
+        payload["user_stories"] = _coerce_user_stories(payload["user_stories"])
+    if "requirement_pool" in payload:
+        payload["requirement_pool"] = _coerce_requirement_pool(payload["requirement_pool"])
+    if "operational_profile" in payload:
+        payload["operational_profile"] = _coerce_operational_profile(
+            payload["operational_profile"]
+        )
+    if "consistency_profile" in payload:
+        payload["consistency_profile"] = _coerce_consistency_profile(
+            payload["consistency_profile"]
+        )
+    return payload
+
+
 class SpecArtifact(BaseModel):
     version: ARTIFACT_VERSION
     profile: str
@@ -140,3 +273,8 @@ class SpecArtifact(BaseModel):
     consistency_profile: ConsistencyProfile
     acceptance_criteria: list[AcceptanceCriterion]
     constraints: list[str] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_llm_payload(cls, data: Any) -> Any:
+        return coerce_spec_payload(data)

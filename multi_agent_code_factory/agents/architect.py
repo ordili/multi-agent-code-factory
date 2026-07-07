@@ -8,7 +8,10 @@ from multi_agent_code_factory.agents.base import (
     default_stub_fixtures,
     load_json_fixture,
 )
-from multi_agent_code_factory.agents.live_helpers import normalize_design
+from multi_agent_code_factory.agents.live_helpers import (
+    format_design_validation_feedback,
+    normalize_design,
+)
 from multi_agent_code_factory.agents.llm_runner import LlmRunner
 from multi_agent_code_factory.agents.llm_schemas import ArchitectLLMOutput
 from multi_agent_code_factory.log import agent_run, get_logger
@@ -53,6 +56,7 @@ def run_architect(
                 role_id="architect",
                 schema=ArchitectLLMOutput,
                 context=agent_context("architect", state, profile),
+                extra_system=format_design_validation_feedback(state),
             )
             design = normalize_design(output.design, state)
             flow_text = output.flow_mmd

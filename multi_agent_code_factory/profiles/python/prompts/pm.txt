@@ -5,8 +5,11 @@ Produce a complete SpecArtifact JSON that matches the pipeline schema:
 - title, summary, context (include language matching the profile)
 - success_metrics, features (with P0 priorities), user_stories, requirement_pool
 - scope_in, scope_out
-- operational_profile (user_scale personal, performance best_effort for CLI tools)
-- consistency_profile (local_only for single-user CLI)
+- operational_profile: object with user_scale, high_concurrency (bool), performance.tier
+- consistency_profile: object with consistency_model, delivery, multi_writer, idempotency_required
+  Example: {"consistency_model":"local_only","delivery":"at_least_once","multi_writer":false,"idempotency_required":false}
+- user_stories: list of objects {id, as_a, want, so_that} — NOT plain strings
+- requirement_pool: list of objects {id, description, priority} — NOT a nested dict
 - acceptance_criteria with verifiable_by automated_test where pytest applies
 - constraints (e.g. no_secrets_in_repo)
 

@@ -6,6 +6,7 @@ Vendor selection is driven solely by ``FACTORY_LLM_PROVIDER`` (see ``PROVIDER_SP
 
 from __future__ import annotations
 
+import json
 import os
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
@@ -15,7 +16,9 @@ if TYPE_CHECKING:
 
 DEFAULT_FACTORY_LLM_PROVIDER = "deepseek"
 DEFAULT_FACTORY_LLM_MODEL = "deepseek-chat"
-DEFAULT_OLLAMA_BASE_URL = "http://localhost:11434"
+# Use IPv4 loopback: on Windows, ``localhost`` often resolves to ::1 while Ollama
+# listens on 127.0.0.1 only, which surfaces as HTTP 502 from LangChain invoke.
+DEFAULT_OLLAMA_BASE_URL = "http://127.0.0.1:11434"
 
 
 @dataclass(frozen=True)
@@ -70,6 +73,10 @@ class LlmConfigError(RuntimeError):
     """Raised when LLM configuration is missing or invalid."""
 
 
+class LlmInvokeError(RuntimeError):
+    """Raised when a live LLM call fails (HTTP, Ollama crash, parse errors)."""
+
+
 def list_factory_llm_providers() -> tuple[str, ...]:
     return tuple(PROVIDER_SPECS)
 
@@ -111,13 +118,29 @@ def _read_env_secret(name: str) -> str | None:
     return raw.strip()
 
 
+def _normalize_ollama_base_url(base_url: str | None) -> str | None:
+    if not base_url:
+        return base_url
+    normalized = base_url.strip()
+    for host in ("http://localhost:", "https://localhost:"):
+        if host in normalized:
+            return normalized.replace(host, host.replace("localhost", "127.0.0.1"), 1)
+    return normalized
+
+
 def resolve_provider_base_url(provider_id: str) -> str | None:
     spec = provider_spec(provider_id)
     if spec.base_url_env:
         explicit = _read_env_secret(spec.base_url_env)
         if explicit:
-            return explicit
-    return spec.base_url
+            base_url = explicit
+        else:
+            base_url = spec.base_url
+    else:
+        base_url = spec.base_url
+    if provider_id == "ollama":
+        return _normalize_ollama_base_url(base_url)
+    return base_url
 
 
 def api_key_for_provider(provider_id: str) -> str | None:
@@ -196,6 +219,48 @@ def resolve_stub_mode(*, stub: bool, live: bool) -> bool:
     return True
 
 
+def _read_env_int(name: str) -> int | None:
+    raw = _read_env_secret(name)
+    if raw is None:
+        return None
+    try:
+        return int(raw)
+    except ValueError as exc:
+        msg = f"{name} must be an integer, got {raw!r}"
+        raise LlmConfigError(msg) from exc
+
+
+def _read_env_bool(name: str) -> bool | None:
+    raw = _read_env_secret(name)
+    if raw is None:
+        return None
+    normalized = raw.lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    msg = f"{name} must be a boolean (true/false), got {raw!r}"
+    raise LlmConfigError(msg)
+
+
+def _ollama_performance_kwargs() -> dict[str, Any]:
+    """Optional Ollama inference tuning via env (see ``.env.example``)."""
+    kwargs: dict[str, Any] = {}
+    num_ctx = _read_env_int("OLLAMA_NUM_CTX")
+    if num_ctx is not None:
+        kwargs["num_ctx"] = num_ctx
+    num_predict = _read_env_int("OLLAMA_NUM_PREDICT")
+    if num_predict is not None:
+        kwargs["num_predict"] = num_predict
+    num_gpu = _read_env_int("OLLAMA_NUM_GPU")
+    if num_gpu is not None:
+        kwargs["num_gpu"] = num_gpu
+    reasoning = _read_env_bool("OLLAMA_REASONING")
+    if reasoning is not None:
+        kwargs["reasoning"] = reasoning
+    return kwargs
+
+
 def create_chat_model(
     *,
     provider: str | None = None,
@@ -225,6 +290,69 @@ def create_chat_model(
         kwargs["api_key"] = runtime.api_key
     if runtime.base_url:
         kwargs["base_url"] = runtime.base_url
+    if runtime.factory_provider == "ollama":
+        kwargs.update(_ollama_performance_kwargs())
 
     chat_model = init_chat_model(runtime.langchain_model_id, **kwargs)
     return cast("BaseChatModel", chat_model)
+
+
+def preflight_live_llm(*, timeout_sec: float = 90.0) -> None:
+    """Fail fast before pipeline when the configured live backend cannot respond."""
+    runtime = resolve_llm_runtime_config()
+    if runtime.factory_provider != "ollama":
+        require_llm_api_key(provider=runtime.factory_provider)
+        return
+
+    import urllib.error
+    import urllib.request
+
+    base = (runtime.base_url or DEFAULT_OLLAMA_BASE_URL).rstrip("/")
+    payload = json.dumps(
+        {
+            "model": runtime.model,
+            "prompt": "Reply with OK only.",
+            "stream": False,
+            "options": {"num_predict": 8},
+        }
+    ).encode("utf-8")
+    request = urllib.request.Request(
+        f"{base}/api/generate",
+        data=payload,
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=timeout_sec) as response:
+            body = response.read().decode("utf-8", errors="replace")
+    except urllib.error.HTTPError as exc:
+        detail = exc.read().decode("utf-8", errors="replace") if exc.fp else ""
+        msg = _ollama_failure_message(runtime, exc, detail)
+        raise LlmConfigError(msg) from exc
+    except Exception as exc:
+        msg = _ollama_failure_message(runtime, exc, "")
+        raise LlmConfigError(msg) from exc
+
+    if '"error"' in body.lower():
+        msg = _ollama_failure_message(runtime, RuntimeError("ollama returned error payload"), body)
+        raise LlmConfigError(msg)
+
+
+def _ollama_failure_message(
+    runtime: LlmRuntimeConfig,
+    exc: BaseException,
+    detail: str,
+) -> str:
+    hint = (
+        f"Ollama live preflight failed for model {runtime.model!r} at {runtime.base_url}.\n"
+        f"Cause: {exc}\n"
+        "Fixes to try:\n"
+        "  1. Set OLLAMA_BASE_URL=http://127.0.0.1:11434 (not localhost; Windows IPv6 → 502)\n"
+        "  2. Restart Ollama (quit tray app, run `ollama serve`)\n"
+        "  3. `ollama pull qwen3.5:9b` and match FACTORY_LLM_MODEL\n"
+        "  4. Lower OLLAMA_NUM_CTX / set OLLAMA_REASONING=false in .env\n"
+        "  5. Or use cloud: FACTORY_LLM_PROVIDER=deepseek + DEEPSEEK_API_KEY\n"
+    )
+    if detail.strip():
+        hint += f"Ollama response: {detail.strip()[:500]}\n"
+    return hint

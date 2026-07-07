@@ -157,6 +157,10 @@ def validate_design_rules(
         traced: set[str] = set()
         for row in design.traceability:
             ref_id = row.get("spec_ref_id")
+            if not isinstance(ref_id, str):
+                feature_id = row.get("feature_id")
+                if isinstance(feature_id, str):
+                    ref_id = feature_id
             if isinstance(ref_id, str):
                 traced.add(ref_id)
         for task in design.dev_tasks:
