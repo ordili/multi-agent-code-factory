@@ -105,6 +105,12 @@ def cmd_run(args: argparse.Namespace) -> int:
     print(f"test_parser={profile.toolchain.test_parser}")
     print(f"user_request={user_request!r}")
     print(f"mode={mode}")
+    if not stub:
+        from multi_agent_code_factory.llm import resolve_llm_runtime_config
+
+        llm_cfg = resolve_llm_runtime_config()
+        print(f"llm_provider={llm_cfg.factory_provider}")
+        print(f"llm_model={llm_cfg.model}")
     print(f"loop_limits={factory_config.loop_limits.model_dump()}")
     print(f"run_dir={result.run_dir}")
     print(f"status={result.status.value}")

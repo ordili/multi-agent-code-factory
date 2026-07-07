@@ -73,6 +73,12 @@ def test_llm_available_anthropic_provider(monkeypatch: pytest.MonkeyPatch) -> No
     assert llm_available() is True
 
 
+def test_llm_available_ollama_without_api_key(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("FACTORY_LLM_PROVIDER", "ollama")
+    monkeypatch.delenv("OLLAMA_API_KEY", raising=False)
+    assert llm_available() is True
+
+
 def test_normalize_spec_sets_profile_and_language(
     snippets_dir: Path,
 ) -> None:
@@ -85,6 +91,69 @@ def test_normalize_spec_sets_profile_and_language(
     assert normalized.profile == "python"
     assert normalized.context.get("language") == "python"
     assert normalized.revision == 1
+
+
+def test_resolve_stub_mode_live_ollama_without_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("FACTORY_LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("FACTORY_LLM_MODEL", "deepseek-r1:1.5b")
+    monkeypatch.delenv("OLLAMA_API_KEY", raising=False)
+    assert resolve_stub_mode(stub=False, live=True) is False
+
+
+def test_resolve_chat_model_id_ollama_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("FACTORY_LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("FACTORY_LLM_MODEL", "deepseek-r1:1.5b")
+    assert resolve_chat_model_id() == "ollama:deepseek-r1:1.5b"
+
+
+def test_create_chat_model_ollama_uses_env_base_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("FACTORY_LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("FACTORY_LLM_MODEL", "deepseek-r1:1.5b")
+    monkeypatch.setenv("OLLAMA_BASE_URL", "http://localhost:11434")
+    calls: list[tuple[str, dict[str, object]]] = []
+
+    def fake_init_chat_model(model: str, **kwargs: object) -> object:
+        calls.append((model, kwargs))
+        return object()
+
+    monkeypatch.setattr(
+        "langchain.chat_models.init_chat_model",
+        fake_init_chat_model,
+    )
+    create_chat_model()
+    assert calls[0][0] == "ollama:deepseek-r1:1.5b"
+    assert calls[0][1]["base_url"] == "http://localhost:11434"
+    assert "api_key" not in calls[0][1]
+
+
+def test_resolve_chat_model_id_ignores_colon_in_model_name(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Model tags like ``deepseek-r1:1.5b`` must not override FACTORY_LLM_PROVIDER."""
+    monkeypatch.setenv("FACTORY_LLM_PROVIDER", "ollama")
+    monkeypatch.setenv("FACTORY_LLM_MODEL", "deepseek-r1:1.5b")
+    assert resolve_chat_model_id() == "ollama:deepseek-r1:1.5b"
+
+
+def test_resolve_llm_runtime_config_uses_factory_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from multi_agent_code_factory.llm import resolve_llm_runtime_config
+
+    monkeypatch.setenv("FACTORY_LLM_PROVIDER", "deepseek")
+    monkeypatch.setenv("FACTORY_LLM_MODEL", "deepseek-chat")
+    monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+    cfg = resolve_llm_runtime_config()
+    assert cfg.factory_provider == "deepseek"
+    assert cfg.api_key_env == "DEEPSEEK_API_KEY"
+    assert cfg.langchain_model_id == "openai:deepseek-chat"
+    assert cfg.base_url == "https://api.deepseek.com"
 
 
 def test_resolve_chat_model_id_deepseek_defaults(

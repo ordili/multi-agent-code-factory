@@ -20,6 +20,7 @@ dependencies = [
 llm = [
     "langchain>=1.0,<2",
     "langchain-openai>=1.0,<2",
+    "langchain-ollama>=0.2",
 ]
 
 dev = [
@@ -30,6 +31,7 @@ dev = [
     "types-PyYAML>=6",
     "langchain>=1.0,<2",
     "langchain-openai>=1.0,<2",
+    "langchain-ollama>=0.2",
 ]
 
 
@@ -68,6 +70,8 @@ module = [
     "langchain.*",
     "langchain_openai",
     "langchain_openai.*",
+    "langchain_ollama",
+    "langchain_ollama.*",
     "langchain_core",
     "langchain_core.*",
 ]

@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
 from multi_agent_code_factory.config import FactoryConfig, LoopLimits
 from multi_agent_code_factory.graph import run_pipeline
-from multi_agent_code_factory.llm import llm_available
+from multi_agent_code_factory.llm import (
+    llm_available,
+    provider_spec,
+    resolve_factory_llm_provider,
+)
 from multi_agent_code_factory.profiles import load_profile
 from multi_agent_code_factory.schemas.run_meta import RunMeta, RunStatus
 from multi_agent_code_factory.schemas.test_report import TestReport
@@ -22,11 +27,24 @@ def live_profile(tmp_path: Path):
     return load_profile("python", code_root_override=code_root)
 
 
-def test_todo_cli_live_e2e(tmp_path: Path, live_profile) -> None:
+def _skip_unless_live_llm_ready() -> None:
+    provider_id = resolve_factory_llm_provider()
+    if provider_id == "ollama":
+        if os.environ.get("RUN_OLLAMA_E2E") != "1":
+            pytest.skip("Ollama e2e disabled; set RUN_OLLAMA_E2E=1 to enable")
+        pytest.importorskip("langchain_ollama")
+        return
     if not llm_available():
         pytest.skip("LLM API key not set for current FACTORY_LLM_PROVIDER")
+    langchain_provider = provider_spec(provider_id).langchain_provider
+    if langchain_provider == "openai":
+        pytest.importorskip("langchain_openai")
+    elif langchain_provider == "anthropic":
+        pytest.importorskip("langchain_anthropic")
 
-    pytest.importorskip("langchain_openai")
+
+def test_todo_cli_live_e2e(tmp_path: Path, live_profile) -> None:
+    _skip_unless_live_llm_ready()
 
     run_dir = tmp_path / "runs" / "todo-e2e"
     result = run_pipeline(

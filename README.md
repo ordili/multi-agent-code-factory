@@ -91,7 +91,7 @@ python -m multi_agent_code_factory run \
 | `--max-impl-retries` 等 | 覆盖回路次数，见 `config/autonomy_policy.yaml`                                                  |
 
 
-环境变量（LLM）：`FACTORY_LLM_PROVIDER`、`FACTORY_LLM_MODEL`；厂商 Key：`DEEPSEEK_API_KEY`、`OPENAI_API_KEY`、`ANTHROPIC_API_KEY`（未用的留空）。工厂策略：`FACTORY_MAX_IMPL_RETRIES` 等。详见 [流水线设计 §9](docs/design/pipeline/multi-agent-pipeline-design.md#9-环境变量)。
+环境变量（LLM）：`FACTORY_LLM_PROVIDER`（厂商）、`FACTORY_LLM_MODEL`（模型名）；按 provider 填对应 API Key（`DEEPSEEK_API_KEY`、`OPENAI_API_KEY`、`ANTHROPIC_API_KEY`、`OLLAMA_API_KEY`，未用留空）。Ollama 另可设 `OLLAMA_BASE_URL`。工厂策略：`FACTORY_MAX_IMPL_RETRIES` 等。
 
 集成测试（需 API Key，CI 默认跳过）：
 
