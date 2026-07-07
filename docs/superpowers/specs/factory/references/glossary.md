@@ -1,0 +1,23 @@
+# 术语表
+
+> **主线：** [multi-agent-pipeline-design.md](../../multi-agent-pipeline-design.md)
+
+| 术语 | 含义 |
+|------|------|
+| **SOP** | Standard Operating Procedure；固定角色 + Schema 交接 |
+| **Artifact** | 结构化 JSON 产物；配套 MD/Mermaid 为人读 |
+| **HITL** | 人工审批；`spec_hitl` / `design_hitl` / `deploy_hitl` / `escalation_hitl` + `HitlDecision` |
+| **再入点** | Agent 修订后主线第一站（如 PM→`spec_validate`、Developer→QA）；见主线 §4.3 |
+| **escalation_hitl** | loop 触顶人工裁决（`on_limit_exceeded=escalation_hitl`）；≠ `deploy_hitl` |
+| **Profile** | 领域配置：`code_root`（**仓库外**生成代码根）、`language`、`toolchain`、prompts、tools、hitl |
+| **Run 目录** | `docs/factory/runs/<task_id>/`；单次流水线 Artifact 与 `run_meta.json` |
+| **设计 Spec** | `docs/superpowers/specs/`；人读架构文档，**非** Agent 运行时产物 |
+| **Toolchain** | Profile 内构建/测试命令集（见 [profiles.md](../profiles.md)） |
+| **Test Parser** | 将各语言测试输出归一化为 `TestReport` 的插件 |
+| **Watch** | 节点执行前注入上下文的 Artifact 列表 |
+| **RetryBundle** | Developer 重试时的 spec+design+test_report+代码片段 |
+| **Reflexion** | 失败后结构化反思条目，纳入 RetryBundle |
+| **ACI** | Agent-Computer Interface；Developer 侧窄 Tool 集（SWE-agent） |
+| **ValidationReport** | `spec_validate` / `design_validate` 程序校验输出 |
+| **产物校验** | PM/Architect 规则 + 可选 HITL |
+| **Structured Output** | LLM 输出须符合 Pydantic schema |

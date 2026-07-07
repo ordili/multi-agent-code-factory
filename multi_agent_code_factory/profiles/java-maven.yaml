@@ -1,0 +1,31 @@
+id: java-maven
+language: java
+code_root: ../generated/java-maven
+prompts_dir: multi_agent_code_factory/profiles/java-maven/prompts
+tools: [read_file, write_file, run_tests, linter]
+toolchain:
+  setup: mvn -q -DskipTests compile
+  test_command: mvn -q test
+  test_parser: junit_xml
+  test_artifacts: ["target/surefire-reports/TEST-*.xml"]
+  lint_command: mvn -q checkstyle:check
+  test_dir_glob: "src/test/**/*Test.java"
+context_schema:
+  type: object
+  properties:
+    language:
+      const: java
+    build_tool:
+      enum: [maven]
+    java_version:
+      type: string
+      default: "21"
+    test_framework:
+      enum: [junit5]
+      default: junit5
+auto_generate_tests: false
+hitl:
+  sensitive_globs:
+    - "**/src/main/resources/application-prod.*"
+    - "**/deploy/**"
+  flags: [touches_production]

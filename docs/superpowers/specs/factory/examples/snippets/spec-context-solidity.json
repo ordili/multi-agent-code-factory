@@ -1,0 +1,16 @@
+{
+  "context": {
+    "language": "solidity",
+    "build_tool": "foundry",
+    "evm_version": "cancun",
+    "test_framework": "forge-std"
+  },
+  "acceptance_criteria": [
+    {
+      "id": "AC-1",
+      "description": "forge test 全部通过；不含主网部署",
+      "verifiable_by": "automated_test"
+    }
+  ],
+  "constraints": ["no_mainnet_rpc_in_tests", "no_private_keys_in_repo"]
+}

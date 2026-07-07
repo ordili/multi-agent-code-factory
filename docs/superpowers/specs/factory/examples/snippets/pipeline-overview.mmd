@@ -1,0 +1,63 @@
+%% 多 Agent 研发流水线 — 全线 + 产物 + 条件回路 + 再入点
+%% 真源副本：multi-agent-pipeline-design.md §1 / §4.1
+flowchart TB
+    U(["用户需求 / HITL 审批人"]) --> PM
+
+    PM --> P_OUT[["spec.json<br/>spec.md"]]
+    P_OUT --> SV[spec_validate]
+    SV -->|"violations<br/>再入→spec_validate"| PM
+    SV -->|pass| SV_OUT[["spec_validation.json"]]
+    SV_OUT --> SH{spec_hitl?}
+    SH -->|require_hitl| H1[[spec_hitl]]
+    H1 -->|驳回| PM
+    H1 -->|批准| A
+    SH -->|skip| A
+
+    A[Architect] --> A_OUT[["design.json<br/>design.md · flow.mmd"]]
+    A_OUT --> DV[design_validate]
+    DV -->|"violations<br/>再入→design_validate"| A
+    DV -->|pass| DV_OUT[["design_validation.json"]]
+    DV_OUT --> DH{design_hitl?}
+    DH -->|require_hitl| H2[[design_hitl]]
+    H2 -->|驳回| A
+    H2 -->|批准| D
+    DH -->|skip| D
+
+    D[Developer] --> D_OUT[["dev_manifest.json<br/>{code_root}/**"]]
+    D_OUT --> QA[QA · run_tests]
+    QA --> QA_OUT[["test_report.json"]]
+    QA -->|"failed<br/>再入→QA"| D
+    QA -->|passed| R[Reviewer]
+    R --> R_OUT[["review.json<br/>review.md"]]
+    R -->|"next_stage=developer<br/>再入→QA"| D
+    R -->|"next_stage=architect<br/>再入→design_validate"| A
+    R -->|"next_stage=pm<br/>再入→spec_validate"| PM
+    R -->|approved| DH2{deploy_hitl?}
+    DH2 -->|require_hitl| H3[[deploy_hitl]]
+    H3 --> U
+    U -->|批准| DEPLOY[Deploy]
+    H3 -->|驳回| D
+    DH2 -->|skip| DEPLOY
+
+    SV -.->|loop 触顶| ESC[[escalation_hitl]]
+    DV -.->|loop 触顶| ESC
+    QA -.->|loop 触顶| ESC
+    R -.->|loop 触顶| ESC
+    ESC --> U
+    U -->|终止| FAIL([run_meta.status=failed])
+    U -->|继续·重置计数| RESUME(["§4.3 对应再入点"])
+
+    classDef agent fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef gate fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef hitl fill:#fce7f3,stroke:#db2777,color:#831843
+    classDef artifact fill:#f3f4f6,stroke:#6b7280,stroke-dasharray:4 4,color:#374151
+    classDef terminal fill:#d1fae5,stroke:#059669,color:#064e3b
+    classDef escalation fill:#fff,stroke:#9333ea,stroke-dasharray:6 3,color:#581c87
+
+    class PM,A,D,QA,R agent
+    class SV,DV gate
+    class SH,DH,DH2 hitl
+    class H1,H2,H3 hitl
+    class P_OUT,SV_OUT,A_OUT,DV_OUT,D_OUT,QA_OUT,R_OUT artifact
+    class DEPLOY terminal
+    class ESC,FAIL,RESUME escalation

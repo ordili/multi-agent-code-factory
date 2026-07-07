@@ -1,0 +1,15 @@
+{
+  "context": {
+    "language": "rust",
+    "build_tool": "cargo",
+    "edition": "2021",
+    "interface": "cli"
+  },
+  "acceptance_criteria": [
+    {
+      "id": "AC-1",
+      "description": "cargo test 全部通过",
+      "verifiable_by": "automated_test"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+sequenceDiagram
+    participant U as User
+    participant CLI as TodoCLI
+    participant S as TodoStore
+    U->>CLI: todo add "buy milk"
+    CLI->>S: append(item)
+    S->>S: save todos.json

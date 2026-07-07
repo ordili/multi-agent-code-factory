@@ -1,0 +1,71 @@
+{
+  "version": "1",
+  "profile": "default",
+  "revision": 1,
+  "title": "CLI Todo App",
+  "summary": "命令行增删查 Todo，数据存本地 JSON",
+  "context": {
+    "runtime": "python",
+    "interface": "cli",
+    "storage": "json_file"
+  },
+  "success_metrics": [
+    {
+      "id": "KPI-1",
+      "name": "核心流程可用",
+      "description": "增删查与持久化",
+      "target": "手动走通 US-1、US-2",
+      "verifiable_by": "manual"
+    },
+    {
+      "id": "KPI-2",
+      "name": "自动化质量",
+      "description": "pytest 回归",
+      "target": "全部通过",
+      "verifiable_by": "automated_test"
+    }
+  ],
+  "features": [
+    {
+      "id": "FEAT-1",
+      "name": "待办 CRUD",
+      "description": "add/list/done",
+      "priority": "P0",
+      "user_story_ids": ["US-1", "US-2"]
+    }
+  ],
+  "user_stories": [
+    {
+      "id": "US-1",
+      "as_a": "用户",
+      "want": "添加待办",
+      "so_that": "记录任务"
+    }
+  ],
+  "requirement_pool": [
+    { "id": "REQ-1", "description": "持久化到 JSON", "priority": "P0" }
+  ],
+  "scope_in": ["add/list/done 子命令", "单元测试"],
+  "scope_out": ["Web UI", "多用户"],
+  "operational_profile": {
+    "user_scale": "personal",
+    "high_concurrency": false,
+    "performance": { "tier": "best_effort", "notes": "本地 CLI，无 SLA" }
+  },
+  "consistency_profile": {
+    "consistency_model": "local_only",
+    "delivery": "at_least_once",
+    "multi_writer": false,
+    "idempotency_required": false,
+    "conflict_strategy": "not_applicable",
+    "notes": "单进程单 JSON 文件"
+  },
+  "acceptance_criteria": [
+    {
+      "id": "AC-1",
+      "description": "单元测试全部通过（pytest + tests/test_todo.py）",
+      "verifiable_by": "automated_test"
+    }
+  ],
+  "constraints": ["no_secrets_in_repo"]
+}

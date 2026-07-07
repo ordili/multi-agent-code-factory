@@ -1,0 +1,25 @@
+{
+  "version": "1",
+  "spec_ref": "CLI Todo App",
+  "revision": 1,
+  "summary": "CLI Todo：CLI + JSON Store",
+  "non_goals": ["Web UI", "多用户"],
+  "design_goals": ["CRUD 稳定", "持久化可单测"],
+  "modules": [
+    { "name": "TodoCLI", "path": "src/cli.py", "responsibility": "子命令", "code_domain": "CLI" },
+    { "name": "TodoStore", "path": "src/todo_store.py", "responsibility": "JSON 读写", "code_domain": "STORE" }
+  ],
+  "external_dependencies": [
+    { "name": "todos.json", "kind": "filesystem", "code_domain": "STORE", "purpose": "持久化", "criticality": "required" }
+  ],
+  "error_catalog": [
+    { "code": "ERR-STORE-001", "when": "JSON 损坏", "message": "Invalid JSON", "retryable": false }
+  ],
+  "dev_tasks": [
+    { "id": "T1", "path": "src/todo_store.py", "description": "load/save", "depends_on": [] }
+  ],
+  "diagrams": [
+    { "path": "flow.mmd", "kind": "sequence", "title": "add 时序" },
+    { "path": "flow.mmd", "kind": "flowchart", "title": "异常分支" }
+  ]
+}

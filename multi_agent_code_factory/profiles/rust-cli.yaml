@@ -1,0 +1,27 @@
+id: rust-cli
+language: rust
+code_root: ../generated/rust-cli
+prompts_dir: multi_agent_code_factory/profiles/rust-cli/prompts
+tools: [read_file, write_file, run_tests, linter]
+toolchain:
+  setup: cargo fetch
+  build: cargo build
+  test_command: cargo test --message-format=json
+  test_parser: cargo_json
+  lint_command: cargo clippy --all-targets --all-features -- -D warnings
+  test_dir_glob: "{src/**,tests/**}/*.rs"
+context_schema:
+  type: object
+  properties:
+    language:
+      const: rust
+    build_tool:
+      const: cargo
+    edition:
+      type: string
+      default: "2021"
+auto_generate_tests: false
+hitl:
+  sensitive_globs:
+    - "**/benches/**"
+  flags: [touches_production]

@@ -1,0 +1,10 @@
+# Global factory policy. Override via FACTORY_* env vars or CLI flags.
+# See multi-agent-pipeline-design.md §4.4
+
+multi_agent_code_factory:
+  loop_limits:
+    max_impl_retries: 3
+    max_design_revisions: 2
+    max_spec_revisions: 1
+  max_hitl_rounds: 5
+  on_limit_exceeded: fail          # fail | escalation_hitl（deploy_hitl 已废弃，见 multi-agent-pipeline-design.md §4.4）

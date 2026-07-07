@@ -1,0 +1,15 @@
+id: go-cli
+language: go
+code_root: ../generated/go-cli
+prompts_dir: multi_agent_code_factory/profiles/go-cli/prompts
+tools: [read_file, write_file, run_tests, linter]
+toolchain:
+  setup: go mod tidy
+  test_command: go test -json ./...
+  test_parser: go_json
+  lint_command: golangci-lint run ./...
+  test_dir_glob: "**/*_test.go"
+auto_generate_tests: false
+hitl:
+  sensitive_globs: ["**/deploy/**"]
+  flags: [touches_production]

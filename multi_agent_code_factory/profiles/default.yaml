@@ -1,0 +1,27 @@
+id: default
+language: python
+code_root: ../generated/default
+prompts_dir: multi_agent_code_factory/profiles/default/prompts
+tools: [read_file, write_file, run_tests, linter]
+toolchain:
+  setup: pip install -e ".[dev]"
+  test_command: pytest -q --junitxml=reports/junit.xml
+  test_parser: junit_xml
+  test_artifacts: ["reports/junit.xml"]
+  lint_command: ruff check .
+  test_dir_glob: "tests/**"
+auto_generate_tests: false
+validation:
+  spec:
+    enabled: true
+    block_on: error
+    require_hitl: false
+  design:
+    enabled: true
+    block_on: error
+    require_hitl: false
+    validate_mermaid: true
+    require_hitl_if_flags: [touches_production]
+hitl:
+  sensitive_globs: ["**/auth/**", "**/deploy/**"]
+  flags: [touches_production]

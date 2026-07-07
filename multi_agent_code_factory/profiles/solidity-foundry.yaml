@@ -1,0 +1,31 @@
+id: solidity-foundry
+language: solidity
+code_root: ../generated/solidity-foundry
+prompts_dir: multi_agent_code_factory/profiles/solidity-foundry/prompts
+tools: [read_file, write_file, run_tests, linter]
+toolchain:
+  setup: forge build --skip test
+  test_command: forge test --json
+  test_parser: forge_json
+  lint_command: forge fmt --check
+  test_dir_glob: "{test,src}/**/*.t.sol"
+context_schema:
+  type: object
+  properties:
+    language:
+      const: solidity
+    build_tool:
+      enum: [foundry]
+    evm_version:
+      type: string
+      default: cancun
+    test_framework:
+      enum: [forge-std]
+      default: forge-std
+auto_generate_tests: false
+hitl:
+  sensitive_globs:
+    - "**/script/**"
+    - "**/broadcast/**"
+    - "**/deploy/**"
+  flags: [touches_production, touches_mainnet]
