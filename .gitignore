@@ -23,6 +23,5 @@ docs/runs/*/
 *.swp
 
 # Env
-.env
 .env.*
 !.env.example
