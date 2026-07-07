@@ -1,0 +1,11 @@
+﻿# Python code standards (Profile default) — inject into Developer system prompt
+# Full spec: docs/design/pipeline/python-style.md
+
+- Python >= 3.11; follow PEP 8 (enforced by Ruff).
+- Format: ruff format (Black-compatible, line length 88, double quotes).
+- Naming: snake_case functions/vars, PascalCase classes, UPPER constants.
+- Public functions/classes: type hints + Google-style docstrings.
+- Tests: pytest under tests/test_*.py; no network in unit tests unless specified.
+- Logging: use logging module; no print except CLI user output.
+- No hardcoded secrets; use environment variables.
+- Before finishing: code must pass `python -m ruff check . && python -m ruff format --check .` and `python -m pytest -q`.

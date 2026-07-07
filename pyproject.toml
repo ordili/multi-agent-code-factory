@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "multi-agent-code-factory"
+version = "0.1.0"
+description = "Multi-agent LangGraph pipeline for structured code generation"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "pydantic>=2",
+    "pyyaml>=6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.8",
+    "pytest>=8",
+    "pytest-cov>=4",
+    "ruff>=0.8",
+]
+
+[project.scripts]
+# CLI entry when __main__ is implemented:
+# multi-agent-code-factory = "multi_agent_code_factory.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["multi_agent_code_factory*"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 88
+src = ["multi_agent_code_factory", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["multi_agent_code_factory"]
+warn_unused_configs = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+    "integration: tests that need external services",
+]
+
+[tool.coverage.run]
+source = ["multi_agent_code_factory"]
+branch = true
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+skip_covered = false
