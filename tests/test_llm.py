@@ -22,13 +22,19 @@ from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
 from tests.conftest import load_snippet_json
 
 
+@pytest.fixture(autouse=True)
+def _default_deepseek_provider(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("FACTORY_LLM_PROVIDER", "deepseek")
+    monkeypatch.setenv("FACTORY_LLM_MODEL", "deepseek-chat")
+
+
 def test_resolve_stub_mode_defaults_to_stub() -> None:
     assert resolve_stub_mode(stub=False, live=False) is True
 
 
 def test_resolve_stub_mode_live_requires_key(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
-    with pytest.raises(LlmConfigError):
+    with pytest.raises(LlmConfigError, match="DEEPSEEK_API_KEY"):
         resolve_stub_mode(stub=False, live=True)
 
 
@@ -42,10 +48,28 @@ def test_resolve_stub_mode_rejects_both_flags() -> None:
         resolve_stub_mode(stub=True, live=True)
 
 
-def test_llm_available_reads_env(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_llm_available_checks_active_provider_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
     assert llm_available() is False
     monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
+    assert llm_available() is True
+
+
+def test_llm_available_ignores_other_vendor_keys(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.delenv("DEEPSEEK_API_KEY", raising=False)
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-openai")
+    assert llm_available() is False
+
+
+def test_llm_available_anthropic_provider(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("FACTORY_LLM_PROVIDER", "anthropic")
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    assert llm_available() is False
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-ant")
     assert llm_available() is True
 
 
@@ -63,22 +87,30 @@ def test_normalize_spec_sets_profile_and_language(
     assert normalized.revision == 1
 
 
-def test_resolve_chat_model_id_defaults_to_openai_provider(
+def test_resolve_chat_model_id_deepseek_defaults(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.delenv("FACTORY_CHAT_MODEL", raising=False)
-    monkeypatch.setenv("DEEPSEEK_MODEL", "deepseek-chat")
+    monkeypatch.delenv("FACTORY_LLM_MODEL", raising=False)
     assert resolve_chat_model_id() == "openai:deepseek-chat"
 
 
-def test_resolve_chat_model_id_factory_chat_model_override(
+def test_resolve_chat_model_id_openai_provider(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    monkeypatch.setenv("FACTORY_CHAT_MODEL", "openai:gpt-4o-mini")
+    monkeypatch.setenv("FACTORY_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("FACTORY_LLM_MODEL", "gpt-4o-mini")
     assert resolve_chat_model_id() == "openai:gpt-4o-mini"
 
 
-def test_create_chat_model_uses_init_chat_model(
+def test_resolve_chat_model_id_anthropic_provider(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("FACTORY_LLM_PROVIDER", "anthropic")
+    monkeypatch.setenv("FACTORY_LLM_MODEL", "claude-sonnet-4-6")
+    assert resolve_chat_model_id() == "anthropic:claude-sonnet-4-6"
+
+
+def test_create_chat_model_deepseek_uses_inferred_base_url(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     monkeypatch.setenv("DEEPSEEK_API_KEY", "sk-test")
@@ -98,6 +130,27 @@ def test_create_chat_model_uses_init_chat_model(
     assert calls[0][0] == "openai:deepseek-chat"
     assert calls[0][1]["api_key"] == "sk-test"
     assert calls[0][1]["base_url"] == "https://api.deepseek.com"
+
+
+def test_create_chat_model_openai_omits_base_url(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("FACTORY_LLM_PROVIDER", "openai")
+    monkeypatch.setenv("FACTORY_LLM_MODEL", "gpt-4o")
+    monkeypatch.setenv("OPENAI_API_KEY", "sk-openai")
+    calls: list[dict[str, object]] = []
+
+    def fake_init_chat_model(model: str, **kwargs: object) -> object:
+        calls.append(kwargs)
+        return object()
+
+    monkeypatch.setattr(
+        "langchain.chat_models.init_chat_model",
+        fake_init_chat_model,
+    )
+    create_chat_model()
+    assert "base_url" not in calls[0]
+    assert calls[0]["api_key"] == "sk-openai"
 
 
 def test_pm_live_invokes_llm_runner(

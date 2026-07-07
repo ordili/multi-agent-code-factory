@@ -25,7 +25,7 @@
 | 回路重试次数等**工厂全局**默认 | `config/autonomy_policy.yaml`；本机可再用 `FACTORY_*` 覆盖 |
 | 这一次做什么需求 | CLI：`--task-id` + 引号里的自然语言 |
 
-选栈：`--profile <语言>`（V1：`python`、`go`、`java`、`rust`、`solidity`）；配 Key：编辑 `.env` 里的 `DEEPSEEK_API_KEY`。二者职责不重叠。详见 [profiles.md §0](docs/design/pipeline/profiles.md#0-配置分层profile-vs-env-vs-其它) 与 [profiles/README.md](multi_agent_code_factory/profiles/README.md)。
+选栈：`--profile <语言>`（V1：`python`、`go`、`java`、`rust`、`solidity`）；配 LLM：在 `.env` 设 `FACTORY_LLM_PROVIDER`、`FACTORY_LLM_MODEL`，并填**当前厂商**对应 API Key（如 `DEEPSEEK_API_KEY`）。详见 [profiles/README.md](multi_agent_code_factory/profiles/README.md)。
 
 ## 快速开始（Stub，无需 API Key）
 
@@ -62,10 +62,10 @@ python -m multi_agent_code_factory run \
 ```bash
 pip install -e ".[llm]"
 cp .env.example .env   # Windows: copy .env.example .env
-# 编辑 .env，填入 DEEPSEEK_API_KEY=sk_...
+# 编辑 .env：FACTORY_LLM_PROVIDER、FACTORY_LLM_MODEL、对应厂商 API Key
 ```
 
-CLI 启动时会自动加载仓库根目录的 `.env`（已设置的 shell 环境变量优先）。也可不用文件，直接 `export DEEPSEEK_API_KEY=sk_...`。
+CLI 启动时会自动加载仓库根目录的 `.env`（已设置的 shell 环境变量优先）。
 
 指定输出目录并启用 live 模式：
 
@@ -86,12 +86,12 @@ python -m multi_agent_code_factory run \
 | `--profile`            | 语言 Profile id：`python` \| `go` \| `java` \| `rust` \| `solidity`（见 [profiles/](multi_agent_code_factory/profiles/)） |
 | `--task-id`            | 本次 run 标识，产物写入 `docs/runs/<task_id>/`                                                   |
 | `--stub`               | 强制 Stub（默认行为）                                                                           |
-| `--live`               | 真实 LLM（需 `DEEPSEEK_API_KEY`）                                                            |
+| `--live`               | 真实 LLM（需当前 `FACTORY_LLM_PROVIDER` 对应 API Key）                                                            |
 | `--code-root`          | 覆盖 Profile 的 `code_root`                                                                |
 | `--max-impl-retries` 等 | 覆盖回路次数，见 `config/autonomy_policy.yaml`                                                  |
 
 
-环境变量（可选）：`DEEPSEEK_API_KEY`、`DEEPSEEK_BASE_URL`、`DEEPSEEK_MODEL`；换模型可用 `FACTORY_CHAT_MODEL`（如 `openai:deepseek-chat`）或 `FACTORY_LLM_PROVIDER`；回路上限 `FACTORY_MAX_IMPL_RETRIES` 等。详见 [流水线设计 §9](docs/design/pipeline/multi-agent-pipeline-design.md#9-环境变量)。
+环境变量（LLM）：`FACTORY_LLM_PROVIDER`、`FACTORY_LLM_MODEL`；厂商 Key：`DEEPSEEK_API_KEY`、`OPENAI_API_KEY`、`ANTHROPIC_API_KEY`（未用的留空）。工厂策略：`FACTORY_MAX_IMPL_RETRIES` 等。详见 [流水线设计 §9](docs/design/pipeline/multi-agent-pipeline-design.md#9-环境变量)。
 
 集成测试（需 API Key，CI 默认跳过）：
 

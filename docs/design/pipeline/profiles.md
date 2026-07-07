@@ -15,7 +15,7 @@
 | 层级 | 载体 | 是否进 Git | 职责 | 典型内容 |
 |------|------|------------|------|----------|
 | **Profile** | `profiles/<id>.yaml` + `profiles/<id>/prompts/` | ✅ 是 | **技术栈与质量门**（可版本化、团队共享） | `language`、`toolchain`、`validation`、`hitl`、`prompts_dir`；`code_root` **路径约定**（推荐相对路径如 `../generated/<id>`） |
-| **运行环境** | `.env`（本机）或 shell / CI 密钥 | ❌ `.env` 不进 | **密钥与本机/环境差异** | `DEEPSEEK_API_KEY`、可选 `DEEPSEEK_MODEL`；本机路径占位如 `FACTORY_CODE_ROOT`（仅当 Profile 写 `${FACTORY_CODE_ROOT}/…` 时需要） |
+| **运行环境** | `.env`（本机）或 shell / CI 密钥 | ❌ `.env` 不进 | **厂商 + 模型 + 对应 API Key** | `FACTORY_LLM_PROVIDER`、`FACTORY_LLM_MODEL`；`DEEPSEEK_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY`（未用留空） |
 | **工厂全局策略** | `config/autonomy_policy.yaml` | ✅ 是 | **回路上限等团队默认** | `loop_limits`、`max_hitl_rounds`；可用 `FACTORY_*` env **覆盖**，默认仍以 YAML 为准 |
 | **单次 run** | CLI 参数 | — | **本次任务** | `--task-id`、`user_request`、`--live`/`--stub`、`--code-root`（单次覆盖 Profile） |
 

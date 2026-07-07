@@ -24,7 +24,7 @@ def live_profile(tmp_path: Path):
 
 def test_todo_cli_live_e2e(tmp_path: Path, live_profile) -> None:
     if not llm_available():
-        pytest.skip("DEEPSEEK_API_KEY not set")
+        pytest.skip("LLM API key not set for current FACTORY_LLM_PROVIDER")
 
     pytest.importorskip("langchain_openai")
 

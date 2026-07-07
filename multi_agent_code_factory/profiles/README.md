@@ -6,8 +6,8 @@
 
 | 放 **Profile**（本目录 YAML） | 放 **`.env`**（仓库根，不进 Git） |
 |------------------------------|-----------------------------------|
-| 语言、`toolchain`、测试/ lint 命令 | `DEEPSEEK_API_KEY` 等 LLM 密钥 |
-| `validation`、`hitl`、角色 prompts | 本机可选：`DEEPSEEK_MODEL`、`FACTORY_CHAT_MODEL` |
+| 语言、`toolchain`、测试/ lint 命令 | 厂商 API Key（`DEEPSEEK_API_KEY` 等，未用留空） |
+| `validation`、`hitl`、角色 prompts | `FACTORY_LLM_PROVIDER`、`FACTORY_LLM_MODEL` |
 | `code_root` 路径**约定**（如 `../generated/python`） | 仅当 YAML 用 `${FACTORY_CODE_ROOT}/…` 时，在此设 `FACTORY_CODE_ROOT` |
 | `tools` 列表 | 可选：覆盖 `FACTORY_MAX_*` 回路上限 |
 

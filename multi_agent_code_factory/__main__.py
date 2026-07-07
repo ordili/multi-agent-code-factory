@@ -37,7 +37,7 @@ def build_parser() -> argparse.ArgumentParser:
     run_parser.add_argument(
         "--live",
         action="store_true",
-        help="Use real LLM agents (requires DEEPSEEK_API_KEY)",
+        help="Use real LLM agents (requires API key for FACTORY_LLM_PROVIDER)",
     )
     run_parser.add_argument(
         "--code-root",
