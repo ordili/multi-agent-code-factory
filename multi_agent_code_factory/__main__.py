@@ -9,6 +9,7 @@ from collections.abc import Sequence
 from multi_agent_code_factory.config import load_factory_config
 from multi_agent_code_factory.env import load_env_file
 from multi_agent_code_factory.graph import run_pipeline
+from multi_agent_code_factory.log import configure_logging
 from multi_agent_code_factory.llm import LlmConfigError, resolve_stub_mode
 from multi_agent_code_factory.profiles import ProfileLoadError, load_profile
 from multi_agent_code_factory.schemas.run_meta import RunStatus
@@ -67,6 +68,11 @@ def build_parser() -> argparse.ArgumentParser:
         nargs="+",
         help="Natural-language task description",
     )
+    run_parser.add_argument(
+        "--log-level",
+        default=None,
+        help="Log level (default: INFO, or FACTORY_LOG_LEVEL from .env)",
+    )
     return parser
 
 
@@ -119,9 +125,12 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 def main(argv: Sequence[str] | None = None) -> int:
     load_env_file()
+    configure_logging()
     parser = build_parser()
     args = parser.parse_args(list(argv) if argv is not None else None)
     if args.command == "run":
+        if args.log_level is not None:
+            configure_logging(level=args.log_level, force=True)
         return cmd_run(args)
     parser.error(f"unknown command: {args.command}")
     return 2

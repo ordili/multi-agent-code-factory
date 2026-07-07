@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from multi_agent_code_factory.log import get_logger, log_validation_result
 from multi_agent_code_factory.profiles import ProfileConfig
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.spec import SpecArtifact
@@ -15,6 +16,8 @@ from multi_agent_code_factory.schemas.validation_report import (
 from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
 from multi_agent_code_factory.validators._report import build_validation_report, warn
 from multi_agent_code_factory.validators.design_rules import validate_design_rules
+
+logger = get_logger("nodes.design_validate")
 
 
 def _check_flow_mmd(run_dir: Path | None) -> list[Violation]:
@@ -60,4 +63,5 @@ def run_design_validate(
         )
     if writer is not None:
         writer.write_model("design_validation.json", report)
+    log_validation_result(logger, target="design", report=report)
     return report

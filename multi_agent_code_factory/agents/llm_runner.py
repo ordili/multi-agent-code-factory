@@ -10,11 +10,14 @@ from pydantic import BaseModel
 
 from multi_agent_code_factory.config import FactoryConfig
 from multi_agent_code_factory.llm import create_chat_model
+from multi_agent_code_factory.log import get_logger
 from multi_agent_code_factory.profiles import ProfileConfig
 from multi_agent_code_factory.schemas.run_meta import BudgetUsage
 from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
 
 T = TypeVar("T", bound=BaseModel)
+
+logger = get_logger("agents.llm_runner")
 
 
 class LlmRunner:
@@ -95,13 +98,19 @@ class LlmRunner:
         )
         user_prompt = json.dumps(context, ensure_ascii=False, indent=2)
         structured = self._model.with_structured_output(schema)
-        result = structured.invoke(
-            [
-                SystemMessage(content=system_prompt),
-                HumanMessage(content=user_prompt),
-            ]
-        )
+        logger.info("llm invoke start role=%s schema=%s", role_id, schema.__name__)
+        try:
+            result = structured.invoke(
+                [
+                    SystemMessage(content=system_prompt),
+                    HumanMessage(content=user_prompt),
+                ]
+            )
+        except Exception:
+            logger.exception("llm invoke failed role=%s schema=%s", role_id, schema.__name__)
+            raise
         if not isinstance(result, schema):
             result = schema.model_validate(result)
         self._record_call()
+        logger.info("llm invoke done role=%s schema=%s", role_id, schema.__name__)
         return result

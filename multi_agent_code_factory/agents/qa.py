@@ -8,11 +8,14 @@ from multi_agent_code_factory.agents.base import (
     default_stub_fixtures,
     load_json_fixture,
 )
+from multi_agent_code_factory.log import agent_run, get_logger
 from multi_agent_code_factory.profiles import ProfileConfig
 from multi_agent_code_factory.schemas.test_report import TestReport
 from multi_agent_code_factory.state import PipelineState
 from multi_agent_code_factory.tools.run_tests import run_tests
 from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
+
+logger = get_logger("agents.qa")
 
 
 def run_qa(
@@ -25,25 +28,36 @@ def run_qa(
 ) -> dict[str, object]:
     _ = agent_context("qa", state, profile)
 
-    if stub:
-        fixtures = default_stub_fixtures()
-        if stub_scenario == StubScenario.QA_ALWAYS_FAIL:
-            report = TestReport.model_validate(
-                load_json_fixture(fixtures.test_report_fail)
-            )
-        elif stub_scenario == StubScenario.QA_FAIL_THEN_PASS:
-            if state.impl_retry_count == 0:
+    with agent_run(logger, role_id="qa", stub=stub):
+        if stub:
+            fixtures = default_stub_fixtures()
+            if stub_scenario == StubScenario.QA_ALWAYS_FAIL:
                 report = TestReport.model_validate(
                     load_json_fixture(fixtures.test_report_fail)
                 )
+            elif stub_scenario == StubScenario.QA_FAIL_THEN_PASS:
+                if state.impl_retry_count == 0:
+                    report = TestReport.model_validate(
+                        load_json_fixture(fixtures.test_report_fail)
+                    )
+                else:
+                    report = TestReport.model_validate(
+                        load_json_fixture(fixtures.test_report)
+                    )
             else:
                 report = TestReport.model_validate(
                     load_json_fixture(fixtures.test_report)
                 )
         else:
-            report = TestReport.model_validate(load_json_fixture(fixtures.test_report))
-    else:
-        report = run_tests(profile)
+            report = run_tests(profile)
 
-    writer.write_model("test_report.json", report)
+        writer.write_model("test_report.json", report)
+        if report.passed:
+            logger.info("qa tests passed")
+        else:
+            logger.warning(
+                "qa tests failed passed=%s failed=%s",
+                report.summary.passed,
+                report.summary.failed,
+            )
     return {"test_report": report}

@@ -16,6 +16,7 @@ from multi_agent_code_factory.agents.pm import run_pm
 from multi_agent_code_factory.agents.qa import run_qa
 from multi_agent_code_factory.agents.reviewer import run_reviewer
 from multi_agent_code_factory.config import FactoryConfig, LoopLimits
+from multi_agent_code_factory.log import get_logger
 from multi_agent_code_factory.graph_routing import (
     RouteDecision,
     decide_after_design_validate,
@@ -35,6 +36,8 @@ from multi_agent_code_factory.profiles import ProfileConfig
 from multi_agent_code_factory.schemas.run_meta import RunStatus
 from multi_agent_code_factory.state import PipelineState
 from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
+
+logger = get_logger("graph")
 
 
 @dataclass
@@ -263,6 +266,13 @@ def run_pipeline(
     stub: bool = True,
     stub_scenario: StubScenario | str = StubScenario.HAPPY,
 ) -> PipelineRunResult:
+    mode = "stub" if stub else "live"
+    logger.info(
+        "pipeline start task_id=%s profile=%s mode=%s",
+        task_id,
+        profile.id,
+        mode,
+    )
     writer = RunArtifactWriter(task_id, base_dir=run_dir)
     limits = factory_config.loop_limits
     writer.init_run_meta(profile, limits, factory_config=factory_config)
@@ -302,4 +312,10 @@ def run_pipeline(
     status = meta.status if meta is not None else RunStatus.FAILED
     if status is None:
         status = RunStatus.FAILED
+    logger.info(
+        "pipeline finished task_id=%s status=%s run_dir=%s",
+        task_id,
+        status.value,
+        writer.directory,
+    )
     return PipelineRunResult(state=final_state, status=status, run_dir=writer.directory)

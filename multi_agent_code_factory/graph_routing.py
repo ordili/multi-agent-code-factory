@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from multi_agent_code_factory.config import LoopLimits
+from multi_agent_code_factory.log import get_logger
 from multi_agent_code_factory.profiles import ProfileConfig
 from multi_agent_code_factory.state import PipelineState
 
@@ -17,6 +18,8 @@ SPEC_ESCALATION_STALE_FILES = [
     "design_validation.json",
     "flow.mmd",
 ]
+
+logger = get_logger("graph.routing")
 
 
 @dataclass
@@ -50,7 +53,17 @@ def decide_after_spec_validate(
         and profile.validation.spec.block_on == "error"
     ):
         if state.spec_revision_count >= limits.max_spec_revisions:
+            logger.error(
+                "spec validation loop limit reached revisions=%s max=%s",
+                state.spec_revision_count,
+                limits.max_spec_revisions,
+            )
             return RouteDecision(_limit_route(limits))
+        logger.warning(
+            "spec validation failed; retry pm revision=%s/%s",
+            state.spec_revision_count + 1,
+            limits.max_spec_revisions,
+        )
         return RouteDecision(
             "pm",
             state_updates={
@@ -64,7 +77,9 @@ def decide_after_spec_validate(
             stale_artifacts=SPEC_ESCALATION_STALE_FILES,
         )
     if profile.validation.spec.require_hitl:
+        logger.info("spec validation passed; route spec_hitl")
         return RouteDecision("spec_hitl")
+    logger.info("spec validation passed; route architect")
     return RouteDecision("architect")
 
 
@@ -80,7 +95,17 @@ def decide_after_design_validate(
         and profile.validation.design.block_on == "error"
     ):
         if state.design_revision_count >= limits.max_design_revisions:
+            logger.error(
+                "design validation loop limit reached revisions=%s max=%s",
+                state.design_revision_count,
+                limits.max_design_revisions,
+            )
             return RouteDecision(_limit_route(limits))
+        logger.warning(
+            "design validation failed; retry architect revision=%s/%s",
+            state.design_revision_count + 1,
+            limits.max_design_revisions,
+        )
         return RouteDecision(
             "architect",
             state_updates={
@@ -94,16 +119,29 @@ def decide_after_design_validate(
     if profile.validation.design.require_hitl or (
         validation is not None and validation.require_hitl
     ):
+        logger.info("design validation passed; route design_hitl")
         return RouteDecision("design_hitl")
+    logger.info("design validation passed; route developer")
     return RouteDecision("developer")
 
 
 def decide_after_test(state: PipelineState, limits: LoopLimits) -> RouteDecision:
     report = state.test_report
     if report is not None and report.passed:
+        logger.info("qa passed; route reviewer")
         return RouteDecision("reviewer")
     if state.impl_retry_count >= limits.max_impl_retries:
+        logger.error(
+            "implementation loop limit reached retries=%s max=%s",
+            state.impl_retry_count,
+            limits.max_impl_retries,
+        )
         return RouteDecision(_limit_route(limits))
+    logger.warning(
+        "qa failed; retry developer attempt=%s/%s",
+        state.impl_retry_count + 1,
+        limits.max_impl_retries,
+    )
     return RouteDecision(
         "developer",
         state_updates={"impl_retry_count": state.impl_retry_count + 1},
@@ -121,16 +159,29 @@ def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecisi
     if stage == "deploy":
         if not review.approved:
             if state.impl_retry_count >= limits.max_impl_retries:
+                logger.error(
+                    "review rejected deploy; implementation loop limit reached retries=%s max=%s",
+                    state.impl_retry_count,
+                    limits.max_impl_retries,
+                )
                 return RouteDecision(_limit_route(limits))
+            logger.warning("review rejected deploy; retry developer")
             return RouteDecision(
                 "developer",
                 state_updates={"impl_retry_count": state.impl_retry_count + 1},
             )
+        logger.info("review approved; route deploy_hitl")
         return RouteDecision("deploy_hitl")
 
     if stage == "developer":
         if state.impl_retry_count >= limits.max_impl_retries:
+            logger.error(
+                "review escalated developer; implementation loop limit reached retries=%s max=%s",
+                state.impl_retry_count,
+                limits.max_impl_retries,
+            )
             return RouteDecision(_limit_route(limits))
+        logger.warning("review escalated developer; retry developer")
         return RouteDecision(
             "developer",
             state_updates={"impl_retry_count": state.impl_retry_count + 1},
@@ -138,7 +189,13 @@ def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecisi
 
     if stage == "architect":
         if state.design_revision_count >= limits.max_design_revisions:
+            logger.error(
+                "review escalated architect; design loop limit reached revisions=%s max=%s",
+                state.design_revision_count,
+                limits.max_design_revisions,
+            )
             return RouteDecision(_limit_route(limits))
+        logger.warning("review escalated architect; retry architect")
         return RouteDecision(
             "architect",
             state_updates={
@@ -152,7 +209,13 @@ def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecisi
 
     if stage == "pm":
         if state.spec_revision_count >= limits.max_spec_revisions:
+            logger.error(
+                "review escalated pm; spec loop limit reached revisions=%s max=%s",
+                state.spec_revision_count,
+                limits.max_spec_revisions,
+            )
             return RouteDecision(_limit_route(limits))
+        logger.warning("review escalated pm; retry pm")
         return RouteDecision(
             "pm",
             state_updates={
