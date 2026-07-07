@@ -81,6 +81,8 @@ Reviewer Tool `git_diff(code_root)`；§4.7 增量 run 读 `parent_task_id`。
 
 ## C.5 实现 backlog
 
+> **排期与 PR 拆分：** [implementation-plan.md](../implementation-plan.md)
+
 ```text
 P0  watch/RetryBundle + spec_validate/design_validate + Developer Tool 收敛 + reflection + test_parsers（junit_xml）
 P1  Profile.sandbox + go_json/cargo_json/forge_json + git_diff + agents.yaml

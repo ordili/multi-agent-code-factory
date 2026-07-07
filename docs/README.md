@@ -15,6 +15,7 @@
 | [design/00-master-overview.md](design/00-master-overview.md) | 项目总览与目标 |
 | [design/pipeline/multi-agent-pipeline-design.md](design/pipeline/multi-agent-pipeline-design.md) | 多 Agent 流水线主线 |
 | [design/pipeline/README.md](design/pipeline/README.md) | 工厂细目索引（Profile、产物规格、示例） |
+| [design/pipeline/implementation-plan.md](design/pipeline/implementation-plan.md) | V1 实现计划（阶段、PR、验收） |
 
 **V2 领域设计**（当前不实现）：[domains/](../domains/README.md)
 

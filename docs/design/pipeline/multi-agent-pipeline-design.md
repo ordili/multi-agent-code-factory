@@ -19,6 +19,7 @@
 | [`multi_agent_code_factory/profiles/*.yaml`](../../../multi_agent_code_factory/profiles/) | Profile 配置（以 YAML 为准） |
 | [`multi_agent_code_factory/schemas/`](../../../multi_agent_code_factory/schemas/) | Pydantic 实现 |
 | [quality-gates.md](./quality-gates.md) | PM / Architect **规则校验** + 可选 **人工 HITL** |
+| [implementation-plan.md](./implementation-plan.md) | **V1 编码计划**（设计定稿后的实现阶段与 PR 拆分） |
 | [examples/](./examples/README.md) | JSON / Mermaid **示例片段** |
 | [references/](./references/README.md) | MetaGPT、开源调研、术语 |
 

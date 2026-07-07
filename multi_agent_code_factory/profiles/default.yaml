@@ -20,7 +20,7 @@ validation:
     enabled: true
     block_on: error
     require_hitl: false
-    validate_mermaid: true
+    validate_mermaid: false   # MVP：见 implementation-plan.md §3.1；P1 启用 mermaid.py 后可改 true
     require_hitl_if_flags: [touches_production]
 hitl:
   sensitive_globs: ["**/auth/**", "**/deploy/**"]

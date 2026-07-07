@@ -40,6 +40,8 @@ Code = SOP(Team)
 
 ## B.3 实现 backlog（设计已定，待编码）
 
+> **排期与 PR 拆分：** [implementation-plan.md](../implementation-plan.md)
+
 | 项 | 落点 | 阶段 |
 |----|------|------|
 | `context.py`：按 `watch` 组装 `NodeContext` | 主线 §4.5 | P0 |

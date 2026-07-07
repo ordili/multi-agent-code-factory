@@ -16,10 +16,11 @@
 | [examples/](./examples/README.md) | JSON / Mermaid **示例片段**（Todo 等） | — |
 | [references/](./references/README.md) | 术语、MetaGPT、开源调研 | — |
 | [quality-gates.md](./quality-gates.md) | **程序校验** rule_id、`validation` 配置 | `validators/`、`nodes/` |
+| [implementation-plan.md](./implementation-plan.md) | **V1 编码计划**（阶段、PR 拆分、验收对照） | `multi_agent_code_factory/` |
 | [python-style.md](./python-style.md) | **Python** 代码规范（PEP 8 / Ruff / pytest） | [`pyproject.toml`](../../../pyproject.toml) |
 
 Schema 与人读模板细目见 [artifact-schemas/README.md](./artifact-schemas/README.md)、[artifact-templates/README.md](./artifact-templates/README.md)。
 
 **Agent 角色命名：** [§3.1](./multi-agent-pipeline-design.md#31-角色命名约定)
 
-**阅读顺序：** 主线 §1–§4、§6 → 本目录按需查表；抄 JSON 示例 → [examples/](./examples/README.md)。
+**阅读顺序：** 主线 §1–§4、§6 → 本目录按需查表；**开始编码** → [implementation-plan.md](./implementation-plan.md)；抄 JSON 示例 → [examples/](./examples/README.md)。

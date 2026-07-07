@@ -5,6 +5,7 @@
   "title": "CLI Todo App",
   "summary": "命令行增删查 Todo，数据存本地 JSON",
   "context": {
+    "language": "python",
     "runtime": "python",
     "interface": "cli",
     "storage": "json_file"
