@@ -16,7 +16,6 @@ from multi_agent_code_factory.agents.pm import run_pm
 from multi_agent_code_factory.agents.qa import run_qa
 from multi_agent_code_factory.agents.reviewer import run_reviewer
 from multi_agent_code_factory.config import FactoryConfig, LoopLimits
-from multi_agent_code_factory.log import get_logger
 from multi_agent_code_factory.graph_routing import (
     RouteDecision,
     decide_after_design_validate,
@@ -24,6 +23,7 @@ from multi_agent_code_factory.graph_routing import (
     decide_after_spec_validate,
     decide_after_test,
 )
+from multi_agent_code_factory.log import get_logger
 from multi_agent_code_factory.nodes.deploy import run_deploy
 from multi_agent_code_factory.nodes.deploy_hitl import run_deploy_hitl
 from multi_agent_code_factory.nodes.design_hitl import run_design_hitl
@@ -318,4 +318,19 @@ def run_pipeline(
         status.value,
         writer.directory,
     )
+    if meta is not None and meta.budget is not None:
+        logger.info(
+            "llm budget used_llm_calls=%s used_tokens=%s",
+            meta.budget.used_llm_calls,
+            meta.budget.used_tokens,
+        )
+    usage = writer.read_llm_usage()
+    if usage is not None:
+        logger.info(
+            "llm usage totals calls=%s prompt_tokens=%s completion_tokens=%s total_tokens=%s",
+            usage.totals.llm_calls,
+            usage.totals.prompt_tokens,
+            usage.totals.completion_tokens,
+            usage.totals.total_tokens,
+        )
     return PipelineRunResult(state=final_state, status=status, run_dir=writer.directory)

@@ -10,6 +10,12 @@ from typing import Any
 from pydantic import BaseModel
 
 from multi_agent_code_factory._paths import run_dir
+from multi_agent_code_factory.agents.llm_usage import (
+    LlmCallUsage,
+    LlmUsageLog,
+    LlmUsageTotals,
+    merge_usage_totals,
+)
 from multi_agent_code_factory.config import FactoryConfig, LoopLimits
 from multi_agent_code_factory.profiles import ProfileConfig
 from multi_agent_code_factory.schemas.run_meta import (
@@ -45,6 +51,11 @@ class RunArtifactWriter:
         self.directory = (base_dir or run_dir(task_id)).resolve()
         self.directory.mkdir(parents=True, exist_ok=True)
         self._meta_path = self.directory / "run_meta.json"
+        self._llm_usage_path = self.directory / "llm_usage.json"
+
+    @property
+    def llm_usage_path(self) -> Path:
+        return self._llm_usage_path
 
     def write_model(self, filename: str, artifact: BaseModel) -> Path:
         path = self.directory / filename
@@ -104,6 +115,40 @@ class RunArtifactWriter:
         updated = RunMeta.model_validate(payload)
         self.write_model("run_meta.json", updated)
         return updated
+
+    def read_llm_usage(self) -> LlmUsageLog | None:
+        if not self._llm_usage_path.is_file():
+            return None
+        data = json.loads(self._llm_usage_path.read_text(encoding="utf-8"))
+        return LlmUsageLog.model_validate(data)
+
+    def record_llm_usage(
+        self,
+        call: LlmCallUsage,
+        *,
+        provider: str,
+        model: str,
+    ) -> LlmUsageLog:
+        existing = self.read_llm_usage()
+        if existing is None:
+            log = LlmUsageLog(
+                version="1",
+                provider=provider,
+                model=model,
+                calls=[call],
+                totals=merge_usage_totals(LlmUsageTotals(), call),
+            )
+        else:
+            log = existing.model_copy(
+                update={
+                    "provider": provider,
+                    "model": model,
+                    "calls": [*existing.calls, call],
+                    "totals": merge_usage_totals(existing.totals, call),
+                }
+            )
+        self.write_model("llm_usage.json", log)
+        return log
 
     def mark_stale(self, filenames: list[str]) -> None:
         if not filenames:

@@ -3,14 +3,15 @@
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from collections.abc import Sequence
 
 from multi_agent_code_factory.config import load_factory_config
 from multi_agent_code_factory.env import load_env_file
 from multi_agent_code_factory.graph import run_pipeline
-from multi_agent_code_factory.log import configure_logging
 from multi_agent_code_factory.llm import LlmConfigError, resolve_stub_mode
+from multi_agent_code_factory.log import configure_logging
 from multi_agent_code_factory.profiles import ProfileLoadError, load_profile
 from multi_agent_code_factory.schemas.run_meta import RunStatus
 
@@ -129,6 +130,26 @@ def cmd_run(args: argparse.Namespace) -> int:
     print(f"loop_limits={factory_config.loop_limits.model_dump()}")
     print(f"run_dir={result.run_dir}")
     print(f"status={result.status.value}")
+    meta_path = result.run_dir / "run_meta.json"
+    if meta_path.is_file():
+        meta_data = json.loads(meta_path.read_text(encoding="utf-8"))
+        budget = meta_data.get("budget")
+        if isinstance(budget, dict):
+            print(
+                "llm_budget="
+                f"calls={budget.get('used_llm_calls')} "
+                f"tokens={budget.get('used_tokens')}"
+            )
+    usage_path = result.run_dir / "llm_usage.json"
+    if usage_path.is_file():
+        usage_data = json.loads(usage_path.read_text(encoding="utf-8"))
+        totals = usage_data.get("totals") or {}
+        print(
+            "llm_usage="
+            f"prompt_tokens={totals.get('prompt_tokens')} "
+            f"completion_tokens={totals.get('completion_tokens')} "
+            f"total_tokens={totals.get('total_tokens')}"
+        )
     return 0 if result.status == RunStatus.COMPLETED else 1
 
 

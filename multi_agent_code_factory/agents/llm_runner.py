@@ -10,7 +10,15 @@ from typing import Any, TypeVar
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, ValidationError
 
-from multi_agent_code_factory.agents.base import default_stub_fixtures, load_json_fixture
+from multi_agent_code_factory.agents.base import (
+    default_stub_fixtures,
+    load_json_fixture,
+)
+from multi_agent_code_factory.agents.llm_usage import (
+    LlmCallUsage,
+    TokenUsage,
+    extract_token_usage,
+)
 from multi_agent_code_factory.config import FactoryConfig
 from multi_agent_code_factory.llm import (
     LlmInvokeError,
@@ -28,7 +36,13 @@ logger = get_logger("agents.llm_runner")
 
 _JSON_FENCE_RE = re.compile(r"^```(?:json)?\s*|\s*```$", re.IGNORECASE | re.MULTILINE)
 _TRANSIENT_ERROR_NAMES = frozenset(
-    {"ResponseError", "ReadError", "RemoteProtocolError", "ConnectionError", "TimeoutError"}
+    {
+        "ResponseError",
+        "ReadError",
+        "RemoteProtocolError",
+        "ConnectionError",
+        "TimeoutError",
+    }
 )
 
 
@@ -48,12 +62,27 @@ def _is_transient_llm_error(exc: BaseException) -> bool:
     return "502" in message or "503" in message or "connection" in message
 
 
+_PROMPTED_JSON_PROVIDERS = frozenset({"ollama", "deepseek"})
+
+
+def _uses_prompted_json(provider: str) -> bool:
+    """Providers that reject LangChain ``with_structured_output`` (JSON schema mode)."""
+    return provider in _PROMPTED_JSON_PROVIDERS
+
+
 def _ollama_invoke_hint(model: str) -> str:
     return (
-        f"Ollama call failed for model {model!r}. "
-        "Restart Ollama, prefer qwen2.5:7b over deepseek-r1:1.5b for SpecArtifact JSON, "
-        "or switch to FACTORY_LLM_PROVIDER=deepseek."
+        f"LLM call failed for model {model!r}. "
+        "For Ollama: restart the server and prefer qwen3.5:9b for large JSON specs. "
+        "For DeepSeek: use deepseek-chat or deepseek-v4-pro with prompted JSON mode. "
+        "Or switch FACTORY_LLM_PROVIDER=ollama."
     )
+
+
+def _resolved_call_tokens(call: LlmCallUsage) -> int:
+    if call.total_tokens is not None:
+        return call.total_tokens
+    return (call.prompt_tokens or 0) + (call.completion_tokens or 0)
 
 
 class LlmRunner:
@@ -89,13 +118,19 @@ class LlmRunner:
         meta = self.writer.read_meta()
         if meta is None or meta.budget is None:
             return
-        max_calls = meta.budget.max_llm_calls
-        used = meta.budget.used_llm_calls or 0
-        if max_calls is not None and used >= max_calls:
-            msg = f"LLM call budget exceeded ({used}/{max_calls})"
+        budget = meta.budget
+        max_calls = budget.max_llm_calls
+        used_calls = budget.used_llm_calls or 0
+        if max_calls is not None and used_calls >= max_calls:
+            msg = f"LLM call budget exceeded ({used_calls}/{max_calls})"
+            raise RuntimeError(msg)
+        max_tokens = budget.max_tokens
+        used_tokens = budget.used_tokens or 0
+        if max_tokens is not None and used_tokens >= max_tokens:
+            msg = f"LLM token budget exceeded ({used_tokens}/{max_tokens})"
             raise RuntimeError(msg)
 
-    def _record_call(self) -> None:
+    def _record_call(self, call: LlmCallUsage) -> None:
         meta = self.writer.read_meta()
         if meta is None:
             return
@@ -107,13 +142,37 @@ class LlmRunner:
                 used_llm_calls=0,
                 used_tokens=0,
             )
+        tokens = _resolved_call_tokens(call)
         if budget is None:
-            budget = BudgetUsage(used_llm_calls=1, used_tokens=0)
+            budget = BudgetUsage(used_llm_calls=1, used_tokens=tokens)
         else:
             budget = budget.model_copy(
-                update={"used_llm_calls": (budget.used_llm_calls or 0) + 1}
+                update={
+                    "used_llm_calls": (budget.used_llm_calls or 0) + 1,
+                    "used_tokens": (budget.used_tokens or 0) + tokens,
+                }
             )
         self.writer.update_meta(budget=budget)
+
+    def _persist_usage(self, call: LlmCallUsage) -> None:
+        self.writer.record_llm_usage(
+            call,
+            provider=self._runtime.factory_provider,
+            model=self._runtime.model,
+        )
+
+    def _log_usage(self, call: LlmCallUsage) -> None:
+        logger.info(
+            "llm usage role=%s schema=%s attempt=%s prompt_tokens=%s "
+            "completion_tokens=%s total_tokens=%s duration_ms=%s",
+            call.role_id,
+            call.schema_name,
+            call.attempt,
+            call.prompt_tokens,
+            call.completion_tokens,
+            call.total_tokens,
+            call.duration_ms,
+        )
 
     def _example_json_for_schema(self, schema: type[BaseModel]) -> str | None:
         fixtures = default_stub_fixtures()
@@ -152,17 +211,23 @@ class LlmRunner:
         schema: type[T],
         system_prompt: str,
         user_prompt: str,
-    ) -> T:
-        structured = self._model.with_structured_output(schema)
-        result = structured.invoke(
+    ) -> tuple[T, Any | None]:
+        structured = self._model.with_structured_output(schema, include_raw=True)
+        payload = structured.invoke(
             [
                 SystemMessage(content=system_prompt),
                 HumanMessage(content=user_prompt),
             ]
         )
-        if not isinstance(result, schema):
-            result = schema.model_validate(result)
-        return result
+        raw: Any | None = None
+        if isinstance(payload, dict):
+            raw = payload.get("raw")
+            parsed = payload.get("parsed")
+        else:
+            parsed = payload
+        if not isinstance(parsed, schema):
+            parsed = schema.model_validate(parsed)
+        return parsed, raw
 
     def _invoke_ollama_json(
         self,
@@ -171,7 +236,7 @@ class LlmRunner:
         schema: type[T],
         system_prompt: str,
         user_prompt: str,
-    ) -> T:
+    ) -> tuple[T, Any]:
         example = self._example_json_for_schema(schema)
         json_rules = (
             "Output ONLY one JSON object. No markdown fences, no commentary.\n"
@@ -202,12 +267,35 @@ class LlmRunner:
             )
             raise LlmInvokeError(msg) from exc
         try:
-            return schema.model_validate(payload)
+            return schema.model_validate(payload), response
         except ValidationError as exc:
-            msg = (
-                f"Ollama JSON did not match schema {schema.__name__} for role={role_id}: {exc}"
-            )
+            msg = f"Ollama JSON did not match schema {schema.__name__} for role={role_id}: {exc}"
             raise LlmInvokeError(msg) from exc
+
+    def _build_call_usage(
+        self,
+        *,
+        role_id: str,
+        schema: type[BaseModel],
+        attempt: int,
+        duration_ms: int,
+        raw_response: Any | None,
+    ) -> LlmCallUsage:
+        usage = (
+            extract_token_usage(raw_response)
+            if raw_response is not None
+            else TokenUsage()
+        )
+        total = usage.resolved_total()
+        return LlmCallUsage(
+            role_id=role_id,
+            schema_name=schema.__name__,
+            attempt=attempt,
+            duration_ms=duration_ms,
+            prompt_tokens=usage.prompt_tokens,
+            completion_tokens=usage.completion_tokens,
+            total_tokens=total if total > 0 else None,
+        )
 
     def invoke_structured(
         self,
@@ -225,28 +313,41 @@ class LlmRunner:
         )
         logger.info("llm invoke start role=%s schema=%s", role_id, schema.__name__)
 
-        use_ollama_json = self._runtime.factory_provider == "ollama"
-        attempts = 2 if use_ollama_json else 3
+        use_prompted_json = _uses_prompted_json(self._runtime.factory_provider)
+        attempts = 2 if use_prompted_json else 3
         last_error: Exception | None = None
 
         for attempt in range(1, attempts + 1):
+            started = time.perf_counter()
             try:
-                if use_ollama_json:
-                    result = self._invoke_ollama_json(
+                if use_prompted_json:
+                    result, raw = self._invoke_ollama_json(
                         role_id=role_id,
                         schema=schema,
                         system_prompt=system_prompt,
                         user_prompt=user_prompt,
                     )
                 else:
-                    result = self._invoke_langchain_structured(
+                    result, raw = self._invoke_langchain_structured(
                         role_id=role_id,
                         schema=schema,
                         system_prompt=system_prompt,
                         user_prompt=user_prompt,
                     )
-                self._record_call()
-                logger.info("llm invoke done role=%s schema=%s", role_id, schema.__name__)
+                duration_ms = int((time.perf_counter() - started) * 1000)
+                call = self._build_call_usage(
+                    role_id=role_id,
+                    schema=schema,
+                    attempt=attempt,
+                    duration_ms=duration_ms,
+                    raw_response=raw,
+                )
+                self._record_call(call)
+                self._persist_usage(call)
+                self._log_usage(call)
+                logger.info(
+                    "llm invoke done role=%s schema=%s", role_id, schema.__name__
+                )
                 return result
             except Exception as exc:
                 last_error = exc
@@ -264,7 +365,7 @@ class LlmRunner:
                 break
 
         assert last_error is not None
-        if use_ollama_json:
+        if use_prompted_json:
             msg = f"{_ollama_invoke_hint(self._runtime.model)}\nOriginal error: {last_error}"
             raise LlmInvokeError(msg) from last_error
         logger.exception(
