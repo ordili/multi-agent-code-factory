@@ -11,7 +11,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from multi_agent_code_factory._paths import repo_root
-from multi_agent_code_factory.context import build_node_context
+from multi_agent_code_factory.prompt_context import build_prompt_context
 from multi_agent_code_factory.profiles import ProfileConfig
 from multi_agent_code_factory.state import PipelineState
 
@@ -87,7 +87,7 @@ def agent_context(
     profile: ProfileConfig,
 ) -> dict[str, Any]:
     """为指定 Agent 角色构建 LLM 调用上下文。"""
-    return build_node_context(role_id, state, profile)
+    return build_prompt_context(role_id, state, profile)
 
 
 def write_artifact_model(

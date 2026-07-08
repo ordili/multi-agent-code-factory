@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from multi_agent_code_factory.context import build_node_context
+from multi_agent_code_factory.prompt_context import build_prompt_context
 from multi_agent_code_factory.profiles import ProfileConfig
 from multi_agent_code_factory.schemas.run_meta import DeployStatus, RunStatus
 from multi_agent_code_factory.state import PipelineState
@@ -17,7 +17,7 @@ def run_deploy(
     writer: RunArtifactWriter,
 ) -> dict[str, object]:
     """标记 run 为 COMPLETED，并根据 deploy HITL 结果设置 deploy_status。"""
-    _ = build_node_context("deploy", state, profile)
+    _ = build_prompt_context("deploy", state, profile)
     hitl = state.hitl
     deploy_status = DeployStatus.SKIPPED
     if hitl is not None and hitl.stage.value == "deploy" and hitl.approved:

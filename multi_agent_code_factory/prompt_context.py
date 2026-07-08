@@ -1,4 +1,4 @@
-"""节点上下文：各角色 watch 列表、prompt 组装与 Developer 重试包。"""
+"""Agent prompt 上下文：各角色 watch 列表、prompt 组装与 Developer 重试包。"""
 
 from __future__ import annotations
 
@@ -87,7 +87,10 @@ def _read_code_snippets(
     return snippets
 
 
-def build_retry_bundle(state: PipelineState) -> RetryBundle | None:
+def build_retry_bundle(
+    state: PipelineState,
+    profile: ProfileConfig,
+) -> RetryBundle | None:
     """为 Developer 重试组装规格、设计、测试失败与代码片段。"""
     if state.impl_retry_count <= 0:
         return None
@@ -96,7 +99,6 @@ def build_retry_bundle(state: PipelineState) -> RetryBundle | None:
         or state.design is None
         or state.test_report is None
         or state.dev_manifest is None
-        or state.profile is None
     ):
         return None
     reflection = None
@@ -110,12 +112,12 @@ def build_retry_bundle(state: PipelineState) -> RetryBundle | None:
         reflection=reflection,
         code_snippets=_read_code_snippets(
             state.test_report.failures,
-            code_root=state.profile.code_root,
+            code_root=profile.code_root,
         ),
     )
 
 
-def build_node_context(
+def build_prompt_context(
     role_id: str,
     state: PipelineState,
     profile: ProfileConfig,
@@ -162,8 +164,12 @@ def build_node_context(
                 context[key] = value
 
     if role_id == "developer":
-        bundle = build_retry_bundle(state)
+        bundle = build_retry_bundle(state, profile)
         if bundle is not None:
             context["retry_bundle"] = bundle.model_dump(mode="json")
 
     return context
+
+
+# 兼容旧名；新代码请使用 build_prompt_context。
+build_node_context = build_prompt_context

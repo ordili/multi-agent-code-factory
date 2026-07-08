@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from multi_agent_code_factory.config import LoopLimits
+from multi_agent_code_factory.pipeline_nodes import PipelineNode
 from multi_agent_code_factory.log import get_logger
 from multi_agent_code_factory.profiles import ProfileConfig
 from multi_agent_code_factory.state import PipelineState
@@ -21,12 +22,14 @@ SPEC_ESCALATION_STALE_FILES = [
 
 logger = get_logger("graph.routing")
 
+N = PipelineNode
+
 
 @dataclass
 class RouteDecision:
     """路由结果：目标节点、状态更新与需标记为过期的产物文件。"""
 
-    next_node: str
+    next_node: PipelineNode
     state_updates: dict[str, Any] = field(default_factory=dict)
     stale_artifacts: list[str] = field(default_factory=list)
 
@@ -39,8 +42,8 @@ class RouteDecision:
         return patch
 
 
-def _limit_route(limits: LoopLimits) -> str:
-    return limits.on_limit_exceeded.value
+def _limit_route(limits: LoopLimits) -> PipelineNode:
+    return PipelineNode(limits.on_limit_exceeded.value)
 
 
 def decide_after_spec_validate(
@@ -68,7 +71,7 @@ def decide_after_spec_validate(
             limits.max_spec_revisions,
         )
         return RouteDecision(
-            "pm",
+            N.PM,
             state_updates={
                 "spec_revision_count": state.spec_revision_count + 1,
                 "design": None,
@@ -81,9 +84,9 @@ def decide_after_spec_validate(
         )
     if profile.validation.spec.require_hitl:
         logger.info("spec validation passed; route spec_hitl")
-        return RouteDecision("spec_hitl")
+        return RouteDecision(N.SPEC_HITL)
     logger.info("spec validation passed; route architect")
-    return RouteDecision("architect")
+    return RouteDecision(N.ARCHITECT)
 
 
 def decide_after_design_validate(
@@ -111,7 +114,7 @@ def decide_after_design_validate(
             limits.max_design_revisions,
         )
         return RouteDecision(
-            "architect",
+            N.ARCHITECT,
             state_updates={
                 "design_revision_count": state.design_revision_count + 1,
                 "dev_manifest": None,
@@ -124,9 +127,9 @@ def decide_after_design_validate(
         validation is not None and validation.require_hitl
     ):
         logger.info("design validation passed; route design_hitl")
-        return RouteDecision("design_hitl")
+        return RouteDecision(N.DESIGN_HITL)
     logger.info("design validation passed; route developer")
-    return RouteDecision("developer")
+    return RouteDecision(N.DEVELOPER)
 
 
 def decide_after_test(state: PipelineState, limits: LoopLimits) -> RouteDecision:
@@ -134,7 +137,7 @@ def decide_after_test(state: PipelineState, limits: LoopLimits) -> RouteDecision
     report = state.test_report
     if report is not None and report.passed:
         logger.info("qa passed; route reviewer")
-        return RouteDecision("reviewer")
+        return RouteDecision(N.REVIEWER)
     if state.impl_retry_count >= limits.max_impl_retries:
         logger.error(
             "implementation loop limit reached retries=%s max=%s",
@@ -148,7 +151,7 @@ def decide_after_test(state: PipelineState, limits: LoopLimits) -> RouteDecision
         limits.max_impl_retries,
     )
     return RouteDecision(
-        "developer",
+        N.DEVELOPER,
         state_updates={"impl_retry_count": state.impl_retry_count + 1},
     )
 
@@ -173,11 +176,11 @@ def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecisi
                 return RouteDecision(_limit_route(limits))
             logger.warning("review rejected deploy; retry developer")
             return RouteDecision(
-                "developer",
+                N.DEVELOPER,
                 state_updates={"impl_retry_count": state.impl_retry_count + 1},
             )
         logger.info("review approved; route deploy_hitl")
-        return RouteDecision("deploy_hitl")
+        return RouteDecision(N.DEPLOY_HITL)
 
     if stage == "developer":
         if state.impl_retry_count >= limits.max_impl_retries:
@@ -189,7 +192,7 @@ def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecisi
             return RouteDecision(_limit_route(limits))
         logger.warning("review escalated developer; retry developer")
         return RouteDecision(
-            "developer",
+            N.DEVELOPER,
             state_updates={"impl_retry_count": state.impl_retry_count + 1},
         )
 
@@ -203,7 +206,7 @@ def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecisi
             return RouteDecision(_limit_route(limits))
         logger.warning("review escalated architect; retry architect")
         return RouteDecision(
-            "architect",
+            N.ARCHITECT,
             state_updates={
                 "design_revision_count": state.design_revision_count + 1,
                 "test_report": None,
@@ -223,7 +226,7 @@ def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecisi
             return RouteDecision(_limit_route(limits))
         logger.warning("review escalated pm; retry pm")
         return RouteDecision(
-            "pm",
+            N.PM,
             state_updates={
                 "spec_revision_count": state.spec_revision_count + 1,
                 "design": None,
@@ -235,7 +238,7 @@ def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecisi
             stale_artifacts=SPEC_ESCALATION_STALE_FILES,
         )
 
-    return RouteDecision(stage)
+    return RouteDecision(PipelineNode(stage))
 
 
 def route_after_spec_validate(

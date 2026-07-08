@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 from multi_agent_code_factory.config import FactoryConfig
-from multi_agent_code_factory.context import (
+from multi_agent_code_factory.prompt_context import (
     DEFAULT_WATCH,
-    build_node_context,
+    build_prompt_context,
     build_retry_bundle,
     resolve_watch,
 )
@@ -61,17 +61,16 @@ def test_build_retry_bundle_when_retrying(default_profile, snippets_dir: Path) -
     state = PipelineState(
         task_id="t",
         user_request="todo",
-        profile=default_profile,
         spec=spec,
         design=design,
         test_report=report,
         dev_manifest=manifest,
         impl_retry_count=1,
     )
-    bundle = build_retry_bundle(state)
+    bundle = build_retry_bundle(state, default_profile)
     assert bundle is not None
     assert bundle.spec.title == spec.title
-    ctx = build_node_context("developer", state, default_profile)
+    ctx = build_prompt_context("developer", state, default_profile)
     assert "retry_bundle" in ctx
 
 
