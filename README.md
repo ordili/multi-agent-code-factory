@@ -7,22 +7,39 @@ A **LangGraph** pipeline (PM, Architect, Developer, QA, Reviewer) that turns nat
 ## Requirements
 
 - Python **3.11+**
-- **Stub mode** (default) needs no API key; **Live mode** needs LLM config (below)
+- An LLM provider API key (DeepSeek, OpenAI, Anthropic) or a local [Ollama](https://ollama.com/) setup
 
-## Quick Start (Stub)
+## Quick Start
+
+### 1. Configure API key
 
 ```bash
-pip install -e ".[dev]"
+pip install -e ".[llm]"
+cp .env.example .env
+```
 
+Edit `.env` — set provider, model, and the matching API key:
+
+```env
+FACTORY_LLM_PROVIDER=deepseek
+FACTORY_LLM_MODEL=deepseek-v4-pro
+DEEPSEEK_API_KEY=sk-your-key-here
+```
+
+For Ollama or other providers, see [`.env.example`](.env.example) and [docs/operations.md](docs/operations.md).
+
+### 2. Run the pipeline
+
+```bash
 python -m multi_agent_code_factory run \
   --profile python \
   --task-id calculator \
+  --live \
+  --code-root "../generated/calculator" \
   "Build a calculator with add, subtract, multiply, and divide"
 ```
 
 Success when the terminal prints `status=completed`.
-
-> **Windows (PowerShell):** Do not use bash `\` line continuation; use a single line or backtick `` ` `` continuation.
 
 ## Where outputs go
 
@@ -37,8 +54,8 @@ Override the code directory with `--code-root`, e.g. `--code-root ../generated/c
 
 | What to configure | Where |
 |-------------------|--------|
+| LLM provider, API keys | [`.env`](.env.example) (CLI loads it; shell env wins) |
 | Language stack, test commands, validation rules | [`multi_agent_code_factory/profiles/`](multi_agent_code_factory/profiles/) → [profiles/README.md](multi_agent_code_factory/profiles/README.md) |
-| LLM provider, API keys | Copy [`.env.example`](.env.example) to `.env` (CLI loads it; shell env wins) |
 | Loop limits and factory defaults | [`config/autonomy_policy.yaml`](config/autonomy_policy.yaml); override with `FACTORY_*` or CLI |
 | This run’s task | `--task-id` + natural-language request in quotes |
 
@@ -46,30 +63,13 @@ Override the code directory with `--code-root`, e.g. `--code-root ../generated/c
 
 `--profile` is **required**. It selects the **language stack** (test commands, prompts, etc.; in V1, profile id matches the language name). Use **`python`** for your first run. Separate projects with `--task-id` + `--code-root`. Details: [profiles/README.md](multi_agent_code_factory/profiles/README.md).
 
-## Live LLM (optional)
-
-```bash
-pip install -e ".[llm]"
-cp .env.example .env   # Windows: copy .env.example .env
-# Edit .env: FACTORY_LLM_PROVIDER, FACTORY_LLM_MODEL, and the matching API key
-```
-
-```bash
-python -m multi_agent_code_factory run \
-  --profile python \
-  --task-id calculator \
-  --live \
-  --code-root "../generated/calculator" \
-  "Build a calculator with add, subtract, multiply, and divide"
-```
-
-Common flags: `--stub` (default), `--live`, `--log-level`, `--code-root`, `--max-impl-retries`, etc. Full list:
+Common CLI flags: `--live`, `--log-level`, `--code-root`, `--max-impl-retries`, etc.
 
 ```bash
 python -m multi_agent_code_factory run --help
 ```
 
-Ollama, GCP VM, integration tests, and troubleshooting: [docs/operations.md](docs/operations.md).
+Ollama tuning, GCP VM scripts, and troubleshooting: [docs/operations.md](docs/operations.md).
 
 ## Development
 
@@ -80,7 +80,7 @@ python -m pytest -q
 python -m mypy multi_agent_code_factory
 ```
 
-Live integration test (needs API key; skipped in CI by default):
+Integration test (needs API key; skipped in CI by default):
 
 ```bash
 pytest tests/integration/test_todo_cli_e2e.py -m integration
