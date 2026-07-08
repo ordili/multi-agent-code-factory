@@ -17,7 +17,7 @@ class InvokeRequest(Generic[T]):
     """一次结构化 LLM 调用请求。"""
 
     role_id: AgentRole
-    schema: type[T]
+    output_schema: type[T]
     context: dict[str, Any]
     extra_system: str | None = None
 

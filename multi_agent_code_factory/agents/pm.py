@@ -48,7 +48,7 @@ def run_pm(
                 raise ValueError(msg)
             spec = llm_runner.invoke_structured(
                 role_id=AgentRole.PM,
-                schema=SpecArtifact,
+                output_schema=SpecArtifact,
                 context=agent_context(AgentRole.PM, state, profile),
             )
             spec = normalize_spec(spec, profile, state)

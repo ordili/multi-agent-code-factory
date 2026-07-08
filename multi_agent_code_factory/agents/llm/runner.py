@@ -52,14 +52,14 @@ class LlmRunner:
         self,
         *,
         role_id: AgentRole,
-        schema: type[T],
+        output_schema: type[T],
         context: dict[str, Any],
         extra_system: str | None = None,
     ) -> T:
-        """调用 LLM 并解析为指定 Pydantic schema。"""
+        """调用 LLM 并解析为指定 Pydantic 输出模型。"""
         request = InvokeRequest(
             role_id=role_id,
-            schema=schema,
+            output_schema=output_schema,
             context=context,
             extra_system=extra_system,
         )

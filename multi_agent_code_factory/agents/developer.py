@@ -62,7 +62,7 @@ def run_developer(
                 raise ValueError(msg)
             output = llm_runner.invoke_structured(
                 role_id=AgentRole.DEVELOPER,
-                schema=DeveloperLLMOutput,
+                output_schema=DeveloperLLMOutput,
                 context=agent_context(AgentRole.DEVELOPER, state, profile),
             )
             # 将 LLM 返回的源文件写入 profile.code_root

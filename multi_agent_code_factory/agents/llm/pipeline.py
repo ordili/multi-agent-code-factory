@@ -67,11 +67,11 @@ class StructuredInvokePipeline:
             extra_system=request.extra_system,
         )
 
-        schema_name = request.schema.__name__
+        output_schema_name = request.output_schema.__name__
         logger.info(
-            "llm invoke start role=%s schema=%s mode=%s",
+            "llm invoke start role=%s output_schema=%s mode=%s",
             request.role_id,
-            schema_name,
+            output_schema_name,
             self._runtime.output_mode,
         )
 
@@ -81,7 +81,7 @@ class StructuredInvokePipeline:
                 result = self._strategy.invoke(
                     self._model,
                     role_id=request.role_id,
-                    schema=request.schema,
+                    output_schema=request.output_schema,
                     system_prompt=system_prompt,
                     user_prompt=user_prompt,
                 )
@@ -89,7 +89,7 @@ class StructuredInvokePipeline:
                 duration_ms = int((time.perf_counter() - started) * 1000)
                 call = self._usage.build_call(
                     role_id=request.role_id,
-                    schema=request.schema,
+                    output_schema=request.output_schema,
                     attempt=attempt,
                     duration_ms=duration_ms,
                     raw_response=None,
@@ -98,11 +98,11 @@ class StructuredInvokePipeline:
                 )
                 self._usage.record_failure(call)
                 logger.warning(
-                    "llm invoke attempt %s/%s failed role=%s schema=%s: %s",
+                    "llm invoke attempt %s/%s failed role=%s output_schema=%s: %s",
                     attempt,
                     self._retry.max_attempts,
                     request.role_id,
-                    schema_name,
+                    output_schema_name,
                     exc,
                 )
                 raise
@@ -110,7 +110,7 @@ class StructuredInvokePipeline:
             duration_ms = int((time.perf_counter() - started) * 1000)
             call = self._usage.build_call(
                 role_id=request.role_id,
-                schema=request.schema,
+                output_schema=request.output_schema,
                 attempt=attempt,
                 duration_ms=duration_ms,
                 raw_response=result.raw_response,
@@ -118,7 +118,9 @@ class StructuredInvokePipeline:
             )
             self._usage.record_success(call)
             logger.info(
-                "llm invoke done role=%s schema=%s", request.role_id, schema_name
+                "llm invoke done role=%s output_schema=%s",
+                request.role_id,
+                output_schema_name,
             )
             return result.parsed
 

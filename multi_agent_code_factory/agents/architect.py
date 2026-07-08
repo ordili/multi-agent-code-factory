@@ -58,7 +58,7 @@ def run_architect(
                 raise ValueError(msg)
             output = llm_runner.invoke_structured(
                 role_id=AgentRole.ARCHITECT,
-                schema=ArchitectLLMOutput,
+                output_schema=ArchitectLLMOutput,
                 context=agent_context(AgentRole.ARCHITECT, state, profile),
                 extra_system=format_design_validation_feedback(state),
             )

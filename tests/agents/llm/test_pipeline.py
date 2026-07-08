@@ -57,7 +57,7 @@ def test_pipeline_records_success_and_returns_parsed(tmp_path: Path) -> None:
     )
     request = InvokeRequest(
         role_id=AgentRole.PM,
-        schema=_EchoSchema,
+        output_schema=_EchoSchema,
         context={"message": "hello"},
     )
     result = pipeline.execute(request)
@@ -104,7 +104,7 @@ def test_pipeline_records_failed_attempts(tmp_path: Path) -> None:
     )
     request = InvokeRequest(
         role_id=AgentRole.PM,
-        schema=_EchoSchema,
+        output_schema=_EchoSchema,
         context={"message": "hello"},
     )
     with pytest.raises(LlmInvokeError):

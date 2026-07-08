@@ -29,7 +29,17 @@ class InvokeStrategy(Protocol[T]):
         model: Any,
         *,
         role_id: AgentRole,
-        schema: type[T],
+        output_schema: type[T],
         system_prompt: str,
         user_prompt: str,
-    ) -> InvokeResult[T]: ...
+    ) -> InvokeResult[T]:
+        """调用 LLM 一次并解析为 ``InvokeResult``。
+
+        Args:
+            model: LangChain ``BaseChatModel``；默认由 ``create_chat_model()`` 创建（内部调用 ``init_chat_model``，按 ``FACTORY_LLM_PROVIDER`` 解析配置）。
+            role_id: 发起调用的 Agent 角色，用于日志与错误信息。
+            output_schema: 期望输出的 Pydantic 模型类（如 ``ArchitectLLMOutput``）。
+            system_prompt: 组装好的 system 消息（角色 prompt、风格 snippet、可选 JSON 规则）。
+            user_prompt: 组装好的 user 消息（通常为 JSON 序列化后的推理上下文）。
+        """
+        ...

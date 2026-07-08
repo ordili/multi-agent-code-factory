@@ -35,7 +35,7 @@ class UsageRecorder:
         self,
         *,
         role_id: AgentRole,
-        schema: type[BaseModel],
+        output_schema: type[BaseModel],
         attempt: int,
         duration_ms: int,
         raw_response: Any | None,
@@ -50,7 +50,7 @@ class UsageRecorder:
         total = usage.resolved_total()
         return LlmCallUsage(
             role_id=role_id,
-            schema_name=schema.__name__,
+            schema_name=output_schema.__name__,
             attempt=attempt,
             duration_ms=duration_ms,
             prompt_tokens=usage.prompt_tokens,
@@ -80,7 +80,7 @@ class UsageRecorder:
     def _log_call(self, call: LlmCallUsage) -> None:
         level = logger.info if call.success else logger.warning
         level(
-            "llm usage role=%s schema=%s attempt=%s success=%s error_type=%s "
+            "llm usage role=%s output_schema=%s attempt=%s success=%s error_type=%s "
             "prompt_tokens=%s completion_tokens=%s total_tokens=%s duration_ms=%s",
             call.role_id,
             call.schema_name,

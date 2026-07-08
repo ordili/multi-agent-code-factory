@@ -55,11 +55,11 @@ class PromptedJsonStrategy:
         model: Any,
         *,
         role_id: AgentRole,
-        schema: type[T],
+        output_schema: type[T],
         system_prompt: str,
         user_prompt: str,
     ) -> InvokeResult[T]:
-        json_rules = json_output_instructions(schema)
+        json_rules = json_output_instructions(output_schema)
         messages = [
             SystemMessage(content=f"{system_prompt}\n\n{json_rules}"),
             HumanMessage(content=user_prompt),
@@ -69,22 +69,23 @@ class PromptedJsonStrategy:
         if not isinstance(content, str) or not content.strip():
             msg = (
                 f"LLM returned empty content for role={role_id} "
-                f"schema={schema.__name__}"
+                f"output_schema={output_schema.__name__}"
             )
             raise LlmInvokeError(msg)
         try:
             payload = json.loads(extract_json_text(content))
         except json.JSONDecodeError as exc:
             msg = (
-                f"JSON parse failed for role={role_id} schema={schema.__name__}: {exc}\n"
+                f"JSON parse failed for role={role_id} "
+                f"output_schema={output_schema.__name__}: {exc}\n"
                 f"Raw output (first 800 chars): {content[:800]}"
             )
             raise LlmParseError(msg) from exc
         try:
-            parsed = schema.model_validate(payload)
+            parsed = output_schema.model_validate(payload)
         except ValidationError as exc:
             msg = (
-                f"JSON did not match schema {schema.__name__} "
+                f"JSON did not match output_schema {output_schema.__name__} "
                 f"for role={role_id}: {exc}"
             )
             raise LlmParseError(msg) from exc

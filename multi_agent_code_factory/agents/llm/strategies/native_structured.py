@@ -40,12 +40,12 @@ class NativeStructuredStrategy:
         model: Any,
         *,
         role_id: AgentRole,
-        schema: type[T],
+        output_schema: type[T],
         system_prompt: str,
         user_prompt: str,
     ) -> InvokeResult[T]:
         del role_id
-        structured = model.with_structured_output(schema, include_raw=True)
+        structured = model.with_structured_output(output_schema, include_raw=True)
         payload = structured.invoke(
             [
                 SystemMessage(content=system_prompt),
@@ -58,6 +58,6 @@ class NativeStructuredStrategy:
             parsed = payload.get("parsed")
         else:
             parsed = payload
-        if not isinstance(parsed, schema):
-            parsed = schema.model_validate(parsed)
+        if not isinstance(parsed, output_schema):
+            parsed = output_schema.model_validate(parsed)
         return InvokeResult(parsed=parsed, raw_response=raw)

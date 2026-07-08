@@ -58,7 +58,7 @@ def run_reviewer(
                 raise ValueError(msg)
             review = llm_runner.invoke_structured(
                 role_id=AgentRole.REVIEWER,
-                schema=ReviewReport,
+                output_schema=ReviewReport,
                 context=agent_context(AgentRole.REVIEWER, state, profile),
             )
 
