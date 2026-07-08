@@ -1,4 +1,4 @@
-﻿# Python code standards (Profile default) — injected for PM, Architect, Developer system prompts
+﻿# Python code standards (Profile default) — injected into Developer system prompt when generating source code
 # Full spec: docs/design/pipeline/python-style.md
 
 - Python >= 3.11; follow PEP 8 (enforced by Ruff).

@@ -1,0 +1,12 @@
+# Solidity code standards (Profile solidity) — injected into Developer system prompt when generating source code
+# Toolchain: profiles/solidity.yaml (Foundry)
+
+- Solidity ^0.8.x with Foundry; contracts under src/, tests under test/*.t.sol.
+- Naming: contracts/interfaces PascalCase; functions/vars mixedCase; constants UPPER_SNAKE_CASE.
+- NatSpec on public/external functions and contracts where behavior is non-obvious.
+- Single responsibility: one clear job per contract; split concerns (token, vault, admin).
+- Security: checks-effects-interactions; use custom errors; no tx.origin for auth; validate external calls.
+- No mainnet RPC or live deployment in tests; use forge-std and local/anvil only unless spec says otherwise.
+- Access control: explicit roles/owners; no hardcoded private keys or secrets in repo.
+- Tests: forge-std Test; cover happy path and revert cases; fuzz critical math when applicable.
+- Before finishing: code must pass `forge fmt --check` and `forge test --json`.

@@ -10,7 +10,7 @@ Produce a complete SpecArtifact JSON that matches the pipeline schema:
   Example: {"consistency_model":"local_only","delivery":"at_least_once","multi_writer":false,"idempotency_required":false}
 - user_stories: list of objects {id, as_a, want, so_that} — NOT plain strings
 - requirement_pool: list of objects {id, description, priority} — NOT a nested dict
-- acceptance_criteria with verifiable_by automated_test where pytest applies
+- acceptance_criteria with verifiable_by automated_test where the profile test toolchain applies
 - constraints (e.g. no_secrets_in_repo)
 
 When spec_validation is present in the input context, fix every listed violation.

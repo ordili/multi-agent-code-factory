@@ -1,0 +1,14 @@
+# Rust code standards (Profile rust) — injected into Developer system prompt when generating source code
+# Toolchain: profiles/rust.yaml
+
+- Rust edition 2021; run rustfmt on all .rs files.
+- Naming: snake_case functions/vars/modules; PascalCase types/traits; SCREAMING_SNAKE_CASE constants.
+- Public items: /// doc comments on exported API.
+- Single responsibility: one clear job per function/module; split crates/modules by concern.
+- Errors: use Result and ?; avoid unwrap/expect in library paths; meaningful error types.
+- Safety: minimize unsafe; document invariants when unsafe is required.
+- Tests: #[cfg(test)] modules and tests/*.rs integration tests; no network in unit tests unless spec requires.
+- Logging: use tracing or log crate; no println! except CLI user output.
+- No hardcoded secrets; use environment variables.
+- Dependencies: prefer std; add crates only when spec requires them; keep Cargo.toml minimal.
+- Before finishing: code must pass `cargo clippy --all-targets --all-features -- -D warnings` and `cargo test --message-format=json`.

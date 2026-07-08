@@ -7,6 +7,7 @@ from typing import Any
 
 from multi_agent_code_factory.agent_roles import STYLE_SNIPPET_ROLES, AgentRole
 from multi_agent_code_factory.agents.llm.prompt.loader import load_role_prompt
+from multi_agent_code_factory.agents.llm.prompt.style_snippet import load_style_snippet
 from multi_agent_code_factory.profiles import ProfileConfig
 
 
@@ -19,9 +20,10 @@ def build_llm_messages(
 ) -> tuple[str, str]:
     """组装 system/user 消息：角色 prompt + 可选风格 snippet + JSON 化上下文。"""
     system_parts = [load_role_prompt(profile, role_id)]
-    style = profile.prompts_dir / "python-style-snippet.txt"
-    if role_id in STYLE_SNIPPET_ROLES and style.is_file():
-        system_parts.append(style.read_text(encoding="utf-8"))
+    if role_id in STYLE_SNIPPET_ROLES:
+        style_text = load_style_snippet(profile)
+        if style_text:
+            system_parts.append(style_text)
     if extra_system:
         system_parts.append(extra_system)
     system_prompt = "\n\n".join(

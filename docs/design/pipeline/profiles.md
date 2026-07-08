@@ -23,7 +23,7 @@
 
 **`.env` 禁止：** `test_command`、校验规则、语言选择、Profile id——这些属于 Profile；应通过 `--profile` 选择栈，而不是在 env 里“换语言”。
 
-**桥接约定：** Profile 可写 `code_root: ${FACTORY_CODE_ROOT}/java-maven`——**模式在 Profile（进 Git）**，**值在 `.env`（本机）**。更简单时直接在 Profile 用 `../generated/<id>`，则无需在 `.env` 配置 `FACTORY_CODE_ROOT`。
+**桥接约定：** Profile 可写 `code_root: ${FACTORY_CODE_ROOT}/java`——**模式在 Profile（进 Git）**，**值在 `.env`（本机）**。更简单时直接在 Profile 用 `../generated/<id>`，则无需在 `.env` 配置 `FACTORY_CODE_ROOT`。
 
 配置优先级（高 → 低）：**CLI → `FACTORY_*` / LLM env → `autonomy_policy.yaml` → Profile 内建默认 → 代码默认**。
 
@@ -61,8 +61,8 @@ Developer / QA / Reviewer 读写业务源码的**唯一根路径**，由 Profile
 | 输入形式 | 示例 | 解析方式 |
 |----------|------|----------|
 | 绝对路径 | `D:/code/todo-cli` | 原样 canonicalize |
-| 相对路径 | `../generated/default` | 相对 **multi-agent-code-factory 仓库根** 展开 |
-| 环境变量 | `${FACTORY_CODE_ROOT}/java-maven` | 展开后按上两类处理 |
+| 相对路径 | `../generated/python` | 相对 **multi-agent-code-factory 仓库根** 展开 |
+| 环境变量 | `${FACTORY_CODE_ROOT}/java` | 展开后按上两类处理 |
 
 **约束：**
 
@@ -75,9 +75,11 @@ Developer / QA / Reviewer 读写业务源码的**唯一根路径**，由 Profile
 
 | Profile | `code_root`（YAML） | 典型用途 |
 |---------|---------------------|----------|
-| `default` | `../generated/default` | Python Todo 等 |
-| `java-maven` | `../generated/java-maven` | Java 示例 |
-| `go-cli` | `../generated/go-cli` | Go CLI 示例 |
+| `python` | `../generated/python` | Python Todo 等 |
+| `go` | `../generated/go` | Go CLI 示例 |
+| `java` | `../generated/java` | Java Maven 示例 |
+| `rust` | `../generated/rust` | Rust CLI 示例 |
+| `solidity` | `../generated/solidity` | Foundry 合约示例 |
 
 **Tool 约定：** `read_file` / `write_file` / `run_tests` / `linter` 的路径均相对 **解析后的 `code_root`**；`hitl.sensitive_globs` 同理。
 
@@ -117,39 +119,58 @@ run_tests Tool：setup（可选）→ build（可选）→ test_command → test
 
 ## 3. Profile 矩阵（V1）
 
-| Profile id | 文件 | `language` | 构建 | Parser |
-|------------|------|------------|------|--------|
-| `default` | [default.yaml](../../../multi_agent_code_factory/profiles/default.yaml) | python | pip / pytest | `junit_xml` |
-| `go-cli` | [go-cli.yaml](../../../multi_agent_code_factory/profiles/go-cli.yaml) | go | go test | `go_json` |
-| `java-maven` | [java-maven.yaml](../../../multi_agent_code_factory/profiles/java-maven.yaml) | java | Maven | `junit_xml` |
-| `java-gradle` | [java-gradle.yaml](../../../multi_agent_code_factory/profiles/java-gradle.yaml) | java | Gradle | `junit_xml` |
-| `rust-cli` | [rust-cli.yaml](../../../multi_agent_code_factory/profiles/rust-cli.yaml) | rust | Cargo | `cargo_json` |
-| `solidity-foundry` | [solidity-foundry.yaml](../../../multi_agent_code_factory/profiles/solidity-foundry.yaml) | solidity | Foundry | `forge_json` |
-| `solidity-hardhat` | [solidity-hardhat.yaml](../../../multi_agent_code_factory/profiles/solidity-hardhat.yaml) | solidity | Hardhat | `junit_xml` |
+| Profile id | 文件 | `language` | 构建 / 测试 | Parser |
+|------------|------|------------|-------------|--------|
+| `python` | [python.yaml](../../../multi_agent_code_factory/profiles/python.yaml) | python | pip / pytest | `junit_xml` |
+| `go` | [go.yaml](../../../multi_agent_code_factory/profiles/go.yaml) | go | go test -json | `go_json` |
+| `java` | [java.yaml](../../../multi_agent_code_factory/profiles/java.yaml) | java | Maven | `junit_xml` |
+| `rust` | [rust.yaml](../../../multi_agent_code_factory/profiles/rust.yaml) | rust | Cargo | `cargo_json` |
+| `solidity` | [solidity.yaml](../../../multi_agent_code_factory/profiles/solidity.yaml) | solidity | Foundry | `forge_json` |
+
+**P2（文档预留，尚无 YAML）：** `java-gradle`、`solidity-hardhat` 等变体 Profile。
+
+**角色 prompt：** PM / Architect / Reviewer 共用 [`profiles/_shared/prompts/`](../../../multi_agent_code_factory/profiles/_shared/prompts/)；Developer 使用各语言 `profiles/<language>/prompts/developer.txt` 与 `{language}-style-snippet.txt`。
 
 ---
 
 ## 4. 语言约定（摘要）
 
-### Python（`default`）
+### 编码规范 snippet（各语言）
+
+- 路径：`profiles/<language>/prompts/{language}-style-snippet.txt`（可选别名 `style-snippet.txt`）。
+- 注入：**Developer** 节点组装 system prompt 时追加；PM / Architect 等文档产出角色不注入。
+- 解析：`agents/llm/prompt/style_snippet.py` 按 `ProfileConfig.language` 查找文件。
+
+### Python（`python`）
 
 - 规范：[python-style.md](./python-style.md)；工具配置：仓库根 `pyproject.toml`。
 - Lint：`python -m ruff check . && python -m ruff format --check .`；测试：`python -m pytest` + `junit_xml` Parser。
-- Developer prompt 注入：`profiles/<id>/prompts/python-style-snippet.txt`。
+- Snippet：`profiles/python/prompts/python-style-snippet.txt`。
 
-### Java（Maven / Gradle）
+### Go（`go`）
+
+- Lint：`golangci-lint run ./...`；测试：`go test -json ./...`。
+- Snippet：`profiles/go/prompts/go-style-snippet.txt`；Developer：`developer.txt`。
+
+### Java（Maven）
 
 - 布局：`src/main/java`、`src/test/java`；测试类 `*Test.java`；JUnit 5 + Surefire。
+- Lint：`mvn -q checkstyle:check`；测试：`mvn -q test`。
+- Snippet：`profiles/java/prompts/java-style-snippet.txt`；Developer：`developer.txt`.
 - Gradle 在 Windows 上 `./gradlew` 可由 `profiles.py` 归一为 `gradlew.bat`（P2）。
 
 ### Rust（Cargo）
 
 - 单元测试：`src/**/*.rs` 内 `#[cfg(test)]`；集成测试：`tests/*.rs`。
+- Lint：`cargo clippy --all-targets --all-features -- -D warnings`；测试：`cargo test --message-format=json`.
+- Snippet：`profiles/rust/prompts/rust-style-snippet.txt`；Developer：`developer.txt`.
 - P2 可选 [cargo-nextest](https://nexte.st/) + `junit_xml` Parser。
 
 ### Solidity（Foundry，推荐）
 
 - 合约 `src/*.sol`；测试 `test/*.t.sol`；`forge-std`。
+- Lint：`forge fmt --check`；测试：`forge test --json`.
+- Snippet：`profiles/solidity/prompts/solidity-style-snippet.txt`；Developer：`developer.txt`.
 - **禁止** QA 连主网 RPC；`script/`、`broadcast/` 变更触发 HITL。
 
 ### Solidity（Hardhat，P2）
@@ -161,10 +182,10 @@ run_tests Tool：setup（可选）→ build（可选）→ test_command → test
 ## 5. 运行示例
 
 ```bash
-python -m multi_agent_code_factory run --profile default --task-id todo-cli "实现命令行 Todo"
-python -m multi_agent_code_factory run --profile java-maven --task-id order-api "实现订单 REST API"
-python -m multi_agent_code_factory run --profile rust-cli --task-id todo-rs "实现 Rust CLI Todo"
-python -m multi_agent_code_factory run --profile solidity-foundry --task-id vault "实现 ERC4626 金库与测试"
+python -m multi_agent_code_factory run --profile python --task-id todo-cli "实现命令行 Todo"
+python -m multi_agent_code_factory run --profile java --task-id order-api "实现订单 REST API"
+python -m multi_agent_code_factory run --profile rust --task-id todo-rs "实现 Rust CLI Todo"
+python -m multi_agent_code_factory run --profile solidity --task-id vault "实现 ERC4626 金库与测试"
 ```
 
 ---

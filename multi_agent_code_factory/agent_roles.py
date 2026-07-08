@@ -18,11 +18,5 @@ class AgentRole(StrEnum):
     DEPLOY = "deploy"
 
 
-# 组装 system prompt 时需附加 python-style-snippet 的角色。
-STYLE_SNIPPET_ROLES: frozenset[AgentRole] = frozenset(
-    {
-        AgentRole.PM,
-        AgentRole.ARCHITECT,
-        AgentRole.DEVELOPER,
-    }
-)
+# 组装 system prompt 时需附加 {language}-style-snippet 的角色（仅输出源码）。
+STYLE_SNIPPET_ROLES: frozenset[AgentRole] = frozenset({AgentRole.DEVELOPER})

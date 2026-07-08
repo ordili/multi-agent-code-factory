@@ -1,0 +1,14 @@
+# Go code standards (Profile go) — injected into Developer system prompt when generating source code
+# Toolchain: profiles/go.yaml
+
+- Go >= 1.21; run gofmt on all .go files (enforced by golangci-lint).
+- Naming: exported identifiers PascalCase; unexported camelCase; packages are short lowercase single words.
+- Public functions/types: godoc comments on exported symbols.
+- Single responsibility: one clear job per function/type; split packages by concern.
+- Errors: return errors; use fmt.Errorf with %w; avoid panic for expected failures.
+- Context: pass context.Context for I/O and cancellation; respect ctx.Done().
+- Tests: *_test.go beside code or in package; table-driven tests; no network in unit tests unless spec requires.
+- Logging: use log/slog or standard log; no fmt.Println except CLI user output.
+- No hardcoded secrets; use environment variables or config files outside repo.
+- Dependencies: prefer stdlib; add modules only when spec requires them; keep go.mod tidy.
+- Before finishing: code must pass `golangci-lint run ./...` and `go test -json ./...`.

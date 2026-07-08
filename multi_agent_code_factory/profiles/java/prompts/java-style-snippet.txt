@@ -1,0 +1,14 @@
+# Java code standards (Profile java) — injected into Developer system prompt when generating source code
+# Toolchain: profiles/java.yaml
+
+- Java 21; Maven project layout (src/main/java, src/test/java).
+- Naming: packages lowercase; classes PascalCase; methods/fields camelCase; constants UPPER_SNAKE_CASE.
+- Public classes/methods: Javadoc on exported API where non-obvious.
+- Single responsibility: one clear job per class/method; split services by concern.
+- Error handling: specific exceptions; preserve cause chains; no empty catch blocks.
+- Security: no eval/script engines on untrusted input; validate external input; no hardcoded secrets.
+- Resources: use try-with-resources for streams, connections, and closeables.
+- Dependencies: prefer JDK; add Maven deps only when spec requires them; declare in pom.xml.
+- Tests: JUnit 5 under src/test/java; class names *Test.java; no network in unit tests unless spec requires.
+- Logging: SLF4J or java.util.logging; no System.out except CLI user output.
+- Before finishing: code must pass `mvn -q checkstyle:check` and `mvn -q test`.

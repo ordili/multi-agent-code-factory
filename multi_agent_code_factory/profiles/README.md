@@ -28,8 +28,24 @@ profiles/
 ├── _base/common.yaml       # 公共默认（不可 --profile）
 ├── python.yaml             # extends common
 ├── go.yaml / java.yaml / …
-└── python/prompts/         # 按语言放 prompt（python 已有完整集）
+└── python/prompts/         # 按语言放 prompt；编码规范为 {language}-style-snippet.txt
 ```
+
+各语言 **Developer** Live 模式需具备：
+
+- `{language}/prompts/developer.txt` — 角色任务说明（语言相关）
+- `{language}/prompts/{language}-style-snippet.txt` — 编码规范摘要（仅 Developer 注入）
+
+**PM / Architect / Reviewer** 与语言无关，共用 `profiles/_shared/prompts/{role}.txt`（产出 Spec / Design / Review JSON 或 Mermaid）。各语言目录可放 `{role}.txt` 覆盖共享版。
+
+当前状态：
+
+| 角色 | 共享 prompt | 语言专用 |
+|------|-------------|----------|
+| PM | `_shared/prompts/pm.txt` | — |
+| Architect | `_shared/prompts/architect.txt` | — |
+| Reviewer | `_shared/prompts/reviewer.txt` | — |
+| Developer | — | 各语言 `developer.txt` + `{language}-style-snippet.txt` |
 
 ## V1 语言 Profile
 
