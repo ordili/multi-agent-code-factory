@@ -3,7 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from multi_agent_code_factory.agents.live_helpers import (
+from multi_agent_code_factory.agents.artifact_normalizers import (
     enrich_design_for_validation,
     format_design_validation_feedback,
 )

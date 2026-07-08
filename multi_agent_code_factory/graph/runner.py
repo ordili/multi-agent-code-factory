@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from multi_agent_code_factory.agents.base import StubScenario
-from multi_agent_code_factory.agents.llm_runner import LlmRunner
+from multi_agent_code_factory.agents.llm import LlmRunner
 from multi_agent_code_factory.config import FactoryConfig
 from multi_agent_code_factory.graph.pipeline_run_context import PipelineRunContext
 from multi_agent_code_factory.graph.graph_builder import build_graph

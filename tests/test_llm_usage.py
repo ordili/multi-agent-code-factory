@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 
 from multi_agent_code_factory.agent_roles import AgentRole
-from multi_agent_code_factory.agents.llm_usage import (
+from multi_agent_code_factory.agents.llm.usage import (
     LlmCallUsage,
     LlmUsageTotals,
     extract_token_usage,

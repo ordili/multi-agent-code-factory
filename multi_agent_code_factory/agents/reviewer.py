@@ -9,7 +9,7 @@ from multi_agent_code_factory.agents.base import (
     default_stub_fixtures,
     load_json_fixture,
 )
-from multi_agent_code_factory.agents.llm_runner import LlmRunner
+from multi_agent_code_factory.agents.llm import LlmRunner
 from multi_agent_code_factory.log import agent_run, get_logger
 from multi_agent_code_factory.profiles import ProfileConfig
 from multi_agent_code_factory.renderers.review_md import render_review_md

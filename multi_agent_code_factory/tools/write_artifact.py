@@ -10,7 +10,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from multi_agent_code_factory._paths import run_dir
-from multi_agent_code_factory.agents.llm_usage import (
+from multi_agent_code_factory.agents.llm.usage import (
     LlmCallUsage,
     LlmUsageLog,
     LlmUsageTotals,

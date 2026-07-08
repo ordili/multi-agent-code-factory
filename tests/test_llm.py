@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-from multi_agent_code_factory.agents.live_helpers import normalize_spec
+from multi_agent_code_factory.agents.artifact_normalizers import normalize_spec
 from multi_agent_code_factory.agents.pm import run_pm
 from multi_agent_code_factory.config import LoopLimits
 from multi_agent_code_factory.llm import (

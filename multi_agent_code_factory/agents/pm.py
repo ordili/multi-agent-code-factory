@@ -9,8 +9,8 @@ from multi_agent_code_factory.agents.base import (
     default_stub_fixtures,
     load_json_fixture,
 )
-from multi_agent_code_factory.agents.live_helpers import normalize_spec
-from multi_agent_code_factory.agents.llm_runner import LlmRunner
+from multi_agent_code_factory.agents.artifact_normalizers import normalize_spec
+from multi_agent_code_factory.agents.llm import LlmRunner
 from multi_agent_code_factory.log import agent_run, get_logger
 from multi_agent_code_factory.profiles import ProfileConfig
 from multi_agent_code_factory.renderers.spec_md import render_spec_md

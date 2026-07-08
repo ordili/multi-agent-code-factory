@@ -1,4 +1,4 @@
-"""Live 模式下 LLM Agent 产物的后处理与规范化。"""
+"""Live 模式下 Agent 产物的后处理与规范化。"""
 
 from __future__ import annotations
 
