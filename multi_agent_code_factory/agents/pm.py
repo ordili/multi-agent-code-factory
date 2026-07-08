@@ -7,7 +7,6 @@ from multi_agent_code_factory.agents.base import (
     agent_context,
     default_stub_fixtures,
     load_json_fixture,
-    load_prompt_snippet,
 )
 from multi_agent_code_factory.agents.live_helpers import normalize_spec
 from multi_agent_code_factory.agents.llm_runner import LlmRunner
@@ -31,8 +30,6 @@ def run_pm(
     llm_runner: LlmRunner | None = None,
 ) -> dict[str, object]:
     """运行 PM 节点，产出 ``spec.json`` / ``spec.md`` 并更新 state。"""
-    _ = load_prompt_snippet(profile, "python-style-snippet.txt")
-
     with agent_run(logger, role_id="pm", stub=stub):
         if stub:
             fixtures = default_stub_fixtures()
