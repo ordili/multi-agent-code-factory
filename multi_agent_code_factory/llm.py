@@ -8,7 +8,9 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
+
+LlmOutputMode = Literal["native_structured", "prompted_json"]
 
 if TYPE_CHECKING:
     from langchain_core.language_models.chat_models import BaseChatModel
@@ -29,6 +31,7 @@ class LlmProviderSpec:
     base_url: str | None = None
     base_url_env: str | None = None
     api_key_required: bool = True
+    output_mode: LlmOutputMode = "native_structured"
 
 
 PROVIDER_SPECS: dict[str, LlmProviderSpec] = {
@@ -36,6 +39,7 @@ PROVIDER_SPECS: dict[str, LlmProviderSpec] = {
         api_key_env="DEEPSEEK_API_KEY",
         langchain_provider="openai",
         base_url="https://api.deepseek.com",
+        output_mode="prompted_json",
     ),
     "openai": LlmProviderSpec(
         api_key_env="OPENAI_API_KEY",
@@ -51,6 +55,7 @@ PROVIDER_SPECS: dict[str, LlmProviderSpec] = {
         base_url=DEFAULT_OLLAMA_BASE_URL,
         base_url_env="OLLAMA_BASE_URL",
         api_key_required=False,
+        output_mode="prompted_json",
     ),
 }
 
@@ -66,6 +71,7 @@ class LlmRuntimeConfig:
     langchain_model_id: str
     base_url: str | None
     api_key: str
+    output_mode: LlmOutputMode
 
 
 class LlmConfigError(RuntimeError):
@@ -74,6 +80,10 @@ class LlmConfigError(RuntimeError):
 
 class LlmInvokeError(RuntimeError):
     """Raised when a live LLM call fails (HTTP, Ollama crash, parse errors)."""
+
+
+class LlmBudgetExceededError(LlmInvokeError):
+    """Raised when run LLM call or token budget is exhausted."""
 
 
 def list_factory_llm_providers() -> tuple[str, ...]:
@@ -181,6 +191,7 @@ def resolve_llm_runtime_config(
         langchain_model_id=f"{spec.langchain_provider}:{model_name}",
         base_url=resolved_base_url,
         api_key=resolved_key,
+        output_mode=spec.output_mode,
     )
 
 

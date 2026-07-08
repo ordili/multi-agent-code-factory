@@ -187,6 +187,7 @@ def test_resolve_llm_runtime_config_uses_factory_provider(
     assert cfg.api_key_env == "DEEPSEEK_API_KEY"
     assert cfg.langchain_model_id == "openai:deepseek-chat"
     assert cfg.base_url == "https://api.deepseek.com"
+    assert cfg.output_mode == "prompted_json"
 
 
 def test_resolve_chat_model_id_deepseek_defaults(

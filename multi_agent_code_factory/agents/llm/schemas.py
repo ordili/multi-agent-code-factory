@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any, ClassVar
+
 from pydantic import BaseModel, Field
 
 from multi_agent_code_factory.schemas.design import DesignArtifact
@@ -9,6 +11,16 @@ from multi_agent_code_factory.schemas.design import DesignArtifact
 
 class ArchitectLLMOutput(BaseModel):
     """Architect LLM 返回：设计产物 + Mermaid 流程图。"""
+
+    __llm_example__: ClassVar[dict[str, Any]] = {
+        "design": DesignArtifact.__llm_example__,
+        "flow_mmd": (
+            "flowchart LR\n"
+            "  User --> CLI\n"
+            "  CLI --> Store\n"
+            "  Store --> JSON[(todos.json)]"
+        ),
+    }
 
     design: DesignArtifact
     flow_mmd: str = Field(
@@ -25,6 +37,17 @@ class SourceFileWrite(BaseModel):
 
 class DeveloperLLMOutput(BaseModel):
     """Developer LLM 返回：已完成任务与待写入源文件。"""
+
+    __llm_example__: ClassVar[dict[str, Any]] = {
+        "tasks_completed": ["T1"],
+        "source_files": [
+            {
+                "path": "src/todo_store.py",
+                "content": "def load(): ...\n",
+            }
+        ],
+        "notes": "Initial store module",
+    }
 
     tasks_completed: list[str] = Field(
         default_factory=list,

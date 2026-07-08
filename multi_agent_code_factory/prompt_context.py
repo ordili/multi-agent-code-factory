@@ -15,6 +15,7 @@ from multi_agent_code_factory.schemas.review import ReviewReport
 from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.schemas.test_report import TestReport
 from multi_agent_code_factory.schemas.validation_report import ValidationReport
+from multi_agent_code_factory.prompt_context_trim import trim_context_for_role
 from multi_agent_code_factory.state import PipelineState
 from multi_agent_code_factory.tools.read_file import read_file
 
@@ -169,7 +170,7 @@ def build_prompt_context(
         if bundle is not None:
             context["retry_bundle"] = bundle.model_dump(mode="json")
 
-    return context
+    return trim_context_for_role(role_id, context)
 
 
 # 兼容旧名；新代码请使用 build_prompt_context。

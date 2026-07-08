@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field
 
@@ -52,6 +53,15 @@ class AcceptanceCoverageItem(BaseModel):
 
 
 class ReviewReport(BaseModel):
+    __llm_example__: ClassVar[dict[str, Any]] = {
+        "version": "1",
+        "approved": True,
+        "next_stage": "deploy",
+        "summary": "Acceptance criteria met.",
+        "findings": [],
+        "acceptance_coverage": [{"id": "AC-1", "met": True}],
+    }
+
     version: ARTIFACT_VERSION
     approved: bool
     next_stage: ReviewNextStage

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from enum import StrEnum
-from typing import Any
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -256,6 +256,66 @@ def coerce_spec_payload(data: Any) -> Any:
 
 
 class SpecArtifact(BaseModel):
+    __llm_example__: ClassVar[dict[str, Any]] = {
+        "version": "1",
+        "profile": "python",
+        "revision": 1,
+        "title": "CLI Todo App",
+        "summary": "Command-line todo CRUD with JSON persistence",
+        "context": {"language": "python", "interface": "cli"},
+        "success_metrics": [
+            {
+                "id": "KPI-1",
+                "name": "Core flow works",
+                "description": "Add/list/complete todos",
+                "target": "Manual smoke test passes",
+                "verifiable_by": "manual",
+            }
+        ],
+        "features": [
+            {
+                "id": "FEAT-1",
+                "name": "Todo CRUD",
+                "description": "add/list/done commands",
+                "priority": "P0",
+                "user_story_ids": ["US-1"],
+            }
+        ],
+        "user_stories": [
+            {
+                "id": "US-1",
+                "as_a": "user",
+                "want": "manage todos from the CLI",
+                "so_that": "I can track tasks locally",
+            }
+        ],
+        "requirement_pool": [
+            {"id": "REQ-1", "description": "Persist todos to JSON", "priority": "P0"}
+        ],
+        "scope_in": ["CLI commands", "unit tests"],
+        "scope_out": ["Web UI"],
+        "operational_profile": {
+            "user_scale": "personal",
+            "high_concurrency": False,
+            "performance": {"tier": "best_effort"},
+        },
+        "consistency_profile": {
+            "consistency_model": "local_only",
+            "delivery": "at_least_once",
+            "multi_writer": False,
+            "idempotency_required": False,
+            "conflict_strategy": "not_applicable",
+        },
+        "acceptance_criteria": [
+            {
+                "id": "AC-1",
+                "description": "pytest suite passes",
+                "verifiable_by": "automated_test",
+            }
+        ],
+        "constraints": ["no_secrets_in_repo"],
+    }
+
     version: ARTIFACT_VERSION
     profile: str
     revision: int = Field(ge=1)

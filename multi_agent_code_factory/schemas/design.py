@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Any
+from typing import Any, ClassVar
 
 from pydantic import BaseModel, Field
 
@@ -65,6 +65,38 @@ class DiagramRef(BaseModel):
 
 
 class DesignArtifact(BaseModel):
+    __llm_example__: ClassVar[dict[str, Any]] = {
+        "version": "1",
+        "spec_ref": "CLI Todo App",
+        "revision": 1,
+        "summary": "CLI + JSON store",
+        "modules": [
+            {
+                "name": "TodoCLI",
+                "path": "src/cli.py",
+                "responsibility": "CLI commands",
+                "code_domain": "CLI",
+            }
+        ],
+        "dev_tasks": [
+            {
+                "id": "T1",
+                "path": "src/todo_store.py",
+                "description": "JSON load/save",
+                "depends_on": [],
+                "covers": ["AC-1"],
+            }
+        ],
+        "external_dependencies": [
+            {
+                "name": "todos.json",
+                "kind": "filesystem",
+                "purpose": "persistence",
+                "code_domain": "STORE",
+            }
+        ],
+    }
+
     version: ARTIFACT_VERSION
     spec_ref: str
     revision: int = Field(ge=1)

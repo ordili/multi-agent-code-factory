@@ -17,6 +17,8 @@ class TestSummary(BaseModel):
 
 
 class TestFailure(BaseModel):
+    __test__ = False
+
     test_id: str
     message: str
     suite: str | None = None
