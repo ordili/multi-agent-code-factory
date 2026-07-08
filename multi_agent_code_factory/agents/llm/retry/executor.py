@@ -1,4 +1,4 @@
-"""Retry loop executor."""
+"""重试循环执行器。"""
 
 from __future__ import annotations
 
@@ -12,7 +12,7 @@ T = TypeVar("T")
 
 
 class RetryExecutor:
-    """Run a callable with configured retries and optional failure hook."""
+    """按配置对可调用对象执行重试，可选失败回调。"""
 
     def __init__(self, policy: RetryPolicy) -> None:
         self._policy = policy

@@ -1,4 +1,4 @@
-"""LLM usage models."""
+"""LLM 用量相关 Pydantic 模型。"""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from multi_agent_code_factory.schemas._base import ARTIFACT_VERSION
 
 
 class TokenUsage(BaseModel):
-    """Token counts for one LLM response."""
+    """单次 LLM 响应的 token 计数。"""
 
     prompt_tokens: int | None = Field(default=None, ge=0)
     completion_tokens: int | None = Field(default=None, ge=0)
@@ -26,7 +26,7 @@ class TokenUsage(BaseModel):
 
 
 class LlmCallUsage(BaseModel):
-    """One structured LLM invoke audit record."""
+    """单次结构化 LLM 调用的审计记录。"""
 
     role_id: AgentRole
     schema_name: str
@@ -40,7 +40,7 @@ class LlmCallUsage(BaseModel):
 
 
 class LlmUsageTotals(BaseModel):
-    """Aggregated LLM usage for one run."""
+    """单次 run 内 LLM 用量累计。"""
 
     llm_calls: int = Field(default=0, ge=0)
     prompt_tokens: int = Field(default=0, ge=0)
@@ -49,7 +49,7 @@ class LlmUsageTotals(BaseModel):
 
 
 class LlmUsageLog(BaseModel):
-    """Persisted ``llm_usage.json`` structure."""
+    """持久化的 ``llm_usage.json`` 结构。"""
 
     version: ARTIFACT_VERSION
     provider: str
@@ -62,7 +62,7 @@ def merge_usage_totals(
     current: LlmUsageTotals,
     call: LlmCallUsage,
 ) -> LlmUsageTotals:
-    """Add one call record to run totals."""
+    """将单次调用用量累加到 run 总计。"""
     prompt = call.prompt_tokens or 0
     completion = call.completion_tokens or 0
     total = call.total_tokens

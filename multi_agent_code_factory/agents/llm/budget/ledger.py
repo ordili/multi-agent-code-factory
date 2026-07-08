@@ -1,4 +1,4 @@
-"""run_meta budget ledger updates."""
+"""run_meta 预算累计写入。"""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
 
 
 def resolved_call_tokens(call: LlmCallUsage) -> int:
-    """Resolve total tokens for one call record."""
+    """从单次调用记录解析 token 总数。"""
     if call.total_tokens is not None:
         return call.total_tokens
     return (call.prompt_tokens or 0) + (call.completion_tokens or 0)
@@ -20,7 +20,7 @@ def record_llm_call(
     factory_config: FactoryConfig | None,
     call: LlmCallUsage,
 ) -> None:
-    """Accumulate successful call count and tokens in ``run_meta.json`` budget."""
+    """将成功调用的次数与 token 累计写入 ``run_meta.json`` budget 字段。"""
     meta = writer.read_meta()
     if meta is None:
         return

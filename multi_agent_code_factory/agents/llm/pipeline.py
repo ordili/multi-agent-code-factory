@@ -1,4 +1,4 @@
-"""Structured LLM invoke pipeline orchestration."""
+"""结构化 LLM 调用流水线编排。"""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from multi_agent_code_factory.agents.llm.prompt.builder import build_llm_message
 from multi_agent_code_factory.agents.llm.retry.executor import RetryExecutor
 from multi_agent_code_factory.agents.llm.retry.policy import default_retry_policy
 from multi_agent_code_factory.agents.llm.strategies.base import InvokeStrategy
-from multi_agent_code_factory.agents.llm.strategies.native import NativeStructuredStrategy
+from multi_agent_code_factory.agents.llm.strategies.native_structured import NativeStructuredStrategy
 from multi_agent_code_factory.agents.llm.strategies.prompted_json import PromptedJsonStrategy
 from multi_agent_code_factory.agents.llm.types import InvokeRequest
 from multi_agent_code_factory.agents.llm.usage.recorder import UsageRecorder
@@ -29,13 +29,15 @@ T = TypeVar("T", bound=BaseModel)
 logger = get_logger("agents.llm.pipeline")
 
 _STRATEGIES: dict[LlmOutputMode, InvokeStrategy[Any]] = {
+    # openai、anthropic — LangChain with_structured_output
     "native_structured": NativeStructuredStrategy(),
+    # deepseek、ollama — 提示词 + 手动 JSON 解析
     "prompted_json": PromptedJsonStrategy(),
 }
 
 
 class StructuredInvokePipeline:
-    """Orchestrate one structured LLM call: budget, prompt, retry, strategy, usage."""
+    """编排一次结构化 LLM 调用：预算、prompt、重试、策略、用量。"""
 
     def __init__(
         self,

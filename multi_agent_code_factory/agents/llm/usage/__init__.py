@@ -1,4 +1,4 @@
-"""LLM usage models and extraction."""
+"""LLM 用量模型与提取逻辑。"""
 
 from multi_agent_code_factory.agents.llm.usage.extract import extract_token_usage
 from multi_agent_code_factory.agents.llm.usage.models import (

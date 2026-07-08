@@ -1,4 +1,4 @@
-"""Trim prompt context payloads to reduce LLM token usage."""
+"""裁剪 prompt 上下文 payload，降低 LLM token 消耗。"""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def _truncate_lines(text: str, max_lines: int) -> str:
     lines = text.splitlines()
     if len(lines) <= max_lines:
         return text
-    return "\n".join(lines[:max_lines]) + "\n... (truncated)"
+    return "\n".join(lines[:max_lines]) + "\n... (已截断)"
 
 
 def _cap_list_items(items: list[Any], max_items: int) -> tuple[list[Any], int | None]:
@@ -37,7 +37,7 @@ def _cap_list_items(items: list[Any], max_items: int) -> tuple[list[Any], int | 
 
 
 def trim_spec(payload: dict[str, Any]) -> dict[str, Any]:
-    """Keep spec fields used by downstream agents."""
+    """保留下游 Agent 使用的 spec 字段。"""
     keep = (
         "version",
         "profile",
@@ -61,7 +61,7 @@ def trim_spec(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def trim_design(payload: dict[str, Any], *, compact: bool = False) -> dict[str, Any]:
-    """Drop or cap heavy design arrays; compact mode keeps implementation essentials."""
+    """裁剪 design 中的大数组；compact 模式仅保留实现相关字段。"""
     if compact:
         keep = (
             "version",
@@ -96,7 +96,7 @@ def trim_design(payload: dict[str, Any], *, compact: bool = False) -> dict[str, 
 
 
 def trim_test_report(payload: dict[str, Any]) -> dict[str, Any]:
-    """Keep summary and capped failure details."""
+    """保留 summary 与限量的 failure 详情。"""
     result: dict[str, Any] = {
         "version": payload.get("version"),
         "passed": payload.get("passed"),
@@ -131,7 +131,7 @@ def trim_test_report(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def trim_review(payload: dict[str, Any]) -> dict[str, Any]:
-    """Keep review decision fields and cap findings."""
+    """保留评审结论字段并限制 findings 数量。"""
     result: dict[str, Any] = {
         "version": payload.get("version"),
         "approved": payload.get("approved"),
@@ -152,7 +152,7 @@ def trim_review(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def trim_validation(payload: dict[str, Any]) -> dict[str, Any]:
-    """Keep validation status and cap violations."""
+    """保留校验状态并限制 violations 数量。"""
     result: dict[str, Any] = {
         "version": payload.get("version"),
         "target": payload.get("target"),
@@ -171,7 +171,7 @@ def trim_validation(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def trim_dev_manifest(payload: dict[str, Any]) -> dict[str, Any]:
-    """Keep manifest summary fields; truncate long notes."""
+    """保留 manifest 摘要字段，截断过长 notes。"""
     result = dict(payload)
     for key in ("notes", "incremental_plan", "escalation_note"):
         value = result.get(key)
@@ -189,7 +189,7 @@ def trim_dev_manifest(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def trim_retry_bundle(payload: dict[str, Any]) -> dict[str, Any]:
-    """Compact developer retry bundle and cap code snippets."""
+    """压缩 Developer 重试包并限制 code snippet 数量与行数。"""
     result = dict(payload)
     spec = result.get("spec")
     if isinstance(spec, dict):
@@ -222,7 +222,7 @@ def trim_context_for_role(
     role_id: AgentRole,
     context: dict[str, Any],
 ) -> dict[str, Any]:
-    """Apply role-aware trimming to assembled prompt context."""
+    """按角色对组装好的 prompt 上下文做裁剪。"""
     result = dict(context)
 
     spec = result.get("spec")

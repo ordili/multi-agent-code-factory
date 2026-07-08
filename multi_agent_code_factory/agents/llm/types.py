@@ -1,4 +1,4 @@
-"""Structured LLM invoke request/result types."""
+"""结构化 LLM 调用的请求/结果类型。"""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ T = TypeVar("T", bound=BaseModel)
 
 @dataclass(frozen=True)
 class InvokeRequest(Generic[T]):
-    """One structured LLM call."""
+    """一次结构化 LLM 调用请求。"""
 
     role_id: AgentRole
     schema: type[T]
@@ -24,7 +24,7 @@ class InvokeRequest(Generic[T]):
 
 @dataclass(frozen=True)
 class InvokeResult(Generic[T]):
-    """Parsed schema plus raw provider response for usage extraction."""
+    """解析后的 schema 与原始响应（用于提取 token 用量）。"""
 
     parsed: T
     raw_response: Any | None

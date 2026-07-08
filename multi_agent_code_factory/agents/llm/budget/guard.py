@@ -1,4 +1,4 @@
-"""Pre-invoke LLM budget guard."""
+"""调用前 LLM 预算检查。"""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ def check_llm_budget(
     writer: RunArtifactWriter,
     factory_config: FactoryConfig | None,
 ) -> None:
-    """Check run_meta LLM call/token budget before invoking."""
+    """调用前检查 run_meta 中的 LLM 次数/token 预算。"""
     if factory_config is None or factory_config.budget is None:
         return
     meta = writer.read_meta()

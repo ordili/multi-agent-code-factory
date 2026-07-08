@@ -1,4 +1,4 @@
-"""Unified LLM usage recording."""
+"""LLM 用量统一记录（budget + 审计文件 + 日志）。"""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ logger = get_logger("agents.llm.usage.recorder")
 
 
 class UsageRecorder:
-    """Record successful/failed LLM calls to budget, audit artifact, and logs."""
+    """将成功/失败的 LLM 调用写入 budget、审计产物与日志。"""
 
     def __init__(
         self,

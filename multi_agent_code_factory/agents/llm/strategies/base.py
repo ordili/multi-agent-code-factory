@@ -1,4 +1,13 @@
-"""Invoke strategy protocol."""
+"""调用策略协议（Protocol）。
+
+工厂 Live 模式的业务场景统一为：多 Agent **强推理** + 结构化产物（Pydantic schema）。
+各策略的差异在于 **如何让模型输出符合 schema**，而非是否为「闲聊」：
+
+- ``native_structured`` → openai、anthropic（API 原生 structured output）
+- ``prompted_json`` → deepseek、ollama（提示词 JSON 约束 + 本地解析）
+
+权威 provider 列表见 ``strategies/modes.py``。
+"""
 
 from __future__ import annotations
 
@@ -13,7 +22,7 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class InvokeStrategy(Protocol[T]):
-    """Call an LLM and parse structured output."""
+    """调用 LLM 并解析为结构化输出。"""
 
     def invoke(
         self,

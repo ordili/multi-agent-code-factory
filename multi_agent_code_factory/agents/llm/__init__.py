@@ -1,4 +1,4 @@
-"""Live-mode LLM invoke package."""
+"""Live 模式 LLM 调用子包。"""
 
 from multi_agent_code_factory.agents.llm.errors import LlmParseError
 from multi_agent_code_factory.agents.llm.runner import LlmRunner
@@ -20,7 +20,7 @@ from multi_agent_code_factory.llm import LlmBudgetExceededError, LlmInvokeError,
 
 
 def uses_prompted_json(provider: str) -> bool:
-    """Return True when provider uses prompted JSON instead of native structured output."""
+    """deepseek/ollama 为 True（``output_mode=prompted_json``），其余为 False。"""
     return provider_spec(provider).output_mode == "prompted_json"
 
 

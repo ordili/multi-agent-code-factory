@@ -1,4 +1,4 @@
-"""LLM message assembly."""
+"""LLM 消息组装。"""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ def build_llm_messages(
     context: dict[str, Any],
     extra_system: str | None,
 ) -> tuple[str, str]:
-    """Build system/user messages: role prompt + optional snippets + JSON context."""
+    """组装 system/user 消息：角色 prompt + 可选风格 snippet + JSON 化上下文。"""
     system_parts = [load_role_prompt(profile, role_id)]
     style = profile.prompts_dir / "python-style-snippet.txt"
     if role_id in STYLE_SNIPPET_ROLES and style.is_file():

@@ -1,4 +1,4 @@
-"""Retry policy configuration."""
+"""LLM 重试策略配置。"""
 
 from __future__ import annotations
 
@@ -20,7 +20,7 @@ _TRANSIENT_ERROR_NAMES = frozenset(
 
 
 def is_transient_llm_error(exc: BaseException) -> bool:
-    """Return True when the error is likely transient and worth retrying."""
+    """判断异常是否为可重试的瞬态 LLM/网络错误。"""
     name = type(exc).__name__
     if name in _TRANSIENT_ERROR_NAMES:
         return True
@@ -30,7 +30,7 @@ def is_transient_llm_error(exc: BaseException) -> bool:
 
 @dataclass(frozen=True)
 class RetryPolicy:
-    """Retry attempts and linear backoff for LLM invokes."""
+    """LLM 调用的重试次数与线性退避配置。"""
 
     max_attempts: int = 3
     backoff_base_sec: float = 1.5

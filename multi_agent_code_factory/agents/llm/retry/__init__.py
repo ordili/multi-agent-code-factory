@@ -1,4 +1,4 @@
-"""Retry policy and executor."""
+"""重试策略与执行器。"""
 
 from multi_agent_code_factory.agents.llm.retry.executor import RetryExecutor
 from multi_agent_code_factory.agents.llm.retry.policy import (

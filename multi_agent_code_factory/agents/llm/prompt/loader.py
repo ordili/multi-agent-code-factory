@@ -1,4 +1,4 @@
-"""Role system prompt loading."""
+"""角色 system prompt 加载。"""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from multi_agent_code_factory.profiles import ProfileConfig
 
 
 def load_role_prompt(profile: ProfileConfig, role_id: AgentRole) -> str:
-    """Load role system prompt; prefer ``{role_id}.txt``, else style snippet."""
+    """加载角色 system prompt；优先 ``{role_id}.txt``，否则回退到通用 snippet。"""
     path = profile.prompts_dir / f"{role_id}.txt"
     if path.is_file():
         return path.read_text(encoding="utf-8")

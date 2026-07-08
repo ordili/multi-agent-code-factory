@@ -1,4 +1,4 @@
-"""JSON output instructions for prompted-json providers."""
+"""prompted-json 模式的 JSON 输出指令。"""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from pydantic import BaseModel
 
 
 def llm_example_for_schema(schema: type[BaseModel]) -> dict[str, Any] | None:
-    """Return compact example JSON from ``schema.__llm_example__`` when present."""
+    """从 schema 的 ``__llm_example__`` 读取紧凑 JSON 示例。"""
     example = getattr(schema, "__llm_example__", None)
     if isinstance(example, dict):
         return example
@@ -17,7 +17,7 @@ def llm_example_for_schema(schema: type[BaseModel]) -> dict[str, Any] | None:
 
 
 def json_output_instructions(schema: type[BaseModel]) -> str:
-    """Instructions appended to system prompt for prompted JSON mode."""
+    """生成 appended 到 system prompt 的 JSON 输出指令（发给模型，保持英文）。"""
     rules = (
         "Output ONLY one JSON object. No markdown fences, no commentary.\n"
         "Match field names and nested object shapes exactly."

@@ -128,7 +128,7 @@ def test_trim_retry_bundle_truncates_code_snippets() -> None:
     trimmed = trim_retry_bundle(payload)
     assert len(trimmed["code_snippets"]) == 3
     assert trimmed["code_snippets_truncated_count"] == 2
-    assert trimmed["code_snippets"][0]["content"].endswith("... (truncated)")
+    assert trimmed["code_snippets"][0]["content"].endswith("... (已截断)")
 
 
 def test_build_prompt_context_is_trimmed(

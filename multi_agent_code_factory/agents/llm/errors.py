@@ -1,4 +1,4 @@
-"""LLM invoke error helpers."""
+"""LLM 调用错误辅助函数。"""
 
 from __future__ import annotations
 
@@ -8,11 +8,11 @@ from multi_agent_code_factory.llm import LlmInvokeError, LlmRuntimeConfig
 
 
 class LlmParseError(LlmInvokeError):
-    """JSON or schema validation failed after an LLM response."""
+    """LLM 响应后的 JSON 或 schema 校验失败。"""
 
 
 def provider_failure_hint(runtime: LlmRuntimeConfig) -> str:
-    """Build operator hints when a live LLM call fails."""
+    """构造 Live 模式调用失败时的运维排查提示。"""
     if runtime.output_mode == "prompted_json":
         return (
             f"LLM call failed for provider={runtime.factory_provider!r} "
@@ -33,7 +33,7 @@ def wrap_invoke_failure(
     *,
     runtime: LlmRuntimeConfig,
 ) -> LlmInvokeError:
-    """Normalize terminal invoke failures to ``LlmInvokeError``."""
+    """将最终失败统一包装为 ``LlmInvokeError``。"""
     if isinstance(exc, LlmInvokeError):
         return exc
     message = f"{provider_failure_hint(runtime)}\nOriginal error: {exc}"

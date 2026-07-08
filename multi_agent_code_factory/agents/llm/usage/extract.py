@@ -1,4 +1,4 @@
-"""Extract token usage from LangChain responses."""
+"""从 LangChain 响应提取 token 用量。"""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ def _usage_from_mapping(data: dict[str, Any]) -> TokenUsage:
 
 
 def extract_token_usage(response: Any) -> TokenUsage:
-    """Read token counts from a LangChain AIMessage-like response."""
+    """从 LangChain AIMessage 或类似响应对象读取 token 计数。"""
     usage_meta = getattr(response, "usage_metadata", None)
     if isinstance(usage_meta, dict) and usage_meta:
         extracted = _usage_from_mapping(usage_meta)

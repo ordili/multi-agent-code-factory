@@ -1,4 +1,4 @@
-"""Structured LLM runner facade."""
+"""结构化 LLM 调用门面（LlmRunner）。"""
 
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class LlmRunner:
-    """Invoke LLM by role and parse structured output; update run budget and usage."""
+    """按角色调用 LLM 并解析结构化输出，同时更新 run 预算与用量。"""
 
     def __init__(
         self,
@@ -45,7 +45,7 @@ class LlmRunner:
         )
 
     def load_role_prompt(self, role_id: AgentRole) -> str:
-        """Load role system prompt."""
+        """加载角色 system prompt。"""
         return load_role_prompt(self.profile, role_id)
 
     def invoke_structured(
@@ -56,7 +56,7 @@ class LlmRunner:
         context: dict[str, Any],
         extra_system: str | None = None,
     ) -> T:
-        """Call LLM and parse to the given Pydantic schema."""
+        """调用 LLM 并解析为指定 Pydantic schema。"""
         request = InvokeRequest(
             role_id=role_id,
             schema=schema,
