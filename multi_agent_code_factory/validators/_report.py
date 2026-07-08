@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
+from multi_agent_code_factory.profiles import ValidationBlockOn
 from multi_agent_code_factory.schemas.validation_report import (
     ValidationReport,
     ValidationTarget,
@@ -22,7 +23,7 @@ def build_validation_report(
     violations: list[Violation],
     *,
     require_hitl: bool = False,
-    block_on: str = "error",
+    block_on: ValidationBlockOn = ValidationBlockOn.ERROR,
 ) -> ValidationReport:
     """根据违规列表汇总生成 ValidationReport。"""
     error_count = sum(
@@ -31,9 +32,9 @@ def build_validation_report(
     warn_count = sum(
         1 for item in violations if item.severity == ViolationSeverity.WARN
     )
-    if block_on == "never":
+    if block_on == ValidationBlockOn.NEVER:
         passed = True
-    elif block_on == "warn":
+    elif block_on == ValidationBlockOn.WARN:
         passed = error_count == 0
     else:
         passed = error_count == 0

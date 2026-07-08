@@ -8,7 +8,8 @@ from typing import Any
 from multi_agent_code_factory.config import LoopLimits
 from multi_agent_code_factory.pipeline_nodes import PipelineNode
 from multi_agent_code_factory.log import get_logger
-from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.profiles import ProfileConfig, ValidationBlockOn
+from multi_agent_code_factory.schemas.review import ReviewNextStage
 from multi_agent_code_factory.state import PipelineState
 
 IMPL_STALE_FILES = ["test_report.json", "review.json"]
@@ -56,7 +57,7 @@ def decide_after_spec_validate(
     if (
         validation is not None
         and not validation.passed
-        and profile.validation.spec.block_on == "error"
+        and profile.validation.spec.block_on == ValidationBlockOn.ERROR
     ):
         if state.spec_revision_count >= limits.max_spec_revisions:
             logger.error(
@@ -99,7 +100,7 @@ def decide_after_design_validate(
     if (
         validation is not None
         and not validation.passed
-        and profile.validation.design.block_on == "error"
+        and profile.validation.design.block_on == ValidationBlockOn.ERROR
     ):
         if state.design_revision_count >= limits.max_design_revisions:
             logger.error(
@@ -163,9 +164,9 @@ def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecisi
         msg = "decide_after_review requires review"
         raise ValueError(msg)
 
-    stage = review.next_stage.value
+    stage = review.next_stage
 
-    if stage == "deploy":
+    if stage == ReviewNextStage.DEPLOY:
         if not review.approved:
             if state.impl_retry_count >= limits.max_impl_retries:
                 logger.error(
@@ -182,7 +183,7 @@ def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecisi
         logger.info("review approved; route deploy_hitl")
         return RouteDecision(N.DEPLOY_HITL)
 
-    if stage == "developer":
+    if stage == ReviewNextStage.DEVELOPER:
         if state.impl_retry_count >= limits.max_impl_retries:
             logger.error(
                 "review escalated developer; implementation loop limit reached retries=%s max=%s",
@@ -196,7 +197,7 @@ def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecisi
             state_updates={"impl_retry_count": state.impl_retry_count + 1},
         )
 
-    if stage == "architect":
+    if stage == ReviewNextStage.ARCHITECT:
         if state.design_revision_count >= limits.max_design_revisions:
             logger.error(
                 "review escalated architect; design loop limit reached revisions=%s max=%s",
@@ -216,7 +217,7 @@ def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecisi
             stale_artifacts=DESIGN_ESCALATION_STALE_FILES,
         )
 
-    if stage == "pm":
+    if stage == ReviewNextStage.PM:
         if state.spec_revision_count >= limits.max_spec_revisions:
             logger.error(
                 "review escalated pm; spec loop limit reached revisions=%s max=%s",
@@ -238,7 +239,7 @@ def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecisi
             stale_artifacts=SPEC_ESCALATION_STALE_FILES,
         )
 
-    return RouteDecision(PipelineNode(stage))
+    return RouteDecision(PipelineNode(stage.value))
 
 
 def route_after_spec_validate(
