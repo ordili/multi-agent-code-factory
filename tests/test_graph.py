@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.config import FactoryConfig
 from multi_agent_code_factory.prompt_context import (
     DEFAULT_WATCH,
@@ -33,8 +34,10 @@ def default_profile():
 
 
 def test_resolve_watch_uses_defaults(default_profile) -> None:
-    assert "spec" in resolve_watch("architect", default_profile)
-    assert resolve_watch("architect", default_profile) == DEFAULT_WATCH["architect"]
+    assert "spec" in resolve_watch(AgentRole.ARCHITECT, default_profile)
+    assert resolve_watch(AgentRole.ARCHITECT, default_profile) == DEFAULT_WATCH[
+        AgentRole.ARCHITECT
+    ]
 
 
 def test_build_retry_bundle_when_retrying(default_profile, snippets_dir: Path) -> None:
@@ -70,7 +73,7 @@ def test_build_retry_bundle_when_retrying(default_profile, snippets_dir: Path) -
     bundle = build_retry_bundle(state, default_profile)
     assert bundle is not None
     assert bundle.spec.title == spec.title
-    ctx = build_prompt_context("developer", state, default_profile)
+    ctx = build_prompt_context(AgentRole.DEVELOPER, state, default_profile)
     assert "retry_bundle" in ctx
 
 

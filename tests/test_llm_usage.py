@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.agents.llm_usage import (
     LlmCallUsage,
     LlmUsageTotals,
@@ -52,7 +53,7 @@ def test_merge_usage_totals_accumulates_calls() -> None:
     totals = merge_usage_totals(
         LlmUsageTotals(),
         LlmCallUsage(
-            role_id="pm",
+            role_id=AgentRole.PM,
             schema_name="SpecArtifact",
             prompt_tokens=100,
             completion_tokens=50,
@@ -68,7 +69,7 @@ def test_merge_usage_totals_accumulates_calls() -> None:
 def test_record_llm_usage_writes_artifact(tmp_path: Path) -> None:
     writer = RunArtifactWriter("usage-test", base_dir=tmp_path)
     call = LlmCallUsage(
-        role_id="pm",
+        role_id=AgentRole.PM,
         schema_name="SpecArtifact",
         duration_ms=1200,
         prompt_tokens=10,
@@ -83,7 +84,7 @@ def test_record_llm_usage_writes_artifact(tmp_path: Path) -> None:
     assert reread.totals.total_tokens == 30
 
     second = LlmCallUsage(
-        role_id="architect",
+        role_id=AgentRole.ARCHITECT,
         schema_name="ArchitectLLMOutput",
         prompt_tokens=100,
         completion_tokens=200,

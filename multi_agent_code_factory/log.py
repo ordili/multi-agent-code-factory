@@ -8,6 +8,7 @@ from collections.abc import Iterator
 from contextlib import contextmanager
 from typing import Any
 
+from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.schemas.validation_report import ValidationReport, Violation
 
 _LOGGER_NAMESPACE = "multi_agent_code_factory"
@@ -105,7 +106,7 @@ def log_validation_result(
 def agent_run(
     logger: logging.Logger,
     *,
-    role_id: str,
+    role_id: AgentRole,
     stub: bool,
     extra: dict[str, Any] | None = None,
 ) -> Iterator[None]:

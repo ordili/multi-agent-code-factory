@@ -6,6 +6,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.schemas._base import ARTIFACT_VERSION
 
 
@@ -29,7 +30,7 @@ class TokenUsage(BaseModel):
 class LlmCallUsage(BaseModel):
     """单次结构化 LLM 调用的用量记录。"""
 
-    role_id: str
+    role_id: AgentRole
     schema_name: str
     attempt: int = Field(default=1, ge=1)
     duration_ms: int | None = Field(default=None, ge=0)

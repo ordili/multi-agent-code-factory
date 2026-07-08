@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.agents.base import (
     StubScenario,
     agent_context,
@@ -29,7 +30,7 @@ def run_reviewer(
     llm_runner: LlmRunner | None = None,
 ) -> dict[str, object]:
     """运行 Reviewer 节点，产出 ``review.json`` / ``review.md``。"""
-    with agent_run(logger, role_id="reviewer", stub=stub):
+    with agent_run(logger, role_id=AgentRole.REVIEWER, stub=stub):
         if stub:
             fixtures = default_stub_fixtures()
             # 首次修订时返回升环 fixture，模拟 reviewer 回退 architect/pm
@@ -56,9 +57,9 @@ def run_reviewer(
                 msg = "llm_runner is required when stub=False"
                 raise ValueError(msg)
             review = llm_runner.invoke_structured(
-                role_id="reviewer",
+                role_id=AgentRole.REVIEWER,
                 schema=ReviewReport,
-                context=agent_context("reviewer", state, profile),
+                context=agent_context(AgentRole.REVIEWER, state, profile),
             )
 
         writer.write_model("review.json", review)

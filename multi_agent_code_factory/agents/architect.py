@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.agents.base import (
     StubScenario,
     agent_context,
@@ -35,7 +36,7 @@ def run_architect(
 ) -> dict[str, object]:
     """运行 Architect 节点，产出 ``design.json`` / ``flow.mmd`` / ``design.md``。"""
     extra = {"revision": state.design_revision_count}
-    with agent_run(logger, role_id="architect", stub=stub, extra=extra):
+    with agent_run(logger, role_id=AgentRole.ARCHITECT, stub=stub, extra=extra):
         if stub:
             fixtures = default_stub_fixtures()
             # 首次修订使用无效 design fixture，触发 design_validate 重试
@@ -56,9 +57,9 @@ def run_architect(
                 msg = "architect requires spec in live mode"
                 raise ValueError(msg)
             output = llm_runner.invoke_structured(
-                role_id="architect",
+                role_id=AgentRole.ARCHITECT,
                 schema=ArchitectLLMOutput,
-                context=agent_context("architect", state, profile),
+                context=agent_context(AgentRole.ARCHITECT, state, profile),
                 extra_system=format_design_validation_feedback(state),
             )
             design = normalize_design(output.design, state)

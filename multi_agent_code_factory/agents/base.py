@@ -11,6 +11,7 @@ from typing import Any
 from pydantic import BaseModel
 
 from multi_agent_code_factory._paths import repo_root
+from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.prompt_context import build_prompt_context
 from multi_agent_code_factory.profiles import ProfileConfig
 from multi_agent_code_factory.state import PipelineState
@@ -82,7 +83,7 @@ def load_prompt_snippet(profile: ProfileConfig, filename: str) -> str | None:
 
 
 def agent_context(
-    role_id: str,
+    role_id: AgentRole,
     state: PipelineState,
     profile: ProfileConfig,
 ) -> dict[str, Any]:

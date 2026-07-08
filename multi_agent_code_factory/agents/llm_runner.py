@@ -10,6 +10,7 @@ from typing import Any, TypeVar
 from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, ValidationError
 
+from multi_agent_code_factory.agent_roles import STYLE_SNIPPET_ROLES, AgentRole
 from multi_agent_code_factory.agents.base import (
     default_stub_fixtures,
     load_json_fixture,
@@ -109,7 +110,7 @@ class LlmRunner:
         self._runtime = resolve_llm_runtime_config()
         self._model = create_chat_model()
 
-    def load_role_prompt(self, role_id: str) -> str:
+    def load_role_prompt(self, role_id: AgentRole) -> str:
         """加载角色 system prompt；优先 ``{role_id}.txt``，否则回退到通用 snippet。"""
         path = self.profile.prompts_dir / f"{role_id}.txt"
         if path.is_file():
@@ -202,14 +203,14 @@ class LlmRunner:
     def _build_messages(
         self,
         *,
-        role_id: str,
+        role_id: AgentRole,
         context: dict[str, Any],
         extra_system: str | None,
     ) -> tuple[str, str]:
         """组装 system/user 消息：角色 prompt + 可选风格 snippet + JSON 化上下文。"""
         system_parts = [self.load_role_prompt(role_id)]
         style = self.profile.prompts_dir / "python-style-snippet.txt"
-        if role_id in {"developer", "architect", "pm"} and style.is_file():
+        if role_id in STYLE_SNIPPET_ROLES and style.is_file():
             system_parts.append(style.read_text(encoding="utf-8"))
         if extra_system:
             system_parts.append(extra_system)
@@ -222,7 +223,7 @@ class LlmRunner:
     def _invoke_langchain_structured(
         self,
         *,
-        role_id: str,
+        role_id: AgentRole,
         schema: type[T],
         system_prompt: str,
         user_prompt: str,
@@ -248,7 +249,7 @@ class LlmRunner:
     def _invoke_ollama_json(
         self,
         *,
-        role_id: str,
+        role_id: AgentRole,
         schema: type[T],
         system_prompt: str,
         user_prompt: str,
@@ -292,7 +293,7 @@ class LlmRunner:
     def _build_call_usage(
         self,
         *,
-        role_id: str,
+        role_id: AgentRole,
         schema: type[BaseModel],
         attempt: int,
         duration_ms: int,
@@ -318,7 +319,7 @@ class LlmRunner:
     def invoke_structured(
         self,
         *,
-        role_id: str,
+        role_id: AgentRole,
         schema: type[T],
         context: dict[str, Any],
         extra_system: str | None = None,

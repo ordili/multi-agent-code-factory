@@ -6,6 +6,7 @@ import logging
 
 import pytest
 
+from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.log import (
     agent_run,
     configure_logging,
@@ -33,7 +34,7 @@ def test_configure_logging_is_idempotent(capsys: pytest.CaptureFixture[str]) -> 
 def test_agent_run_logs_success(capsys: pytest.CaptureFixture[str]) -> None:
     configure_logging(level="INFO", force=True)
     logger = get_logger("test.agent")
-    with agent_run(logger, role_id="pm", stub=True):
+    with agent_run(logger, role_id=AgentRole.PM, stub=True):
         pass
     captured = capsys.readouterr().err
     assert "agent start role=pm mode=stub" in captured
@@ -44,7 +45,7 @@ def test_agent_run_logs_exception(capsys: pytest.CaptureFixture[str]) -> None:
     configure_logging(level="INFO", force=True)
     logger = get_logger("test.agent")
     with pytest.raises(RuntimeError, match="boom"):
-        with agent_run(logger, role_id="architect", stub=False):
+        with agent_run(logger, role_id=AgentRole.ARCHITECT, stub=False):
             raise RuntimeError("boom")
     captured = capsys.readouterr().err
     assert "agent failed role=architect mode=live" in captured

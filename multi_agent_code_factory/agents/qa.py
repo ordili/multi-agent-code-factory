@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.agents.base import (
     StubScenario,
     agent_context,
@@ -27,9 +28,9 @@ def run_qa(
     stub_scenario: StubScenario = StubScenario.HAPPY,
 ) -> dict[str, object]:
     """运行 QA 节点，执行测试并产出 ``test_report.json``。"""
-    _ = agent_context("qa", state, profile)
+    _ = agent_context(AgentRole.QA, state, profile)
 
-    with agent_run(logger, role_id="qa", stub=stub):
+    with agent_run(logger, role_id=AgentRole.QA, stub=stub):
         if stub:
             fixtures = default_stub_fixtures()
             # 按 stub 场景选择通过/失败 fixture，模拟 impl 重试回路

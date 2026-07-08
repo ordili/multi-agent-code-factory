@@ -7,6 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel, Field
 
+from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.profiles import ProfileConfig
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.dev_manifest import DevManifest
@@ -17,20 +18,20 @@ from multi_agent_code_factory.schemas.validation_report import ValidationReport
 from multi_agent_code_factory.state import PipelineState
 from multi_agent_code_factory.tools.read_file import read_file
 
-DEFAULT_WATCH: dict[str, list[str]] = {
-    "pm": ["user_request", "profile", "spec_validation", "review"],
-    "architect": [
+DEFAULT_WATCH: dict[AgentRole, list[str]] = {
+    AgentRole.PM: ["user_request", "profile", "spec_validation", "review"],
+    AgentRole.ARCHITECT: [
         "spec",
         "profile",
         "review",
         "test_report",
         "design_validation",
     ],
-    "developer": ["spec", "design", "profile"],
-    "qa": ["design", "dev_manifest", "profile"],
-    "reviewer": ["spec", "design", "test_report", "dev_manifest"],
-    "deploy_hitl": ["review", "design", "dev_manifest", "profile"],
-    "escalation_hitl": [
+    AgentRole.DEVELOPER: ["spec", "design", "profile"],
+    AgentRole.QA: ["design", "dev_manifest", "profile"],
+    AgentRole.REVIEWER: ["spec", "design", "test_report", "dev_manifest"],
+    AgentRole.DEPLOY_HITL: ["review", "design", "dev_manifest", "profile"],
+    AgentRole.ESCALATION_HITL: [
         "run_meta",
         "impl_retry_count",
         "design_revision_count",
@@ -40,7 +41,7 @@ DEFAULT_WATCH: dict[str, list[str]] = {
         "spec_validation",
         "design_validation",
     ],
-    "deploy": ["review", "hitl", "profile"],
+    AgentRole.DEPLOY: ["review", "hitl", "profile"],
 }
 
 
@@ -58,7 +59,7 @@ class RetryBundle(BaseModel):
     code_snippets: list[CodeSnippet] = Field(default_factory=list)
 
 
-def resolve_watch(role_id: str, profile: ProfileConfig) -> list[str]:
+def resolve_watch(role_id: AgentRole, profile: ProfileConfig) -> list[str]:
     """解析角色应订阅的状态字段（Profile 覆盖优先于默认 watch）。"""
     subscriptions = profile.subscriptions or {}
     override = subscriptions.get(role_id)
@@ -118,7 +119,7 @@ def build_retry_bundle(
 
 
 def build_prompt_context(
-    role_id: str,
+    role_id: AgentRole,
     state: PipelineState,
     profile: ProfileConfig,
 ) -> dict[str, Any]:
@@ -163,7 +164,7 @@ def build_prompt_context(
             elif value is not None:
                 context[key] = value
 
-    if role_id == "developer":
+    if role_id == AgentRole.DEVELOPER:
         bundle = build_retry_bundle(state, profile)
         if bundle is not None:
             context["retry_bundle"] = bundle.model_dump(mode="json")

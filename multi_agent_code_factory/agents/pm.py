@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.agents.base import (
     StubScenario,
     agent_context,
@@ -30,7 +31,7 @@ def run_pm(
     llm_runner: LlmRunner | None = None,
 ) -> dict[str, object]:
     """运行 PM 节点，产出 ``spec.json`` / ``spec.md`` 并更新 state。"""
-    with agent_run(logger, role_id="pm", stub=stub):
+    with agent_run(logger, role_id=AgentRole.PM, stub=stub):
         if stub:
             fixtures = default_stub_fixtures()
             data = load_json_fixture(fixtures.spec)
@@ -46,9 +47,9 @@ def run_pm(
                 msg = "llm_runner is required when stub=False"
                 raise ValueError(msg)
             spec = llm_runner.invoke_structured(
-                role_id="pm",
+                role_id=AgentRole.PM,
                 schema=SpecArtifact,
-                context=agent_context("pm", state, profile),
+                context=agent_context(AgentRole.PM, state, profile),
             )
             spec = normalize_spec(spec, profile, state)
 

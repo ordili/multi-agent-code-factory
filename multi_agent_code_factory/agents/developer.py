@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.agents.base import (
     agent_context,
     default_stub_fixtures,
@@ -47,7 +48,7 @@ def run_developer(
 ) -> dict[str, object]:
     """运行 Developer 节点，写入源码并产出 ``dev_manifest.json``。"""
     extra = {"impl_retry": state.impl_retry_count}
-    with agent_run(logger, role_id="developer", stub=stub, extra=extra):
+    with agent_run(logger, role_id=AgentRole.DEVELOPER, stub=stub, extra=extra):
         if stub:
             manifest = DevManifest.model_validate(
                 load_json_fixture(default_stub_fixtures().dev_manifest)
@@ -60,9 +61,9 @@ def run_developer(
                 msg = "developer requires spec and design in live mode"
                 raise ValueError(msg)
             output = llm_runner.invoke_structured(
-                role_id="developer",
+                role_id=AgentRole.DEVELOPER,
                 schema=DeveloperLLMOutput,
-                context=agent_context("developer", state, profile),
+                context=agent_context(AgentRole.DEVELOPER, state, profile),
             )
             # 将 LLM 返回的源文件写入 profile.code_root
             code_root = profile.code_root
