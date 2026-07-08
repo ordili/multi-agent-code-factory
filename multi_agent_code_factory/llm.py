@@ -28,8 +28,11 @@ class LlmProviderSpec:
 
     api_key_env: str
     langchain_provider: str
+    # 厂商默认 API 地址；OpenAI/Anthropic 为 ``None`` 时用 SDK 默认域名。
     base_url: str | None = None
-    base_url_env: str | None = None
+    # 用 ``.env`` 覆盖 ``base_url``，适配本机/VM/Docker 等不同部署地址。
+    base_url_override_env: str | None = None
+    # ``False``：本地 Ollama 等无需 Key 即可联调；云端厂商保持 ``True``。
     api_key_required: bool = True
     output_mode: LlmOutputMode = "native_structured"
 
@@ -53,7 +56,7 @@ PROVIDER_SPECS: dict[str, LlmProviderSpec] = {
         api_key_env="OLLAMA_API_KEY",
         langchain_provider="ollama",
         base_url=DEFAULT_OLLAMA_BASE_URL,
-        base_url_env="OLLAMA_BASE_URL",
+        base_url_override_env="OLLAMA_BASE_URL",
         api_key_required=False,
         output_mode="prompted_json",
     ),
@@ -139,8 +142,8 @@ def _normalize_ollama_base_url(base_url: str | None) -> str | None:
 
 def resolve_provider_base_url(provider_id: str) -> str | None:
     spec = provider_spec(provider_id)
-    if spec.base_url_env:
-        explicit = _read_env_secret(spec.base_url_env)
+    if spec.base_url_override_env:
+        explicit = _read_env_secret(spec.base_url_override_env)
         if explicit:
             base_url = explicit
         else:
