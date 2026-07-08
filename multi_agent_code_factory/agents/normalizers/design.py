@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from multi_agent_code_factory.agents.normalizers.design_enrichment import enrich_design_for_validation
+from multi_agent_code_factory.agents.normalizers.design_enrichment import (
+    enrich_design_for_validation,
+)
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.state import PipelineState
 

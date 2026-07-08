@@ -166,14 +166,11 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
     if design.interfaces:
         for iface in design.interfaces:
             name = iface.get("name", "Interface")
-            module_ref = iface.get("module_ref") or name
             file_path = iface.get("file", "—")
             protocol = iface.get("protocol", "—")
             domain = iface.get("code_domain") or "—"
             desc = iface.get("description")
-            lines.append(
-                f"#### {name}（`{file_path}` · `{protocol}` · `{domain}`）"
-            )
+            lines.append(f"#### {name}（`{file_path}` · `{protocol}` · `{domain}`）")
             if desc:
                 lines.append("")
                 lines.append(desc)
@@ -204,8 +201,10 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
                     if not isinstance(field, dict):
                         continue
                     nullable = _yes_no(field.get("nullable"))
-                    pk = "PK" if field.get("pk") else (
-                        "UK" if field.get("unique") else "—"
+                    pk = (
+                        "PK"
+                        if field.get("pk")
+                        else ("UK" if field.get("unique") else "—")
                     )
                     lines.append(
                         f"| {field.get('name', '?')} | {field.get('type', '?')} | "
@@ -228,9 +227,7 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
                 )
                 for col in columns:
                     nullable = _yes_no(col.get("nullable"))
-                    pk = "PK" if col.get("pk") else (
-                        "UK" if col.get("unique") else "—"
-                    )
+                    pk = "PK" if col.get("pk") else ("UK" if col.get("unique") else "—")
                     lines.append(
                         f"| {col.get('name', '?')} | {col.get('type', '?')} | "
                         f"{nullable} | {pk} | {col.get('description', '—')} |"
@@ -242,9 +239,7 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
                 for idx in indexes:
                     cols = ", ".join(idx.get("columns") or [])
                     purpose = idx.get("purpose") or ""
-                    lines.append(
-                        f"- `{idx.get('name', '?')}` ({cols}) — {purpose}"
-                    )
+                    lines.append(f"- `{idx.get('name', '?')}` ({cols}) — {purpose}")
                 lines.append("")
     if not design.data_model and not design.table_schemas:
         lines.append("—")
@@ -256,7 +251,9 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
             path = diagram.path
             if path.endswith(".mmd") and path != flow_filename:
                 path = flow_filename
-            kind = diagram.kind.value if hasattr(diagram.kind, "value") else diagram.kind
+            kind = (
+                diagram.kind.value if hasattr(diagram.kind, "value") else diagram.kind
+            )
             title = diagram.title or kind
             lines.append(f"- **{title}** (`{kind}`): `{path}`")
     else:
@@ -264,7 +261,9 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
     lines.append("")
 
     lines.extend(["## 5. Alternatives Considered", ""])
-    decisions = (design.architecture or {}).get("decisions") if design.architecture else None
+    decisions = (
+        (design.architecture or {}).get("decisions") if design.architecture else None
+    )
     if decisions:
         lines.extend(
             [
@@ -385,7 +384,12 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
         )
         for item in design.file_plan:
             path = item.get("path", "—")
-            purpose = item.get("purpose") or item.get("operation") or item.get("reason") or "—"
+            purpose = (
+                item.get("purpose")
+                or item.get("operation")
+                or item.get("reason")
+                or "—"
+            )
             lines.append(f"| `{path}` | {purpose} |")
     else:
         lines.append("—")
@@ -431,7 +435,9 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
     else:
         lines.append("—")
     lines.extend(["", "## 附录 E. 与现有代码对照", ""])
-    code_delta = (design.architecture or {}).get("code_delta") if design.architecture else None
+    code_delta = (
+        (design.architecture or {}).get("code_delta") if design.architecture else None
+    )
     if code_delta:
         lines.append(str(code_delta))
     else:

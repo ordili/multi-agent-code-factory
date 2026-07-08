@@ -5,14 +5,14 @@ from pathlib import Path
 import pytest
 from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.config import FactoryConfig
+from multi_agent_code_factory.graph import run_pipeline
+from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.prompt_context import (
     DEFAULT_WATCH,
     build_prompt_context,
     build_retry_bundle,
     resolve_watch,
 )
-from multi_agent_code_factory.graph import run_pipeline
-from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.dev_manifest import (
     ChangedFile,
@@ -35,9 +35,10 @@ def default_profile():
 
 def test_resolve_watch_uses_defaults(default_profile) -> None:
     assert "spec" in resolve_watch(AgentRole.ARCHITECT, default_profile)
-    assert resolve_watch(AgentRole.ARCHITECT, default_profile) == DEFAULT_WATCH[
-        AgentRole.ARCHITECT
-    ]
+    assert (
+        resolve_watch(AgentRole.ARCHITECT, default_profile)
+        == DEFAULT_WATCH[AgentRole.ARCHITECT]
+    )
 
 
 def test_build_retry_bundle_when_retrying(default_profile, snippets_dir: Path) -> None:

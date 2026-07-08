@@ -1,4 +1,4 @@
-"""LangGraph 节点适配：将 ``PipelineState`` + ``PipelineRunContext`` 桥接到业务 ``run_*``。"""
+"""LangGraph 节点适配：``PipelineState`` + ``PipelineRunContext`` → ``run_*``。"""
 
 from multi_agent_code_factory.graph.nodes.agent_nodes import (
     node_architect,

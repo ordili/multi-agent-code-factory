@@ -6,8 +6,8 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from multi_agent_code_factory.config import LoopLimits
-from multi_agent_code_factory.pipeline_nodes import PipelineNode
 from multi_agent_code_factory.log import get_logger
+from multi_agent_code_factory.pipeline_nodes import PipelineNode
 from multi_agent_code_factory.profile_config import ProfileConfig, ValidationBlockOn
 from multi_agent_code_factory.schemas.review import ReviewNextStage
 from multi_agent_code_factory.state import PipelineState
@@ -170,7 +170,7 @@ def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecisi
         if not review.approved:
             if state.impl_retry_count >= limits.max_impl_retries:
                 logger.error(
-                    "review rejected deploy; implementation loop limit reached retries=%s max=%s",
+                    "review rejected deploy; impl loop limit retries=%s max=%s",
                     state.impl_retry_count,
                     limits.max_impl_retries,
                 )
@@ -186,7 +186,7 @@ def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecisi
     if stage == ReviewNextStage.DEVELOPER:
         if state.impl_retry_count >= limits.max_impl_retries:
             logger.error(
-                "review escalated developer; implementation loop limit reached retries=%s max=%s",
+                "review escalated developer; impl loop limit retries=%s max=%s",
                 state.impl_retry_count,
                 limits.max_impl_retries,
             )
@@ -200,7 +200,7 @@ def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecisi
     if stage == ReviewNextStage.ARCHITECT:
         if state.design_revision_count >= limits.max_design_revisions:
             logger.error(
-                "review escalated architect; design loop limit reached revisions=%s max=%s",
+                "review escalated architect; design loop limit revisions=%s max=%s",
                 state.design_revision_count,
                 limits.max_design_revisions,
             )

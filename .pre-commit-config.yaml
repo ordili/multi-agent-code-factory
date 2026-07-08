@@ -1,0 +1,31 @@
+# Local git hooks: run `pre-commit install` after `pip install -e ".[dev]"`.
+# CI runs the same hooks via `pre-commit run --all-files`.
+# docs/ is excluded: design prose and examples, not application code.
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+        # Python whitespace/EOF is handled by ruff-format below.
+        files: \.(ya?ml|toml)$
+        exclude: ^(\.env|docs/)
+      - id: end-of-file-fixer
+        files: \.(ya?ml|toml)$
+        exclude: ^(\.env|docs/)
+      - id: check-yaml
+        exclude: ^docs/
+      - id: check-toml
+        exclude: ^docs/
+      - id: check-merge-conflict
+        exclude: ^docs/
+      - id: check-added-large-files
+        exclude: ^docs/
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.20
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+        exclude: ^docs/
+      - id: ruff-format
+        exclude: ^docs/

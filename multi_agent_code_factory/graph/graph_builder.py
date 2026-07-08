@@ -31,10 +31,6 @@ from typing import Any
 
 from langgraph.graph import END, START, StateGraph
 
-from multi_agent_code_factory.pipeline_nodes import (
-    PipelineNode,
-    conditional_route_map,
-)
 from multi_agent_code_factory.graph.nodes import (
     node_architect,
     node_deploy,
@@ -55,6 +51,10 @@ from multi_agent_code_factory.graph.nodes import (
     node_spec_validate,
 )
 from multi_agent_code_factory.graph.pipeline_run_context import PipelineRunContext
+from multi_agent_code_factory.pipeline_nodes import (
+    PipelineNode,
+    conditional_route_map,
+)
 from multi_agent_code_factory.state import PipelineState
 
 N = PipelineNode
@@ -81,7 +81,8 @@ def build_graph() -> Any:
 
     # --- Design 阶段 ---
     # architect → design_validate → route_after_design_validate
-    # route_after_design_validate →? architect | design_hitl | developer | fail | escalation_hitl
+    # route_after_design_validate →?
+    #   architect | design_hitl | developer | fail | escalation_hitl
     # design_hitl → developer（固定边）
     graph.add_node(N.ARCHITECT, node_architect)
     graph.add_node(N.DESIGN_VALIDATE, node_design_validate)
@@ -90,7 +91,8 @@ def build_graph() -> Any:
 
     # --- 实现 → 测试 → 审查 ---
     # developer → qa → route_after_qa →? reviewer | developer | fail | escalation_hitl
-    # reviewer → route_after_reviewer →? deploy_hitl | developer | architect | pm | fail | escalation_hitl
+    # reviewer → route_after_reviewer →?
+    #   deploy_hitl | developer | architect | pm | fail | escalation_hitl
     graph.add_node(N.DEVELOPER, node_developer)
     graph.add_node(N.QA, node_qa)
     graph.add_node(N.ROUTE_AFTER_QA, node_route_after_qa)

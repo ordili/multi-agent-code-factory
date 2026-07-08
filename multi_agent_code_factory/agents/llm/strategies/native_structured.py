@@ -20,7 +20,9 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel
 
 from multi_agent_code_factory.agent_roles import AgentRole
-from multi_agent_code_factory.agents.llm.strategies.modes import NATIVE_STRUCTURED_PROVIDERS
+from multi_agent_code_factory.agents.llm.strategies.modes import (
+    NATIVE_STRUCTURED_PROVIDERS,
+)
 from multi_agent_code_factory.agents.llm.types import InvokeResult
 
 T = TypeVar("T", bound=BaseModel)
@@ -30,7 +32,7 @@ SUPPORTED_PROVIDERS = NATIVE_STRUCTURED_PROVIDERS
 
 
 class NativeStructuredStrategy:
-    """强推理场景下通过 LangChain ``with_structured_output`` 调用（openai、anthropic）。"""
+    """强推理场景下通过 LangChain ``with_structured_output`` 调用。"""
 
     output_mode = "native_structured"
     supported_providers = SUPPORTED_PROVIDERS

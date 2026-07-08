@@ -17,8 +17,10 @@ def provider_failure_hint(runtime: LlmRuntimeConfig) -> str:
         return (
             f"LLM call failed for provider={runtime.factory_provider!r} "
             f"model={runtime.model!r}. "
-            "For Ollama: restart the server and prefer qwen3.5:9b for large JSON specs. "
-            "For DeepSeek: use deepseek-chat or deepseek-v4-pro with prompted JSON mode. "
+            "For Ollama: restart the server and prefer qwen3.5:9b "
+            "for large JSON specs. "
+            "For DeepSeek: use deepseek-chat or deepseek-v4-pro "
+            "with prompted JSON mode. "
             "Or switch FACTORY_LLM_PROVIDER=openai."
         )
     return (

@@ -12,8 +12,8 @@ from multi_agent_code_factory.log import agent_run, get_logger
 from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.test_report import TestReport
 from multi_agent_code_factory.state import PipelineState
-from multi_agent_code_factory.tools.run_tests import run_tests
 from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
+from multi_agent_code_factory.tools.run_tests import run_tests
 
 logger = get_logger("agents.qa")
 

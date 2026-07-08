@@ -11,7 +11,8 @@ from pydantic import BaseModel, Field, model_validator
 from multi_agent_code_factory.schemas._base import ARTIFACT_VERSION
 
 _USER_STORY_RE = re.compile(
-    r"^As an?\s+(?P<as_a>.+?),\s+I want\s+(?P<want>.+?)(?:\s+so that\s+(?P<so_that>.+))?\.$",
+    r"^As an?\s+(?P<as_a>.+?),\s+I want\s+(?P<want>.+?)"
+    r"(?:\s+so that\s+(?P<so_that>.+))?\.$",
     re.IGNORECASE | re.DOTALL,
 )
 
@@ -136,7 +137,9 @@ def _parse_user_story_text(text: str, index: int) -> dict[str, str]:
             "id": f"US-{index}",
             "as_a": match.group("as_a").strip(),
             "want": match.group("want").strip(),
-            "so_that": (match.group("so_that") or "deliver the requested behavior").strip(),
+            "so_that": (
+                match.group("so_that") or "deliver the requested behavior"
+            ).strip(),
         }
     return {
         "id": f"US-{index}",
@@ -243,7 +246,9 @@ def coerce_spec_payload(data: Any) -> Any:
     if "user_stories" in payload:
         payload["user_stories"] = _coerce_user_stories(payload["user_stories"])
     if "requirement_pool" in payload:
-        payload["requirement_pool"] = _coerce_requirement_pool(payload["requirement_pool"])
+        payload["requirement_pool"] = _coerce_requirement_pool(
+            payload["requirement_pool"]
+        )
     if "operational_profile" in payload:
         payload["operational_profile"] = _coerce_operational_profile(
             payload["operational_profile"]

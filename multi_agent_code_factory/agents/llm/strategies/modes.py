@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from multi_agent_code_factory.llm import LlmOutputMode, PROVIDER_SPECS
+from multi_agent_code_factory.llm import PROVIDER_SPECS, LlmOutputMode
 
 
 def providers_for_output_mode(mode: LlmOutputMode) -> tuple[str, ...]:

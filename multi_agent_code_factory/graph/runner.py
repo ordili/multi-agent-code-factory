@@ -5,11 +5,11 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from multi_agent_code_factory.agents.stub.fixtures import StubScenario
 from multi_agent_code_factory.agents.llm import LlmRunner
+from multi_agent_code_factory.agents.stub.fixtures import StubScenario
 from multi_agent_code_factory.config import FactoryConfig
-from multi_agent_code_factory.graph.pipeline_run_context import PipelineRunContext
 from multi_agent_code_factory.graph.graph_builder import build_graph
+from multi_agent_code_factory.graph.pipeline_run_context import PipelineRunContext
 from multi_agent_code_factory.log import get_logger
 from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.run_meta import RunStatus
@@ -103,7 +103,8 @@ def run_pipeline(
     usage = writer.read_llm_usage()
     if usage is not None:
         logger.info(
-            "llm usage totals calls=%s prompt_tokens=%s completion_tokens=%s total_tokens=%s",
+            "llm usage totals calls=%s prompt_tokens=%s "
+            "completion_tokens=%s total_tokens=%s",
             usage.totals.llm_calls,
             usage.totals.prompt_tokens,
             usage.totals.completion_tokens,

@@ -40,6 +40,4 @@ def load_role_prompt(profile: ProfileConfig, role_id: AgentRole) -> str:
     if shared_path.is_file() and role_id in _LANGUAGE_AGNOSTIC_ROLES:
         return _read_prompt(shared_path)
 
-    return (
-        f"You are the {role_id} agent. Output must match the requested JSON schema."
-    )
+    return f"You are the {role_id} agent. Output must match the requested JSON schema."

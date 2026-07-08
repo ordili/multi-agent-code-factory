@@ -17,18 +17,18 @@ class PipelineNode(StrEnum):
     DESIGN_VALIDATE = "design_validate"
     ROUTE_AFTER_DESIGN_VALIDATE = "route_after_design_validate"
     DESIGN_HITL = "design_hitl"
-    
+
     DEVELOPER = "developer"
-    
+
     QA = "qa"
     ROUTE_AFTER_QA = "route_after_qa"
-    
+
     REVIEWER = "reviewer"
     ROUTE_AFTER_REVIEWER = "route_after_reviewer"
-    
+
     DEPLOY_HITL = "deploy_hitl"
     DEPLOY = "deploy"
-    
+
     FAIL = "fail"
     ESCALATION_HITL = "escalation_hitl"
 

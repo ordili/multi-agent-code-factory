@@ -25,6 +25,7 @@ llm = [
 
 dev = [
     "mypy>=1.8",
+    "pre-commit>=3.7",
     "pytest>=8",
     "pytest-cov>=4",
     "ruff>=0.8",
@@ -48,6 +49,7 @@ src = ["multi_agent_code_factory", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "UP", "B", "SIM", "RUF"]
+ignore = ["RUF001", "RUF002", "RUF003"]
 
 [tool.ruff.format]
 quote-style = "double"

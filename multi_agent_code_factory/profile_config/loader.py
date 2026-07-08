@@ -10,7 +10,10 @@ from typing import Any
 import yaml
 
 from multi_agent_code_factory._paths import profiles_dir, repo_root
-from multi_agent_code_factory.profile_config.models import ProfileConfig, ProfileLoadError
+from multi_agent_code_factory.profile_config.models import (
+    ProfileConfig,
+    ProfileLoadError,
+)
 
 _ENV_VAR_PATTERN = re.compile(r"\$\{([^}]+)\}")
 

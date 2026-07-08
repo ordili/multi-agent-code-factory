@@ -5,15 +5,14 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
 from multi_agent_code_factory.agent_roles import AgentRole
+from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.prompt_context import build_prompt_context
 from multi_agent_code_factory.prompt_context_trim import (
     trim_design,
     trim_retry_bundle,
     trim_test_report,
 )
-from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.dev_manifest import (
     ChangedFile,
@@ -23,6 +22,8 @@ from multi_agent_code_factory.schemas.dev_manifest import (
 from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.schemas.test_report import (
     TestFailure as TestCaseFailure,
+)
+from multi_agent_code_factory.schemas.test_report import (
     TestReport,
     TestSummary,
 )

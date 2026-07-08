@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from multi_agent_code_factory.agents.stub.fixtures import StubScenario
 from multi_agent_code_factory.agents.llm import LlmRunner
+from multi_agent_code_factory.agents.stub.fixtures import StubScenario
 from multi_agent_code_factory.config import LoopLimits
 from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter

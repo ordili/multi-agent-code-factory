@@ -7,8 +7,6 @@ from types import SimpleNamespace
 from unittest.mock import MagicMock
 
 import pytest
-from pydantic import BaseModel, Field
-
 from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.agents.llm.pipeline import StructuredInvokePipeline
 from multi_agent_code_factory.agents.llm.types import InvokeRequest
@@ -16,6 +14,7 @@ from multi_agent_code_factory.config import LoopLimits
 from multi_agent_code_factory.llm import LlmInvokeError, LlmRuntimeConfig
 from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
+from pydantic import BaseModel, Field
 
 
 class _EchoSchema(BaseModel):

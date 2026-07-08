@@ -1,69 +1,1 @@
-"""LangGraph 流水线图状态（节点间传递的 dataclass）。"""
-
-from __future__ import annotations
-
-from dataclasses import dataclass
-
-from multi_agent_code_factory.schemas.design import DesignArtifact
-from multi_agent_code_factory.schemas.dev_manifest import DevManifest
-from multi_agent_code_factory.schemas.hitl import HitlDecision
-from multi_agent_code_factory.schemas.review import ReviewReport
-from multi_agent_code_factory.schemas.spec import SpecArtifact
-from multi_agent_code_factory.schemas.test_report import TestReport
-from multi_agent_code_factory.schemas.validation_report import ValidationReport
-
-
-@dataclass
-class PipelineState:
-    """单次 run 在图内流转的可变状态。"""
-
-    task_id: str = ""  # 本次 run 唯一标识，用于产物目录命名与日志关联
-    user_request: str = ""  # 用户原始需求描述，供 PM 等 Agent 消费
-    spec: SpecArtifact | None = None  # PM 产出的需求规格工件
-    spec_validation: ValidationReport | None = None  # 规格校验报告
-    design: DesignArtifact | None = None  # Architect 产出的设计工件
-    design_validation: ValidationReport | None = None  # 设计校验报告
-    dev_manifest: DevManifest | None = None  # Developer 产出的开发与文件清单
-    test_report: TestReport | None = None  # QA 产出的测试报告
-    review: ReviewReport | None = None  # Reviewer 产出的评审报告
-    hitl: HitlDecision | None = None  # 当前或最近一次人机协作（HITL）决策记录
-    impl_retry_count: int = 0  # Developer→QA 实现重试次数（测试未通过或 Review 回退 Developer 时累加）
-    design_revision_count: int = 0  # 设计升环修订次数（设计校验失败或 Review 回退 Architect 时累加）
-    spec_revision_count: int = 0  # 规格升环修订次数（规格校验失败或 Review 回退 PM 时累加）
-    pipeline_route: str = ""  # 条件边下一节点名，由 route 节点写入
-
-    def copy_with_counters(
-        self,
-        *,
-        impl_retry_count: int | None = None,
-        design_revision_count: int | None = None,
-        spec_revision_count: int | None = None,
-    ) -> PipelineState:
-        """升环重试时复制 state 并更新计数器。"""
-        return PipelineState(
-            task_id=self.task_id,
-            user_request=self.user_request,
-            spec=self.spec,
-            spec_validation=self.spec_validation,
-            design=self.design,
-            design_validation=self.design_validation,
-            dev_manifest=self.dev_manifest,
-            test_report=self.test_report,
-            review=self.review,
-            hitl=self.hitl,
-            impl_retry_count=(
-                self.impl_retry_count if impl_retry_count is None else impl_retry_count
-            ),
-            design_revision_count=(
-                self.design_revision_count
-                if design_revision_count is None
-                else design_revision_count
-            ),
-            spec_revision_count=(
-                self.spec_revision_count
-                if spec_revision_count is None
-                else spec_revision_count
-            ),
-            pipeline_route=self.pipeline_route,
-        )
-
+"""LangGraph 流水线图状态（节点间传递的 dataclass）。"""from __future__ import annotationsfrom dataclasses import dataclassfrom multi_agent_code_factory.schemas.design import DesignArtifactfrom multi_agent_code_factory.schemas.dev_manifest import DevManifestfrom multi_agent_code_factory.schemas.hitl import HitlDecisionfrom multi_agent_code_factory.schemas.review import ReviewReportfrom multi_agent_code_factory.schemas.spec import SpecArtifactfrom multi_agent_code_factory.schemas.test_report import TestReportfrom multi_agent_code_factory.schemas.validation_report import ValidationReport@dataclassclass PipelineState:    """单次 run 在图内流转的可变状态。"""    task_id: str = ""  # 本次 run 唯一标识，用于产物目录命名与日志关联    user_request: str = ""  # 用户原始需求描述，供 PM 等 Agent 消费    spec: SpecArtifact | None = None  # PM 产出的需求规格工件    spec_validation: ValidationReport | None = None  # 规格校验报告    design: DesignArtifact | None = None  # Architect 产出的设计工件    design_validation: ValidationReport | None = None  # 设计校验报告    dev_manifest: DevManifest | None = None  # Developer 产出的开发与文件清单    test_report: TestReport | None = None  # QA 产出的测试报告    review: ReviewReport | None = None  # Reviewer 产出的评审报告    hitl: HitlDecision | None = None  # 当前或最近一次人机协作（HITL）决策记录    impl_retry_count: int = (        0  # Developer→QA 实现重试次数（测试未通过或 Review 回退 Developer 时累加）    )    design_revision_count: int = (        0  # 设计升环修订次数（设计校验失败或 Review 回退 Architect 时累加）    )    spec_revision_count: int = (        0  # 规格升环修订次数（规格校验失败或 Review 回退 PM 时累加）    )    pipeline_route: str = ""  # 条件边下一节点名，由 route 节点写入    def copy_with_counters(        self,        *,        impl_retry_count: int | None = None,        design_revision_count: int | None = None,        spec_revision_count: int | None = None,    ) -> PipelineState:        """升环重试时复制 state 并更新计数器。"""        return PipelineState(            task_id=self.task_id,            user_request=self.user_request,            spec=self.spec,            spec_validation=self.spec_validation,            design=self.design,            design_validation=self.design_validation,            dev_manifest=self.dev_manifest,            test_report=self.test_report,            review=self.review,            hitl=self.hitl,            impl_retry_count=(                self.impl_retry_count if impl_retry_count is None else impl_retry_count            ),            design_revision_count=(                self.design_revision_count                if design_revision_count is None                else design_revision_count            ),            spec_revision_count=(                self.spec_revision_count                if spec_revision_count is None                else spec_revision_count            ),            pipeline_route=self.pipeline_route,        )

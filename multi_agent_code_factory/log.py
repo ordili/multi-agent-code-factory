@@ -9,7 +9,10 @@ from contextlib import contextmanager
 from typing import Any
 
 from multi_agent_code_factory.agent_roles import AgentRole
-from multi_agent_code_factory.schemas.validation_report import ValidationReport, Violation
+from multi_agent_code_factory.schemas.validation_report import (
+    ValidationReport,
+    Violation,
+)
 
 _LOGGER_NAMESPACE = "multi_agent_code_factory"
 _CONFIGURED = False

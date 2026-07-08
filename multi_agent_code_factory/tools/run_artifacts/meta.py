@@ -12,7 +12,12 @@ from pydantic import BaseModel
 
 from multi_agent_code_factory.config import FactoryConfig, LoopLimits
 from multi_agent_code_factory.profile_config import ProfileConfig
-from multi_agent_code_factory.schemas.run_meta import BudgetUsage, DeployStatus, RunMeta, RunStatus
+from multi_agent_code_factory.schemas.run_meta import (
+    BudgetUsage,
+    DeployStatus,
+    RunMeta,
+    RunStatus,
+)
 from multi_agent_code_factory.tools.run_artifacts.snapshots import (
     loop_limits_snapshot,
     profile_snapshot,

@@ -26,8 +26,6 @@ def build_llm_messages(
             system_parts.append(style_text)
     if extra_system:
         system_parts.append(extra_system)
-    system_prompt = "\n\n".join(
-        part.strip() for part in system_parts if part.strip()
-    )
+    system_prompt = "\n\n".join(part.strip() for part in system_parts if part.strip())
     user_prompt = json.dumps(context, ensure_ascii=False, indent=2)
     return system_prompt, user_prompt

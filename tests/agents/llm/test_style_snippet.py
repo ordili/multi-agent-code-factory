@@ -11,4 +11,7 @@ def test_style_snippet_path_resolves_per_language() -> None:
     assert style_snippet_path(load_profile("go")).name == "go-style-snippet.txt"
     assert style_snippet_path(load_profile("java")).name == "java-style-snippet.txt"
     assert style_snippet_path(load_profile("rust")).name == "rust-style-snippet.txt"
-    assert style_snippet_path(load_profile("solidity")).name == "solidity-style-snippet.txt"
+    assert (
+        style_snippet_path(load_profile("solidity")).name
+        == "solidity-style-snippet.txt"
+    )

@@ -20,7 +20,7 @@ def node_pm(
     *,
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
-    """PM Agent：根据 ``user_request`` 生成 spec 产物（``spec.json`` / ``spec.md``）。"""
+    """PM Agent：根据 ``user_request`` 生成 spec（``spec.json`` / ``spec.md``）。"""
     ctx = runtime.context
     return run_pm(
         state,

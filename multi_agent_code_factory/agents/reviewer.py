@@ -49,9 +49,7 @@ def run_reviewer(
                     load_json_fixture(fixtures.review_pm)
                 )
             else:
-                review = ReviewReport.model_validate(
-                    load_json_fixture(fixtures.review)
-                )
+                review = ReviewReport.model_validate(load_json_fixture(fixtures.review))
         else:
             runner = require_llm_runner(llm_runner)
             review = runner.invoke_structured(

@@ -5,7 +5,7 @@
 CLI 与测试调用 ``run_pipeline()``；编译后的图从 ``pm`` 节点开始执行。
 """
 
-from multi_agent_code_factory.graph.runner import PipelineRunResult, run_pipeline
 from multi_agent_code_factory.graph.graph_builder import build_graph
+from multi_agent_code_factory.graph.runner import PipelineRunResult, run_pipeline
 
 __all__ = ["PipelineRunResult", "build_graph", "run_pipeline"]

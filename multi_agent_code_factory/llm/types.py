@@ -25,7 +25,7 @@ class LlmProviderSpec:
 
 @dataclass(frozen=True)
 class LlmRuntimeConfig:
-    """Resolved live LLM settings from ``FACTORY_LLM_PROVIDER`` + ``FACTORY_LLM_MODEL``."""
+    """Resolved live LLM settings from FACTORY_LLM_* env vars."""
 
     factory_provider: str
     model: str

@@ -4,8 +4,8 @@ from pathlib import Path
 
 from multi_agent_code_factory.config import LoopLimits
 from multi_agent_code_factory.profile_config import ProfileConfig, ToolchainConfig
-from multi_agent_code_factory.tools.run_tests import run_tests
 from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
+from multi_agent_code_factory.tools.run_tests import run_tests
 
 
 def test_run_tests_with_pytest_junit(tmp_path: Path) -> None:

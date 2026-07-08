@@ -8,7 +8,10 @@ from multi_agent_code_factory.agents.developer_output import apply_developer_out
 from multi_agent_code_factory.agents.live import require_llm_runner
 from multi_agent_code_factory.agents.llm import LlmRunner
 from multi_agent_code_factory.agents.llm.schemas import DeveloperLLMOutput
-from multi_agent_code_factory.agents.stub.fixtures import default_stub_fixtures, load_json_fixture
+from multi_agent_code_factory.agents.stub.fixtures import (
+    default_stub_fixtures,
+    load_json_fixture,
+)
 from multi_agent_code_factory.log import agent_run, get_logger
 from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.dev_manifest import DevManifest

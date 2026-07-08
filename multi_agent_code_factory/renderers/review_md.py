@@ -40,9 +40,7 @@ def render_review_md(review: ReviewReport) -> str:
             blocking = "blocking" if finding.blocking else "non-blocking"
             location = f" (`{finding.file}`)" if finding.file else ""
             routing = (
-                f" → `{finding.routing.value}`"
-                if finding.routing is not None
-                else ""
+                f" → `{finding.routing.value}`" if finding.routing is not None else ""
             )
             lines.append(
                 f"- **{finding.id}** [{finding.severity.value}/"

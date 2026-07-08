@@ -24,7 +24,8 @@ def json_output_instructions(schema: type[BaseModel]) -> str:
     )
     example = llm_example_for_schema(schema)
     if example is not None:
-        return f"{rules}\n\nExample JSON shape:\n{json.dumps(example, ensure_ascii=False, indent=2)}"
+        example_json = json.dumps(example, ensure_ascii=False, indent=2)
+        return f"{rules}\n\nExample JSON shape:\n{example_json}"
     return (
         f"{rules}\n\nJSON schema (follow types strictly):\n"
         f"{json.dumps(schema.model_json_schema(), ensure_ascii=False, indent=2)}"

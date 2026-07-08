@@ -11,7 +11,11 @@ from multi_agent_code_factory.agents.llm.pipeline import StructuredInvokePipelin
 from multi_agent_code_factory.agents.llm.prompt.loader import load_role_prompt
 from multi_agent_code_factory.agents.llm.types import InvokeRequest
 from multi_agent_code_factory.config import FactoryConfig
-from multi_agent_code_factory.llm import LlmRuntimeConfig, create_chat_model, resolve_llm_runtime_config
+from multi_agent_code_factory.llm import (
+    LlmRuntimeConfig,
+    create_chat_model,
+    resolve_llm_runtime_config,
+)
 from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 

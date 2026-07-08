@@ -13,8 +13,8 @@ from multi_agent_code_factory.llm import (
     llm_available,
     resolve_chat_model_id,
 )
-from multi_agent_code_factory.runtime.stub_mode import resolve_stub_mode
 from multi_agent_code_factory.profile_config import load_profile
+from multi_agent_code_factory.runtime.stub_mode import resolve_stub_mode
 from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.state import PipelineState
 from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter

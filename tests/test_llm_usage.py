@@ -2,11 +2,8 @@
 
 from __future__ import annotations
 
-from types import SimpleNamespace
-
 from pathlib import Path
-
-import pytest
+from types import SimpleNamespace
 
 from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.agents.llm.usage import (

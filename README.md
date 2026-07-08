@@ -75,9 +75,20 @@ Ollama tuning, GCP VM scripts, and troubleshooting: [docs/operations.md](docs/op
 
 ```bash
 pip install -e ".[dev]"
-python -m ruff check . && python -m ruff format --check .
+pre-commit install          # once per clone; runs ruff on every commit
+pre-commit run --all-files  # optional: verify entire tree before push
 python -m pytest -q
 python -m mypy multi_agent_code_factory
+```
+
+On Windows, if `pre-commit` is not on `PATH`, use `python -m pre_commit install` / `python -m pre_commit run --all-files`.
+
+`pre-commit` mirrors CI lint/format gates locally. If a hook fixes files, stage the changes and commit again.
+
+Run the pipeline in **stub mode** (default; no API key, uses JSON fixtures) to exercise the full graph and write audit artifacts under `docs/runs/<task-id>/`:
+
+```bash
+python -m multi_agent_code_factory run --profile python --task-id demo "hello"
 ```
 
 Integration test (needs API key; skipped in CI by default):

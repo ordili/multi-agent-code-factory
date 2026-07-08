@@ -140,7 +140,9 @@ def test_extends_merge_in_custom_profile(tmp_path: Path) -> None:
     base_dir = tmp_path / "profiles" / "_base"
     base_dir.mkdir(parents=True)
     (base_dir / "common.yaml").write_text(
-        yaml.safe_dump({"tools": ["read_file"], "validation": {"spec": {"enabled": True}}}),
+        yaml.safe_dump(
+            {"tools": ["read_file"], "validation": {"spec": {"enabled": True}}}
+        ),
         encoding="utf-8",
     )
     profiles_root = tmp_path / "profiles"
@@ -159,7 +161,9 @@ def test_extends_merge_in_custom_profile(tmp_path: Path) -> None:
         ),
         encoding="utf-8",
     )
-    profile = load_profile("child", profiles_root=profiles_root, factory_repo=repo_root())
+    profile = load_profile(
+        "child", profiles_root=profiles_root, factory_repo=repo_root()
+    )
     assert profile.tools == ["write_file"]
     assert profile.validation.spec.enabled is True
 

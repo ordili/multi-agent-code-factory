@@ -6,7 +6,10 @@ import json
 import urllib.error
 import urllib.request
 
-from multi_agent_code_factory.llm.config import require_llm_api_key, resolve_llm_runtime_config
+from multi_agent_code_factory.llm.config import (
+    require_llm_api_key,
+    resolve_llm_runtime_config,
+)
 from multi_agent_code_factory.llm.providers import DEFAULT_OLLAMA_BASE_URL
 from multi_agent_code_factory.llm.types import LlmConfigError, LlmRuntimeConfig
 
@@ -45,7 +48,9 @@ def preflight_live_llm(*, timeout_sec: float = 90.0) -> None:
         raise LlmConfigError(msg) from exc
 
     if '"error"' in body.lower():
-        msg = _ollama_failure_message(runtime, RuntimeError("ollama returned error payload"), body)
+        msg = _ollama_failure_message(
+            runtime, RuntimeError("ollama returned error payload"), body
+        )
         raise LlmConfigError(msg)
 
 
@@ -55,10 +60,12 @@ def _ollama_failure_message(
     detail: str,
 ) -> str:
     hint = (
-        f"Ollama live preflight failed for model {runtime.model!r} at {runtime.base_url}.\n"
+        f"Ollama live preflight failed for model {runtime.model!r} "
+        f"at {runtime.base_url}.\n"
         f"Cause: {exc}\n"
         "Fixes to try:\n"
-        "  1. Set OLLAMA_BASE_URL=http://127.0.0.1:11434 (not localhost; Windows IPv6 → 502)\n"
+        "  1. Set OLLAMA_BASE_URL=http://127.0.0.1:11434 "
+        "(not localhost; Windows IPv6 → 502)\n"
         "  2. Restart Ollama (quit tray app, run `ollama serve`)\n"
         "  3. `ollama pull qwen3.5:9b` and match FACTORY_LLM_MODEL\n"
         "  4. Lower OLLAMA_NUM_CTX / set OLLAMA_REASONING=false in .env\n"

@@ -37,5 +37,7 @@ def apply_developer_output(
         write_file(code_root, source_file.path, source_file.content)
     manifest = _manifest_from_output(output)
     if "linter" in profile.tools:
-        manifest = manifest.model_copy(update={"lint_passed": run_linter(profile).passed})
+        manifest = manifest.model_copy(
+            update={"lint_passed": run_linter(profile).passed}
+        )
     return manifest

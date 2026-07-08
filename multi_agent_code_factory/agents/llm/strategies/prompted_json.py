@@ -23,7 +23,9 @@ from pydantic import BaseModel, ValidationError
 
 from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.agents.llm.errors import LlmParseError
-from multi_agent_code_factory.agents.llm.prompt.schema_hints import json_output_instructions
+from multi_agent_code_factory.agents.llm.prompt.schema_hints import (
+    json_output_instructions,
+)
 from multi_agent_code_factory.agents.llm.strategies.modes import PROMPTED_JSON_PROVIDERS
 from multi_agent_code_factory.agents.llm.types import InvokeResult
 from multi_agent_code_factory.llm import LlmInvokeError
@@ -45,7 +47,7 @@ def extract_json_text(raw: str) -> str:
 
 
 class PromptedJsonStrategy:
-    """强推理 + 提示词 JSON 约束 + 本地解析（deepseek、ollama）。""" 
+    """强推理 + 提示词 JSON 约束 + 本地解析（deepseek、ollama）。"""
 
     output_mode = "prompted_json"
     supported_providers = SUPPORTED_PROVIDERS

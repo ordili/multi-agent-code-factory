@@ -35,9 +35,8 @@ class RetryExecutor:
                 last_error = exc
                 if on_attempt_failure is not None:
                     on_attempt_failure(attempt, exc)
-                if (
-                    attempt < self._policy.max_attempts
-                    and self._policy.is_retryable(exc)
+                if attempt < self._policy.max_attempts and self._policy.is_retryable(
+                    exc
                 ):
                     time.sleep(self._policy.backoff_sec(attempt))
                     continue

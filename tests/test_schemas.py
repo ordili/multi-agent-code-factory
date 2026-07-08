@@ -66,7 +66,8 @@ def test_spec_coerces_llm_simplified_shapes() -> None:
                 }
             ],
             "user_stories": [
-                "As a user, I want to divide two numbers safely if the divisor is zero.",
+                "As a user, I want to divide two numbers safely "
+                "if the divisor is zero.",
             ],
             "requirement_pool": {
                 "functional": ["Support division", "Reject zero divisor"],

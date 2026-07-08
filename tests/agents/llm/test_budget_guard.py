@@ -5,10 +5,9 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-
+from multi_agent_code_factory.agents.llm.budget.errors import LlmBudgetExceededError
 from multi_agent_code_factory.agents.llm.budget.guard import check_llm_budget
 from multi_agent_code_factory.config import BudgetConfig, FactoryConfig, LoopLimits
-from multi_agent_code_factory.agents.llm.budget.errors import LlmBudgetExceededError
 from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
