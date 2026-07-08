@@ -1,4 +1,4 @@
-"""DesignArtifact — Architect output."""
+"""设计产物（Architect 输出）的 Pydantic 模型。"""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Program rule validators for PM / Architect artifacts."""
+"""PM / Architect 产物的程序化规则校验器。"""
 
 from multi_agent_code_factory.validators.design_rules import validate_design_rules
 from multi_agent_code_factory.validators.spec_rules import validate_spec_rules

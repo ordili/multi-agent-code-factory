@@ -1,4 +1,4 @@
-"""Structured LLM invocation with budget tracking."""
+"""结构化 LLM 调用封装，含预算追踪与重试。"""
 
 from __future__ import annotations
 
@@ -47,7 +47,7 @@ _TRANSIENT_ERROR_NAMES = frozenset(
 
 
 def extract_json_text(raw: str) -> str:
-    """Strip markdown fences and surrounding whitespace from model output."""
+    """去除模型输出中的 markdown 围栏与首尾空白。"""
     text = raw.strip()
     if text.startswith("```"):
         text = _JSON_FENCE_RE.sub("", text).strip()
@@ -66,7 +66,7 @@ _PROMPTED_JSON_PROVIDERS = frozenset({"ollama", "deepseek"})
 
 
 def _uses_prompted_json(provider: str) -> bool:
-    """Providers that reject LangChain ``with_structured_output`` (JSON schema mode)."""
+    """不支持 LangChain ``with_structured_output`` 的 provider 需走提示词 JSON 模式。"""
     return provider in _PROMPTED_JSON_PROVIDERS
 
 
@@ -86,7 +86,7 @@ def _resolved_call_tokens(call: LlmCallUsage) -> int:
 
 
 class LlmRunner:
-    """Invoke role prompts with structured output and run_meta budget updates."""
+    """按角色调用 LLM 并解析结构化输出，同时更新 run_meta 预算。"""
 
     def __init__(
         self,
@@ -305,6 +305,7 @@ class LlmRunner:
         context: dict[str, Any],
         extra_system: str | None = None,
     ) -> T:
+        """调用 LLM 并解析为指定 Pydantic schema；超预算或全部重试失败则抛错。"""
         self._check_budget()
         system_prompt, user_prompt = self._build_messages(
             role_id=role_id,
@@ -359,6 +360,7 @@ class LlmRunner:
                     schema.__name__,
                     exc,
                 )
+                # 瞬态错误可退避重试
                 if attempt < attempts and _is_transient_llm_error(exc):
                     time.sleep(1.5 * attempt)
                     continue

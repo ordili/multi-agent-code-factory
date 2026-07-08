@@ -1,4 +1,4 @@
-"""Tool registry for Developer / QA agents."""
+"""Developer / QA Agent 的工具注册表。"""
 
 from __future__ import annotations
 
@@ -54,6 +54,7 @@ _TOOL_BUILDERS: dict[str, Callable[[ProfileConfig], ToolFn]] = {
 
 
 def build_tool_registry(profile: ProfileConfig) -> dict[str, ToolFn]:
+    """根据 Profile 声明的工具列表构建已绑定的工具函数字典。"""
     registry: dict[str, ToolFn] = {}
     for name in profile.tools:
         builder = _TOOL_BUILDERS.get(name)
@@ -65,4 +66,5 @@ def build_tool_registry(profile: ProfileConfig) -> dict[str, ToolFn]:
 
 
 def available_tools() -> tuple[str, ...]:
+    """返回所有已注册的工具名称（排序后）。"""
     return tuple(sorted(_TOOL_BUILDERS))

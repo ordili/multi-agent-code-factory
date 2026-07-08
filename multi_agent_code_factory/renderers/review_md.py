@@ -1,4 +1,4 @@
-"""review.json → review.md renderer (P1)."""
+"""review.json → review.md 渲染器（P1）。"""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from multi_agent_code_factory.schemas.review import ReviewReport
 
 
 def render_review_md(review: ReviewReport) -> str:
-    """Render ReviewReport to human-readable Markdown."""
+    """将 ReviewReport 渲染为人类可读的 Markdown 审查报告。"""
     approved = "是" if review.approved else "否"
     lines = [
         "# 审查结论",

@@ -1,4 +1,4 @@
-"""SPEC-001-016 validation rules (MVP whitelist)."""
+"""SPEC-001 至 SPEC-016 校验规则（MVP 白名单）。"""
 
 from __future__ import annotations
 
@@ -66,8 +66,10 @@ def validate_spec_rules(
     spec: SpecArtifact,
     profile: ProfileConfig,
 ) -> list[Violation]:
+    """对 SpecArtifact 执行 SPEC-001 至 SPEC-016 规则校验，返回违规列表。"""
     violations: list[Violation] = []
 
+    # SPEC-001 / SPEC-002：验收标准
     if not spec.acceptance_criteria:
         violations.append(
             error(
@@ -86,6 +88,7 @@ def validate_spec_rules(
             )
         )
 
+    # SPEC-003 / SPEC-004：范围与必填字段
     if not spec.scope_in:
         violations.append(
             error("SPEC-003", "scope_in must not be empty", field="scope_in")
@@ -98,6 +101,7 @@ def validate_spec_rules(
             error("SPEC-004", "summary must not be empty", field="summary")
         )
 
+    # SPEC-005 / SPEC-006 / SPEC-007：Profile 与 context 一致性
     if spec.profile != profile.id:
         violations.append(
             error(
@@ -128,6 +132,7 @@ def validate_spec_rules(
             _validate_context_schema(spec.context, profile.context_schema)
         )
 
+    # SPEC-008 至 SPEC-012：ID 唯一性与必填集合
     id_buckets: dict[str, list[str]] = {
         "user_stories": [story.id for story in spec.user_stories],
         "requirement_pool": [item.id for item in spec.requirement_pool],
@@ -174,6 +179,7 @@ def validate_spec_rules(
                 )
             )
 
+    # SPEC-013 / SPEC-014：运行画像
     if spec.operational_profile is None:
         violations.append(
             error(
@@ -192,6 +198,7 @@ def validate_spec_rules(
                 error("SPEC-014", "operational_profile.performance.tier is required")
             )
 
+    # SPEC-015 / SPEC-016：一致性画像
     if spec.consistency_profile is None:
         violations.append(
             error(

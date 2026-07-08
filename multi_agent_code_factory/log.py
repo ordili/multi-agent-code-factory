@@ -1,4 +1,4 @@
-"""Pipeline logging helpers (stdlib ``logging``)."""
+"""流水线日志辅助（基于标准库 ``logging``）。"""
 
 from __future__ import annotations
 

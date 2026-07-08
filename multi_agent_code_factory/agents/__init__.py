@@ -1,4 +1,4 @@
-"""Five pipeline agents."""
+"""流水线五 Agent 节点（PM / Architect / Developer / QA / Reviewer）。"""
 
 from multi_agent_code_factory.agents.architect import run_architect
 from multi_agent_code_factory.agents.developer import run_developer

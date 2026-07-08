@@ -1,4 +1,4 @@
-"""Execute Profile toolchain test_command and produce TestReport."""
+"""执行 Profile 工具链中的 test_command 并生成 TestReport。"""
 
 from __future__ import annotations
 
@@ -37,23 +37,26 @@ def run_tests(
     *,
     code_root: Path | None = None,
 ) -> TestReport:
-    """Run setup/build/test_command under code_root and parse output."""
+    """在 code_root 下依次执行 setup/build/test 命令并解析输出为 TestReport。"""
     cwd = (code_root or profile.code_root).resolve()
     cwd.mkdir(parents=True, exist_ok=True)
 
     toolchain = profile.toolchain
+    # 可选：环境准备
     if toolchain.setup:
         setup = _run_shell(toolchain.setup, cwd)
         if setup.exit_code != 0:
             parser = get_parser("exit_code_only")
             return parser(setup, profile, cwd)
 
+    # 可选：构建
     if toolchain.build:
         build = _run_shell(toolchain.build, cwd)
         if build.exit_code != 0:
             parser = get_parser("exit_code_only")
             return parser(build, profile, cwd)
 
+    # 执行测试并解析结果
     test_result = _run_shell(toolchain.test_command, cwd)
     parser = get_parser(toolchain.test_parser)
     return parser(test_result, profile, cwd)

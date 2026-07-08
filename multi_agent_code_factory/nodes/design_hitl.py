@@ -1,4 +1,4 @@
-"""design_hitl graph node (MVP: auto-approve when required, no interrupt)."""
+"""design_hitl 图节点（MVP：需要时自动批准，不中断流水线）。"""
 
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ def run_design_hitl(
     profile: ProfileConfig,
     writer: RunArtifactWriter,
 ) -> dict[str, object]:
+    """若需要 design 人工审核则写入自动批准的 HITL 决策；否则无状态更新。"""
     if not _design_hitl_required(state, profile):
         return {}
     decision = HitlDecision(

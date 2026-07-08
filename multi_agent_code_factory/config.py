@@ -1,4 +1,4 @@
-"""Factory-wide configuration (loop limits, budget)."""
+"""工厂级配置：循环上限、预算与策略加载。"""
 
 from __future__ import annotations
 
@@ -14,11 +14,15 @@ from multi_agent_code_factory._paths import default_policy_path, repo_root
 
 
 class OnLimitExceeded(StrEnum):
+    """循环次数用尽时的处置方式。"""
+
     FAIL = "fail"
     ESCALATION_HITL = "escalation_hitl"
 
 
 class LoopLimits(BaseModel):
+    """实现 / 设计 / 规格各阶段的最大重试与升环次数。"""
+
     max_impl_retries: int = Field(default=3, ge=0)
     max_design_revisions: int = Field(default=2, ge=0)
     max_spec_revisions: int = Field(default=1, ge=0)
@@ -33,11 +37,15 @@ class LoopLimits(BaseModel):
 
 
 class BudgetConfig(BaseModel):
+    """单次运行的 LLM 调用与 token 预算上限。"""
+
     max_llm_calls: int | None = Field(default=None, ge=1)
     max_tokens: int | None = Field(default=None, ge=1)
 
 
 class FactoryConfig(BaseModel):
+    """从 autonomy_policy.yaml 解析的工厂运行时配置。"""
+
     loop_limits: LoopLimits = Field(default_factory=LoopLimits)
     max_hitl_rounds: int = Field(default=5, ge=0)
     budget: BudgetConfig | None = None
@@ -166,7 +174,7 @@ def load_factory_config(
     max_hitl_rounds: int | None = None,
     on_limit_exceeded: str | None = None,
 ) -> FactoryConfig:
-    """Load factory config: YAML defaults, then FACTORY_* env, then CLI kwargs."""
+    """加载工厂配置：YAML 默认 → FACTORY_* 环境变量 → CLI 参数覆盖。"""
     path = policy_path or default_policy_path()
     section = _read_policy_file(path)
     config = FactoryConfig.model_validate(section)

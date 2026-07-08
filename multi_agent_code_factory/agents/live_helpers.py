@@ -1,4 +1,4 @@
-"""Post-processing helpers for live LLM agent outputs."""
+"""Live 模式下 LLM Agent 产物的后处理与规范化。"""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ def normalize_spec(
     profile: ProfileConfig,
     state: PipelineState,
 ) -> SpecArtifact:
+    """补全 spec 的 profile、revision 与 language 等元数据。"""
     revision = state.spec.revision + 1 if state.spec is not None else 1
     if state.spec_revision_count > 0:
         revision = max(revision, state.spec_revision_count + 1)
@@ -101,7 +102,7 @@ def enrich_design_for_validation(
     *,
     spec: SpecArtifact | None,
 ) -> DesignArtifact:
-    """Fill common MVP validation gaps when the LLM omits optional-but-required fields."""
+    """在 LLM 遗漏可选字段时补全 MVP 校验所需的设计字段。"""
     updates: dict[str, object] = {}
 
     dev_tasks = _dedupe_dev_tasks_by_path(design.dev_tasks)
@@ -136,6 +137,7 @@ def normalize_design(
     design: DesignArtifact,
     state: PipelineState,
 ) -> DesignArtifact:
+    """规范化 design 的 revision、spec_ref，并补全校验缺口。"""
     spec_title = state.spec.title if state.spec is not None else design.spec_ref
     revision = state.design.revision + 1 if state.design is not None else 1
     if state.design_revision_count > 0:
@@ -150,6 +152,7 @@ def normalize_design(
 
 
 def format_design_validation_feedback(state: PipelineState) -> str | None:
+    """将上次 design 校验失败项格式化为 Architect 重试时的 extra_system 提示。"""
     validation = state.design_validation
     if validation is None or validation.passed:
         return None

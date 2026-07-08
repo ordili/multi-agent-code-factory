@@ -1,4 +1,4 @@
-"""Test output parser registry."""
+"""测试输出解析器注册表。"""
 
 from __future__ import annotations
 
@@ -23,6 +23,7 @@ _PARSERS: dict[str, ParserFn] = {
 
 
 def get_parser(parser_id: str) -> ParserFn:
+    """按 ID 获取测试输出解析函数。"""
     try:
         return _PARSERS[parser_id]
     except KeyError as exc:
@@ -31,4 +32,5 @@ def get_parser(parser_id: str) -> ParserFn:
 
 
 def registered_parsers() -> tuple[str, ...]:
+    """返回所有已注册的解析器 ID（排序后）。"""
     return tuple(sorted(_PARSERS))

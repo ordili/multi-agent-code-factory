@@ -1,4 +1,4 @@
-"""RunMeta — per-run metadata."""
+"""单次运行元数据的 Pydantic 模型。"""
 
 from __future__ import annotations
 

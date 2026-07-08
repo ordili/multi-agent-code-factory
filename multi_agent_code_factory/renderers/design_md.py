@@ -1,4 +1,4 @@
-"""design.json → design.md renderer (P1)."""
+"""design.json → design.md 渲染器（P1）。"""
 
 from __future__ import annotations
 
@@ -61,7 +61,7 @@ def _render_module_row(module: ModuleSpec) -> str:
 
 
 def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd") -> str:
-    """Render DesignArtifact to human-readable Markdown."""
+    """将 DesignArtifact 渲染为人类可读的 Markdown 设计文档。"""
     title = design.spec_ref
     lines: list[str] = [
         f"# Design Doc — {title}",

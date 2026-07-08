@@ -1,4 +1,4 @@
-"""escalation_hitl graph node (loop limit placeholder)."""
+"""escalation_hitl 图节点：环路超限时的 HITL 占位。"""
 
 from __future__ import annotations
 
@@ -11,6 +11,7 @@ def run_escalation_hitl(
     state: PipelineState,
     writer: RunArtifactWriter,
 ) -> dict[str, object]:
+    """写入未批准的升环 HITL 决策，供后续 fail 节点消费。"""
     decision = HitlDecision(
         version="1",
         stage=HitlStage.ESCALATION,

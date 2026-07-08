@@ -1,4 +1,4 @@
-"""Exit-code-only test parser fallback."""
+"""仅依据退出码判断测试结果的解析器（兜底方案）。"""
 
 from __future__ import annotations
 
@@ -20,6 +20,7 @@ def parse_exit_code_only(
     profile: ProfileConfig,
     code_root: Path,
 ) -> TestReport:
+    """根据命令退出码生成 TestReport，失败时附带输出尾部。"""
     del code_root
     passed = result.exit_code == 0
     failures: list[TestFailure] = []

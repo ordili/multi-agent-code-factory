@@ -1,4 +1,4 @@
-"""SpecArtifact — PM output."""
+"""规格产物（PM 输出）的 Pydantic 模型。"""
 
 from __future__ import annotations
 

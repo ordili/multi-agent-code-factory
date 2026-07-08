@@ -1,4 +1,4 @@
-"""Developer agent node."""
+"""Developer Agent 图节点：实现代码并写入 dev_manifest。"""
 
 from __future__ import annotations
 
@@ -45,6 +45,7 @@ def run_developer(
     stub: bool = True,
     llm_runner: LlmRunner | None = None,
 ) -> dict[str, object]:
+    """运行 Developer 节点，写入源码并产出 ``dev_manifest.json``。"""
     extra = {"impl_retry": state.impl_retry_count}
     with agent_run(logger, role_id="developer", stub=stub, extra=extra):
         if stub:
@@ -63,6 +64,7 @@ def run_developer(
                 schema=DeveloperLLMOutput,
                 context=agent_context("developer", state, profile),
             )
+            # 将 LLM 返回的源文件写入 profile.code_root
             code_root = profile.code_root
             code_root.mkdir(parents=True, exist_ok=True)
             for source_file in output.source_files:

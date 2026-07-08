@@ -1,4 +1,4 @@
-"""LangGraph checkpoint save/resume (P1 placeholder)."""
+"""LangGraph 检查点保存与恢复（P1 占位，尚未实现）。"""
 
 from __future__ import annotations
 

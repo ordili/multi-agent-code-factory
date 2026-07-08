@@ -1,4 +1,4 @@
-"""Shared agent helpers: prompts, watch context, stub fixture loading."""
+"""Agent 共享辅助：提示词片段、上下文构建、stub fixture 加载。"""
 
 from __future__ import annotations
 
@@ -17,6 +17,8 @@ from multi_agent_code_factory.state import PipelineState
 
 
 class StubScenario(StrEnum):
+    """Stub 模式下可注入的流水线分支场景。"""
+
     HAPPY = "happy"
     QA_FAIL_THEN_PASS = "qa_fail_then_pass"
     QA_ALWAYS_FAIL = "qa_always_fail"
@@ -28,6 +30,8 @@ class StubScenario(StrEnum):
 
 @dataclass(frozen=True)
 class StubFixturePaths:
+    """各 Agent stub 产物对应的 fixture 文件路径。"""
+
     spec: Path
     design: Path
     design_invalid: Path
@@ -41,6 +45,7 @@ class StubFixturePaths:
 
 
 def default_stub_fixtures() -> StubFixturePaths:
+    """返回仓库内默认 stub fixture 路径集合。"""
     root = repo_root()
     snippets = root / "docs" / "design" / "pipeline" / "examples" / "snippets"
     fixtures = root / "tests" / "fixtures"
@@ -59,6 +64,7 @@ def default_stub_fixtures() -> StubFixturePaths:
 
 
 def load_json_fixture(path: Path) -> dict[str, Any]:
+    """从 JSON fixture 文件加载并校验为 dict。"""
     with path.open(encoding="utf-8") as handle:
         loaded = json.load(handle)
     if not isinstance(loaded, dict):
@@ -68,6 +74,7 @@ def load_json_fixture(path: Path) -> dict[str, Any]:
 
 
 def load_prompt_snippet(profile: ProfileConfig, filename: str) -> str | None:
+    """读取 Profile 提示词目录下的片段文件；不存在则返回 None。"""
     path = profile.prompts_dir / filename
     if not path.is_file():
         return None
@@ -79,6 +86,7 @@ def agent_context(
     state: PipelineState,
     profile: ProfileConfig,
 ) -> dict[str, Any]:
+    """为指定 Agent 角色构建 LLM 调用上下文。"""
     return build_node_context(role_id, state, profile)
 
 
@@ -87,4 +95,5 @@ def write_artifact_model(
     filename: str,
     artifact: BaseModel,
 ) -> None:
+    """将 Pydantic 模型写入 run 目录产物文件。"""
     writer.write_model(filename, artifact)

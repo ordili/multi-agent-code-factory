@@ -1,4 +1,4 @@
-"""Pydantic v2 models for pipeline artifacts."""
+"""流水线产物的 Pydantic v2 模型。"""
 
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.dev_manifest import DevManifest

@@ -1,4 +1,4 @@
-"""Route decisions with state patches and stale artifact tracking."""
+"""条件路由决策：下一节点、状态补丁与过期产物标记。"""
 
 from __future__ import annotations
 
@@ -24,6 +24,8 @@ logger = get_logger("graph.routing")
 
 @dataclass
 class RouteDecision:
+    """路由结果：目标节点、状态更新与需标记为过期的产物文件。"""
+
     next_node: str
     state_updates: dict[str, Any] = field(default_factory=dict)
     stale_artifacts: list[str] = field(default_factory=list)
@@ -46,6 +48,7 @@ def decide_after_spec_validate(
     profile: ProfileConfig,
     limits: LoopLimits,
 ) -> RouteDecision:
+    """规格校验后路由：重试 PM、进入 spec HITL 或 Architect。"""
     validation = state.spec_validation
     if (
         validation is not None
@@ -88,6 +91,7 @@ def decide_after_design_validate(
     profile: ProfileConfig,
     limits: LoopLimits,
 ) -> RouteDecision:
+    """设计校验后路由：重试 Architect、进入 design HITL 或 Developer。"""
     validation = state.design_validation
     if (
         validation is not None
@@ -126,6 +130,7 @@ def decide_after_design_validate(
 
 
 def decide_after_test(state: PipelineState, limits: LoopLimits) -> RouteDecision:
+    """QA 测试后路由：通过则 Reviewer，失败则重试 Developer 或升环。"""
     report = state.test_report
     if report is not None and report.passed:
         logger.info("qa passed; route reviewer")
@@ -149,6 +154,7 @@ def decide_after_test(state: PipelineState, limits: LoopLimits) -> RouteDecision
 
 
 def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecision:
+    """评审后路由：按 next_stage 回退、升环或进入 deploy HITL。"""
     review = state.review
     if review is None:
         msg = "decide_after_review requires review"

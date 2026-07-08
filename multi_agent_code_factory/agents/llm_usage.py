@@ -1,4 +1,4 @@
-"""Extract and persist per-call LLM token usage."""
+"""从 LLM 响应提取 token 用量并汇总到 llm_usage 日志。"""
 
 from __future__ import annotations
 
@@ -10,6 +10,8 @@ from multi_agent_code_factory.schemas._base import ARTIFACT_VERSION
 
 
 class TokenUsage(BaseModel):
+    """单次 LLM 调用的 token 计数。"""
+
     prompt_tokens: int | None = Field(default=None, ge=0)
     completion_tokens: int | None = Field(default=None, ge=0)
     total_tokens: int | None = Field(default=None, ge=0)
@@ -25,6 +27,8 @@ class TokenUsage(BaseModel):
 
 
 class LlmCallUsage(BaseModel):
+    """单次结构化 LLM 调用的用量记录。"""
+
     role_id: str
     schema_name: str
     attempt: int = Field(default=1, ge=1)
@@ -35,6 +39,8 @@ class LlmCallUsage(BaseModel):
 
 
 class LlmUsageTotals(BaseModel):
+    """run 内 LLM 调用的累计用量。"""
+
     llm_calls: int = Field(default=0, ge=0)
     prompt_tokens: int = Field(default=0, ge=0)
     completion_tokens: int = Field(default=0, ge=0)
@@ -42,6 +48,8 @@ class LlmUsageTotals(BaseModel):
 
 
 class LlmUsageLog(BaseModel):
+    """写入 run 目录的 LLM 用量日志结构。"""
+
     version: ARTIFACT_VERSION
     provider: str
     model: str
@@ -83,7 +91,7 @@ def _usage_from_mapping(data: dict[str, Any]) -> TokenUsage:
 
 
 def extract_token_usage(response: Any) -> TokenUsage:
-    """Read token counts from a LangChain AIMessage or similar response object."""
+    """从 LangChain AIMessage 或类似响应对象读取 token 计数。"""
     usage_meta = getattr(response, "usage_metadata", None)
     if isinstance(usage_meta, dict) and usage_meta:
         extracted = _usage_from_mapping(usage_meta)
@@ -108,6 +116,7 @@ def merge_usage_totals(
     current: LlmUsageTotals,
     call: LlmCallUsage,
 ) -> LlmUsageTotals:
+    """将单次调用用量累加到 run 总计。"""
     prompt = call.prompt_tokens or 0
     completion = call.completion_tokens or 0
     total = call.total_tokens

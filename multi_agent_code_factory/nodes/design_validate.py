@@ -1,4 +1,4 @@
-"""design_validate graph node."""
+"""design_validate 图节点：对 design 产物执行规则校验。"""
 
 from __future__ import annotations
 
@@ -21,6 +21,7 @@ logger = get_logger("nodes.design_validate")
 
 
 def _check_flow_mmd(run_dir: Path | None) -> list[Violation]:
+    """MVP 检查：run 目录下 flow.mmd 是否存在且非空。"""
     if run_dir is None:
         return []
     flow_path = run_dir / "flow.mmd"
@@ -43,6 +44,7 @@ def run_design_validate(
     writer: RunArtifactWriter | None = None,
     run_dir: Path | None = None,
 ) -> ValidationReport:
+    """校验 design 并可选写入 ``design_validation.json``。"""
     gate = profile.validation.design
     if not gate.enabled:
         report = build_validation_report(
@@ -52,6 +54,7 @@ def run_design_validate(
         )
     else:
         violations, require_hitl = validate_design_rules(design, profile, spec)
+        # 未启用 Mermaid 校验时，仍做 flow.mmd 存在性 MVP 检查
         if not gate.validate_mermaid:
             flow_dir = run_dir or (writer.directory if writer else None)
             violations.extend(_check_flow_mmd(flow_dir))

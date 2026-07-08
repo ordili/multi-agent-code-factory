@@ -1,7 +1,6 @@
-"""LLM client configuration (provider-agnostic via LangChain init_chat_model).
+"""LLM 客户端配置（经 LangChain init_chat_model，厂商无关）。
 
-Vendor selection is driven solely by ``FACTORY_LLM_PROVIDER`` (see ``PROVIDER_SPECS``).
-``FACTORY_LLM_MODEL`` is only the model id/tag; it must not select the provider.
+厂商由 ``FACTORY_LLM_PROVIDER`` 选择；``FACTORY_LLM_MODEL`` 仅指定模型 id。
 """
 
 from __future__ import annotations
@@ -82,7 +81,7 @@ def list_factory_llm_providers() -> tuple[str, ...]:
 
 
 def resolve_factory_llm_provider(*, provider: str | None = None) -> str:
-    """Return active vendor id from ``FACTORY_LLM_PROVIDER`` (factory provider registry)."""
+    """从 ``FACTORY_LLM_PROVIDER`` 解析并校验活跃厂商 id。"""
     raw = provider or os.environ.get("FACTORY_LLM_PROVIDER", DEFAULT_FACTORY_LLM_PROVIDER)
     if not raw or not raw.strip():
         return DEFAULT_FACTORY_LLM_PROVIDER
@@ -208,6 +207,7 @@ def require_llm_api_key(*, provider: str | None = None) -> str:
 
 
 def resolve_stub_mode(*, stub: bool, live: bool) -> bool:
+    """解析 stub / live 互斥标志；live 模式要求 API key 可用。"""
     if stub and live:
         msg = "cannot use both --stub and --live"
         raise ValueError(msg)
@@ -298,7 +298,7 @@ def create_chat_model(
 
 
 def preflight_live_llm(*, timeout_sec: float = 90.0) -> None:
-    """Fail fast before pipeline when the configured live backend cannot respond."""
+    """流水线启动前探测 live 后端是否可响应，失败则快速报错。"""
     runtime = resolve_llm_runtime_config()
     if runtime.factory_provider != "ollama":
         require_llm_api_key(provider=runtime.factory_provider)

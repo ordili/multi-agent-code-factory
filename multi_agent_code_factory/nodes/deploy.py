@@ -1,4 +1,4 @@
-"""Deploy graph node — terminal step; updates run_meta.deploy_status."""
+"""Deploy 图节点：流水线终止步骤，更新 run_meta.deploy_status。"""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ def run_deploy(
     profile: ProfileConfig,
     writer: RunArtifactWriter,
 ) -> dict[str, object]:
+    """标记 run 为 COMPLETED，并根据 deploy HITL 结果设置 deploy_status。"""
     _ = build_node_context("deploy", state, profile)
     hitl = state.hitl
     deploy_status = DeployStatus.SKIPPED

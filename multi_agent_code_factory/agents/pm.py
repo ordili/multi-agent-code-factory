@@ -1,4 +1,4 @@
-"""PM agent node."""
+"""PM Agent 图节点：根据需求生成 spec 产物。"""
 
 from __future__ import annotations
 
@@ -30,12 +30,14 @@ def run_pm(
     stub_scenario: StubScenario = StubScenario.HAPPY,
     llm_runner: LlmRunner | None = None,
 ) -> dict[str, object]:
+    """运行 PM 节点，产出 ``spec.json`` / ``spec.md`` 并更新 state。"""
     _ = load_prompt_snippet(profile, "python-style-snippet.txt")
 
     with agent_run(logger, role_id="pm", stub=stub):
         if stub:
             fixtures = default_stub_fixtures()
             data = load_json_fixture(fixtures.spec)
+            # 首次修订时清空验收标准，触发 spec_validate 重试路径
             if (
                 stub_scenario == StubScenario.SPEC_VALIDATE_RETRY
                 and state.spec_revision_count == 0

@@ -1,4 +1,4 @@
-"""HitlDecision — human-in-the-loop approval record."""
+"""人机协作决策记录的 Pydantic 模型。"""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-"""Minimal spec.json → spec.md renderer (P0)."""
+"""spec.json → spec.md 最小渲染器（P0）。"""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ from multi_agent_code_factory.schemas.spec import SpecArtifact
 
 
 def render_spec_md(spec: SpecArtifact) -> str:
+    """将 SpecArtifact 渲染为人类可读的 Markdown 文档。"""
     lines = [
         f"# {spec.title}",
         "",

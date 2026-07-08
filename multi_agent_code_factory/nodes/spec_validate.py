@@ -1,4 +1,4 @@
-"""spec_validate graph node."""
+"""spec_validate 图节点：对 spec 产物执行规则校验。"""
 
 from __future__ import annotations
 
@@ -22,6 +22,7 @@ def run_spec_validate(
     *,
     writer: RunArtifactWriter | None = None,
 ) -> ValidationReport:
+    """校验 spec 并可选写入 ``spec_validation.json``。"""
     gate = profile.validation.spec
     if not gate.enabled:
         report = build_validation_report(

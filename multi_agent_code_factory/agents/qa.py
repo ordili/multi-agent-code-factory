@@ -1,4 +1,4 @@
-"""QA agent node."""
+"""QA Agent 图节点：执行测试并产出 test_report。"""
 
 from __future__ import annotations
 
@@ -26,11 +26,13 @@ def run_qa(
     stub: bool = True,
     stub_scenario: StubScenario = StubScenario.HAPPY,
 ) -> dict[str, object]:
+    """运行 QA 节点，执行测试并产出 ``test_report.json``。"""
     _ = agent_context("qa", state, profile)
 
     with agent_run(logger, role_id="qa", stub=stub):
         if stub:
             fixtures = default_stub_fixtures()
+            # 按 stub 场景选择通过/失败 fixture，模拟 impl 重试回路
             if stub_scenario == StubScenario.QA_ALWAYS_FAIL:
                 report = TestReport.model_validate(
                     load_json_fixture(fixtures.test_report_fail)

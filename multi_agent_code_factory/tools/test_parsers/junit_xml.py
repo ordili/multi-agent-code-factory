@@ -1,4 +1,4 @@
-"""JUnit XML test parser (pytest, Maven Surefire, etc.)."""
+"""JUnit XML 测试报告解析器（支持 pytest、Maven Surefire 等）。"""
 
 from __future__ import annotations
 
@@ -98,10 +98,12 @@ def parse_junit_xml(
     profile: ProfileConfig,
     code_root: Path,
 ) -> TestReport:
+    """解析 JUnit XML 产物并汇总为 TestReport；无产物时退化为退出码判断。"""
     artifact_patterns = profile.toolchain.test_artifacts
     artifact_files = _artifact_paths(code_root, artifact_patterns)
 
     if artifact_files:
+        # 聚合多个 XML 产物
         summary = TestSummary(total=0, passed=0, failed=0, skipped=0)
         failures: list[TestFailure] = []
         for path in artifact_files:
@@ -115,6 +117,7 @@ def parse_junit_xml(
             failures.extend(part_failures)
         passed = result.exit_code == 0 and summary.failed == 0 and not failures
     else:
+        # 未找到 XML 产物，仅依据退出码
         passed = result.exit_code == 0
         summary = TestSummary(
             total=0,

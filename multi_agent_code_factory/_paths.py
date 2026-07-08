@@ -1,4 +1,4 @@
-"""Repository path helpers."""
+"""仓库与包路径解析（策略、Profile、运行目录等）。"""
 
 from __future__ import annotations
 

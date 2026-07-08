@@ -1,4 +1,4 @@
-"""CLI entry: python -m multi_agent_code_factory run ..."""
+"""CLI 入口：``python -m multi_agent_code_factory run ...``"""
 
 from __future__ import annotations
 
@@ -17,6 +17,7 @@ from multi_agent_code_factory.schemas.run_meta import RunStatus
 
 
 def build_parser() -> argparse.ArgumentParser:
+    """构建 ``run`` 子命令及参数定义。"""
     parser = argparse.ArgumentParser(prog="multi_agent_code_factory")
     subparsers = parser.add_subparsers(dest="command", required=True)
 
@@ -78,6 +79,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def cmd_run(args: argparse.Namespace) -> int:
+    """解析配置、Live 预检、调用 ``run_pipeline`` 并打印摘要。"""
     user_request = " ".join(args.user_request).strip()
     if not user_request:
         print("error: user_request must not be empty", file=sys.stderr)
@@ -98,6 +100,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         print(f"error: {exc}", file=sys.stderr)
         return 2
 
+    # Live 模式：启动前检查 LLM 连通性 / API Key。
     if not stub:
         from multi_agent_code_factory.llm import preflight_live_llm
 
@@ -154,6 +157,7 @@ def cmd_run(args: argparse.Namespace) -> int:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    """加载 .env、初始化日志、分发子命令。"""
     load_env_file()
     configure_logging()
     parser = build_parser()

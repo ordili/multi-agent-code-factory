@@ -1,4 +1,4 @@
-"""Execute Profile toolchain lint_command."""
+"""执行 Profile 工具链中的 lint_command。"""
 
 from __future__ import annotations
 
@@ -11,6 +11,8 @@ from multi_agent_code_factory.profiles import ProfileConfig
 
 @dataclass(frozen=True)
 class LintResult:
+    """静态检查结果。"""
+
     passed: bool
     exit_code: int
     command: str
@@ -23,6 +25,7 @@ def run_linter(
     *,
     code_root: Path | None = None,
 ) -> LintResult:
+    """在 code_root 下执行 Profile 配置的 lint 命令并返回结果。"""
     command = profile.toolchain.lint_command
     if not command:
         return LintResult(

@@ -1,4 +1,4 @@
-"""Architect agent node."""
+"""Architect Agent 图节点：根据 spec 生成设计与流程图。"""
 
 from __future__ import annotations
 
@@ -33,10 +33,12 @@ def run_architect(
     stub_scenario: StubScenario = StubScenario.HAPPY,
     llm_runner: LlmRunner | None = None,
 ) -> dict[str, object]:
+    """运行 Architect 节点，产出 ``design.json`` / ``flow.mmd`` / ``design.md``。"""
     extra = {"revision": state.design_revision_count}
     with agent_run(logger, role_id="architect", stub=stub, extra=extra):
         if stub:
             fixtures = default_stub_fixtures()
+            # 首次修订使用无效 design fixture，触发 design_validate 重试
             if (
                 stub_scenario == StubScenario.DESIGN_VALIDATE_RETRY
                 and state.design_revision_count == 0

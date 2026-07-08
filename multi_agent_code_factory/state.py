@@ -1,4 +1,4 @@
-"""LangGraph pipeline state."""
+"""LangGraph 流水线图状态（节点间传递的 dataclass）。"""
 
 from __future__ import annotations
 
@@ -17,6 +17,8 @@ from multi_agent_code_factory.schemas.validation_report import ValidationReport
 
 @dataclass
 class PipelineState:
+    """单次 run 在图内流转的可变状态。"""
+
     task_id: str = ""
     user_request: str = ""
     profile: ProfileConfig | None = None
@@ -32,7 +34,7 @@ class PipelineState:
     impl_retry_count: int = 0
     design_revision_count: int = 0
     spec_revision_count: int = 0
-    pipeline_route: str = ""
+    pipeline_route: str = ""  # 条件边下一节点名，由 route 节点写入
 
     def copy_with_counters(
         self,
@@ -41,6 +43,7 @@ class PipelineState:
         design_revision_count: int | None = None,
         spec_revision_count: int | None = None,
     ) -> PipelineState:
+        """升环重试时复制 state 并更新计数器。"""
         return PipelineState(
             task_id=self.task_id,
             user_request=self.user_request,

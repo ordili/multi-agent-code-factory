@@ -1,4 +1,4 @@
-"""Node watch lists, NodeContext, and Developer RetryBundle."""
+"""节点上下文：各角色 watch 列表、prompt 组装与 Developer 重试包。"""
 
 from __future__ import annotations
 
@@ -59,6 +59,7 @@ class RetryBundle(BaseModel):
 
 
 def resolve_watch(role_id: str, profile: ProfileConfig) -> list[str]:
+    """解析角色应订阅的状态字段（Profile 覆盖优先于默认 watch）。"""
     subscriptions = profile.subscriptions or {}
     override = subscriptions.get(role_id)
     if override is not None:
@@ -87,6 +88,7 @@ def _read_code_snippets(
 
 
 def build_retry_bundle(state: PipelineState) -> RetryBundle | None:
+    """为 Developer 重试组装规格、设计、测试失败与代码片段。"""
     if state.impl_retry_count <= 0:
         return None
     if (
@@ -118,7 +120,7 @@ def build_node_context(
     state: PipelineState,
     profile: ProfileConfig,
 ) -> dict[str, Any]:
-    """Build prompt context from role watch list (§4.5)."""
+    """按角色 watch 列表从 PipelineState 组装 prompt 上下文。"""
     context: dict[str, Any] = {}
     for key in resolve_watch(role_id, profile):
         if key == "user_request":

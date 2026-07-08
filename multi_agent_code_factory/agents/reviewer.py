@@ -1,4 +1,4 @@
-"""Reviewer agent node."""
+"""Reviewer Agent 图节点：审查产物并决定下一跳路由。"""
 
 from __future__ import annotations
 
@@ -28,9 +28,11 @@ def run_reviewer(
     stub_scenario: StubScenario = StubScenario.HAPPY,
     llm_runner: LlmRunner | None = None,
 ) -> dict[str, object]:
+    """运行 Reviewer 节点，产出 ``review.json`` / ``review.md``。"""
     with agent_run(logger, role_id="reviewer", stub=stub):
         if stub:
             fixtures = default_stub_fixtures()
+            # 首次修订时返回升环 fixture，模拟 reviewer 回退 architect/pm
             if (
                 stub_scenario == StubScenario.REVIEWER_ESCALATE_ARCHITECT
                 and state.design_revision_count == 0

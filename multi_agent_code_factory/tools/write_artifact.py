@@ -1,4 +1,4 @@
-"""Persist run artifacts under docs/runs/<task_id>/."""
+"""将运行产物持久化到 docs/runs/<task_id>/ 目录。"""
 
 from __future__ import annotations
 
@@ -31,6 +31,7 @@ def _iso_now() -> str:
 
 
 def profile_snapshot(profile: ProfileConfig) -> dict[str, Any]:
+    """将 Profile 配置序列化为可写入 run_meta 的快照字典。"""
     return {
         "id": profile.id,
         "language": profile.language,
@@ -40,11 +41,12 @@ def profile_snapshot(profile: ProfileConfig) -> dict[str, Any]:
 
 
 def loop_limits_snapshot(limits: LoopLimits) -> dict[str, Any]:
+    """将循环限制配置序列化为 JSON 兼容字典。"""
     return limits.model_dump(mode="json")
 
 
 class RunArtifactWriter:
-    """Write JSON artifacts and maintain run_meta.json."""
+    """写入 JSON 产物并维护 run_meta.json 的运行记录器。"""
 
     def __init__(self, task_id: str, *, base_dir: Path | None = None) -> None:
         self.task_id = task_id
@@ -55,9 +57,11 @@ class RunArtifactWriter:
 
     @property
     def llm_usage_path(self) -> Path:
+        """LLM 用量日志文件路径。"""
         return self._llm_usage_path
 
     def write_model(self, filename: str, artifact: BaseModel) -> Path:
+        """将 Pydantic 模型序列化为 JSON 并写入指定文件名。"""
         path = self.directory / filename
         payload = artifact.model_dump(mode="json")
         path.write_text(
@@ -67,11 +71,13 @@ class RunArtifactWriter:
         return path
 
     def write_text(self, filename: str, content: str) -> Path:
+        """将纯文本内容写入指定文件名。"""
         path = self.directory / filename
         path.write_text(content, encoding="utf-8")
         return path
 
     def read_meta(self) -> RunMeta | None:
+        """读取 run_meta.json，不存在时返回 None。"""
         if not self._meta_path.is_file():
             return None
         data = json.loads(self._meta_path.read_text(encoding="utf-8"))
@@ -84,6 +90,7 @@ class RunArtifactWriter:
         *,
         factory_config: FactoryConfig | None = None,
     ) -> RunMeta:
+        """初始化 run_meta.json 并标记运行状态为 RUNNING。"""
         budget_usage = None
         if factory_config and factory_config.budget:
             budget_usage = BudgetUsage(
@@ -106,6 +113,7 @@ class RunArtifactWriter:
         return meta
 
     def update_meta(self, **updates: Any) -> RunMeta:
+        """合并更新字段并写回 run_meta.json。"""
         meta = self.read_meta()
         if meta is None:
             msg = f"run_meta.json not initialized for task {self.task_id!r}"
@@ -117,6 +125,7 @@ class RunArtifactWriter:
         return updated
 
     def read_llm_usage(self) -> LlmUsageLog | None:
+        """读取 llm_usage.json，不存在时返回 None。"""
         if not self._llm_usage_path.is_file():
             return None
         data = json.loads(self._llm_usage_path.read_text(encoding="utf-8"))
@@ -129,6 +138,7 @@ class RunArtifactWriter:
         provider: str,
         model: str,
     ) -> LlmUsageLog:
+        """追加一次 LLM 调用记录并更新累计用量。"""
         existing = self.read_llm_usage()
         if existing is None:
             log = LlmUsageLog(
@@ -151,6 +161,7 @@ class RunArtifactWriter:
         return log
 
     def mark_stale(self, filenames: list[str]) -> None:
+        """将指定产物文件名标记为 stale_artifacts（去重追加）。"""
         if not filenames:
             return
         meta = self.read_meta()

@@ -1,4 +1,4 @@
-"""Terminal fail node when loop limits are exceeded."""
+"""fail 终止节点：环路超限时标记 run 为 FAILED。"""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ def run_fail(
     state: PipelineState,
     writer: RunArtifactWriter,
 ) -> dict[str, object]:
+    """记录失败日志并将 run_meta.status 设为 FAILED。"""
     logger.error(
         "pipeline failed loop_limits spec_revisions=%s design_revisions=%s impl_retries=%s",
         state.spec_revision_count,

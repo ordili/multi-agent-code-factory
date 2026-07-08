@@ -1,4 +1,4 @@
-"""TestReport — QA output."""
+"""测试报告（QA 输出）的 Pydantic 模型。"""
 
 from __future__ import annotations
 

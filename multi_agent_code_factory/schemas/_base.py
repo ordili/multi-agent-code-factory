@@ -1,4 +1,4 @@
-"""Shared schema constants."""
+"""Schema 共享常量。"""
 
 from __future__ import annotations
 

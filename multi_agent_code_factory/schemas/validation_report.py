@@ -1,4 +1,4 @@
-"""ValidationReport — spec_validate / design_validate output."""
+"""校验报告（spec/design 校验节点输出）的 Pydantic 模型。"""
 
 from __future__ import annotations
 

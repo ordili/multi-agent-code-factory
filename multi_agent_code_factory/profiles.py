@@ -1,4 +1,4 @@
-"""Profile YAML loading and normalization."""
+"""Profile YAML 加载、继承合并与路径规范化。"""
 
 from __future__ import annotations
 
@@ -209,6 +209,7 @@ def _profile_yaml_path(
 
 
 def list_profile_ids(*, root_profiles_dir: Path | None = None) -> list[str]:
+    """列出 profiles 目录下所有可用 Profile id。"""
     directory = root_profiles_dir or profiles_dir()
     return sorted(path.stem for path in directory.glob("*.yaml"))
 
@@ -220,7 +221,7 @@ def load_profile(
     profiles_root: Path | None = None,
     code_root_override: str | Path | None = None,
 ) -> ProfileConfig:
-    """Load and validate a profile by id."""
+    """按 id 加载并校验 Profile（含 extends 合并与 code_root 约束）。"""
     factory = (factory_repo or repo_root()).resolve()
     profiles_root_path = profiles_root or profiles_dir()
     yaml_path = _profile_yaml_path(profile_id, root_profiles_dir=profiles_root_path)

@@ -1,4 +1,4 @@
-"""Shared validation helpers."""
+"""校验器共享辅助函数。"""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from multi_agent_code_factory.schemas.validation_report import (
 
 
 def iso_now() -> str:
+    """返回当前 UTC 时间的 ISO 8601 字符串。"""
     return datetime.now(tz=UTC).isoformat()
 
 
@@ -23,6 +24,7 @@ def build_validation_report(
     require_hitl: bool = False,
     block_on: str = "error",
 ) -> ValidationReport:
+    """根据违规列表汇总生成 ValidationReport。"""
     error_count = sum(
         1 for item in violations if item.severity == ViolationSeverity.ERROR
     )
@@ -54,6 +56,7 @@ def error(
     path: str | None = None,
     field: str | None = None,
 ) -> Violation:
+    """构造一条 ERROR 级别的违规记录。"""
     return Violation(
         rule_id=rule_id,
         severity=ViolationSeverity.ERROR,
@@ -70,6 +73,7 @@ def warn(
     path: str | None = None,
     field: str | None = None,
 ) -> Violation:
+    """构造一条 WARN 级别的违规记录。"""
     return Violation(
         rule_id=rule_id,
         severity=ViolationSeverity.WARN,

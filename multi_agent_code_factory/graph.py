@@ -1,4 +1,9 @@
-"""LangGraph pipeline assembly and run entry."""
+"""LangGraph 流水线装配与运行入口。
+
+将五 Agent（PM → Architect → Developer → QA → Reviewer）、校验节点、
+条件路由（重试 / 升环 / HITL）与产物写入器装配为一张图。
+CLI 与测试调用 ``run_pipeline()``；编译后的图从 ``pm`` 节点开始执行。
+"""
 
 from __future__ import annotations
 
@@ -42,17 +47,22 @@ logger = get_logger("graph")
 
 @dataclass
 class PipelineRunResult:
+    """单次 ``run_pipeline`` 调用的返回结果。"""
+
     state: PipelineState
     status: RunStatus
     run_dir: Path
 
 
 def _pick_pipeline_route(state: PipelineState) -> str:
+    """LangGraph 条件边选择器；读取路由节点写入的 ``pipeline_route``。"""
     return state.pipeline_route
 
 
 @dataclass
 class _GraphBindings:
+    """单次 run 内各图节点共享的依赖（Profile、writer、stub/live 等）。"""
+
     profile: ProfileConfig
     limits: LoopLimits
     writer: RunArtifactWriter
@@ -69,9 +79,12 @@ class _GraphBindings:
     def _route_node(
         self, decision: RouteDecision, state: PipelineState
     ) -> dict[str, Any]:
+        """将路由决策写入 state；升环回路时标记作废的产物路径。"""
         if decision.stale_artifacts:
             self.writer.mark_stale(decision.stale_artifacts)
         return decision.apply(state)
+
+    # --- Agent 节点（Live LLM 或 stub fixture）---
 
     def node_pm(self, state: PipelineState) -> dict[str, Any]:
         return run_pm(
@@ -121,6 +134,8 @@ class _GraphBindings:
             llm_runner=self.llm_runner,
         )
 
+    # --- 程序校验（不调用 LLM）---
+
     def node_spec_validate(self, state: PipelineState) -> dict[str, Any]:
         profile = self._require_profile(state)
         if state.spec is None:
@@ -142,6 +157,8 @@ class _GraphBindings:
             run_dir=self.writer.directory,
         )
         return {"design_validation": report}
+
+    # --- 路由节点（设置 ``pipeline_route``，供条件边分支）---
 
     def node_route_after_spec_validate(self, state: PipelineState) -> dict[str, Any]:
         decision = decide_after_spec_validate(
@@ -167,6 +184,8 @@ class _GraphBindings:
         decision = decide_after_review(state, self._require_limits(state))
         return self._route_node(decision, state)
 
+    # --- HITL 占位与终止节点 ---
+
     def node_spec_hitl(self, state: PipelineState) -> dict[str, Any]:
         return run_spec_hitl(state, self._require_profile(state), self.writer)
 
@@ -187,6 +206,12 @@ class _GraphBindings:
 
 
 def build_graph(bindings: _GraphBindings) -> Any:
+    """注册节点与边，返回编译后的 LangGraph 应用。
+
+    主路径：pm → spec_validate → architect → design_validate → developer → qa
+    → reviewer → deploy。``route_after_*`` 节点可能回路到 pm / architect / developer，
+    或进入 fail / escalation_hitl。
+    """
     graph = StateGraph(PipelineState)
 
     graph.add_node("pm", bindings.node_pm)
@@ -209,6 +234,7 @@ def build_graph(bindings: _GraphBindings) -> Any:
     graph.add_node("fail", bindings.node_fail)
     graph.add_node("escalation_hitl", bindings.node_escalation_hitl)
 
+    # 键名须与 graph_routing.RouteDecision 写入的 ``pipeline_route`` 一致。
     route_targets: dict[str, str] = {
         "pm": "pm",
         "spec_hitl": "spec_hitl",
@@ -222,6 +248,7 @@ def build_graph(bindings: _GraphBindings) -> Any:
     }
     route_map = cast("dict[Any, str]", route_targets)
 
+    # Spec 阶段
     graph.add_edge(START, "pm")
     graph.add_edge("pm", "spec_validate")
     graph.add_edge("spec_validate", "route_after_spec_validate")
@@ -231,6 +258,8 @@ def build_graph(bindings: _GraphBindings) -> Any:
         route_map,
     )
     graph.add_edge("spec_hitl", "architect")
+
+    # Design 阶段
     graph.add_edge("architect", "design_validate")
     graph.add_edge("design_validate", "route_after_design_validate")
     graph.add_conditional_edges(
@@ -239,6 +268,8 @@ def build_graph(bindings: _GraphBindings) -> Any:
         route_map,
     )
     graph.add_edge("design_hitl", "developer")
+
+    # 实现 → 测试 → 审查
     graph.add_edge("developer", "qa")
     graph.add_edge("qa", "route_after_qa")
     graph.add_conditional_edges("route_after_qa", _pick_pipeline_route, route_map)
@@ -248,6 +279,8 @@ def build_graph(bindings: _GraphBindings) -> Any:
         _pick_pipeline_route,
         route_map,
     )
+
+    # 终止路径
     graph.add_edge("deploy_hitl", "deploy")
     graph.add_edge("deploy", END)
     graph.add_edge("fail", END)
@@ -266,6 +299,11 @@ def run_pipeline(
     stub: bool = True,
     stub_scenario: StubScenario | str = StubScenario.HAPPY,
 ) -> PipelineRunResult:
+    """端到端执行一次工厂任务。
+
+    创建 ``docs/runs/<task_id>/`` 审计目录，装配 LangGraph 并从 PM 开始 invoke。
+    ``stub=True`` 使用 JSON fixture；``stub=False`` 需 ``LlmRunner``。
+    """
     mode = "stub" if stub else "live"
     logger.info(
         "pipeline start task_id=%s profile=%s mode=%s",
@@ -273,6 +311,8 @@ def run_pipeline(
         profile.id,
         mode,
     )
+
+    # 审计目录与 run_meta.json（各节点执行过程中更新 status）。
     writer = RunArtifactWriter(task_id, base_dir=run_dir)
     limits = factory_config.loop_limits
     writer.init_run_meta(profile, limits, factory_config=factory_config)

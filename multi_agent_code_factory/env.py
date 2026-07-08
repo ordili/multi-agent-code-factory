@@ -1,9 +1,4 @@
-"""Load optional `.env` from the repository root into process environment.
-
-Only runtime secrets and environment-specific overrides belong in ``.env``.
-Stack defaults (language, toolchain, validation) belong in Profile YAML.
-See docs/design/pipeline/profiles.md §0.
-"""
+"""从仓库根目录加载可选 ``.env`` 到进程环境（密钥与运行时覆盖）。"""
 
 from __future__ import annotations
 

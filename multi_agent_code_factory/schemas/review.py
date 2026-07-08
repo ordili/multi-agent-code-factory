@@ -1,4 +1,4 @@
-"""ReviewReport — Reviewer output."""
+"""评审报告（Reviewer 输出）的 Pydantic 模型。"""
 
 from __future__ import annotations
 

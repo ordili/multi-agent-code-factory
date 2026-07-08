@@ -1,4 +1,4 @@
-"""DevManifest — Developer output."""
+"""开发清单（Developer 输出）的 Pydantic 模型。"""
 
 from __future__ import annotations
 

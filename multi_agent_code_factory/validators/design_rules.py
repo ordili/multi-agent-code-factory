@@ -1,4 +1,4 @@
-"""DES-001-010, DES-101-104, DES-011, DES-301 validation rules (MVP whitelist)."""
+"""DES-001 至 DES-104、DES-011、DES-301 校验规则（MVP 白名单）。"""
 
 from __future__ import annotations
 
@@ -63,9 +63,11 @@ def validate_design_rules(
     profile: ProfileConfig,
     spec: SpecArtifact | None = None,
 ) -> tuple[list[Violation], bool]:
+    """对 DesignArtifact 执行设计规则校验，返回 (违规列表, 是否需 HITL)。"""
     violations: list[Violation] = []
     require_hitl = False
 
+    # DES-001 至 DES-005：开发任务
     if not design.dev_tasks:
         violations.append(
             error("DES-001", "dev_tasks must not be empty", field="dev_tasks")
@@ -108,6 +110,7 @@ def validate_design_rules(
             error("DES-005", "dev_tasks dependency cycle detected", field="dev_tasks")
         )
 
+    # DES-006 / DES-007：模块定义
     if not design.modules:
         violations.append(
             error("DES-006", "modules must not be empty", field="modules")
@@ -125,6 +128,7 @@ def validate_design_rules(
                 )
             )
 
+    # DES-008：非目标、上下文视图与架构策略
     if not design.non_goals:
         violations.append(
             error("DES-008", "non_goals must not be empty", field="non_goals")
@@ -144,6 +148,7 @@ def validate_design_rules(
             )
         )
 
+    # DES-009：可追溯性（含 P0 功能覆盖）
     if not design.traceability:
         violations.append(
             error("DES-009", "traceability must not be empty", field="traceability")
@@ -176,6 +181,7 @@ def validate_design_rules(
                     )
                 )
 
+    # DES-010 / DES-011：横切关注点与非功能需求
     if design.cross_cutting is None:
         violations.append(
             error("DES-010", "cross_cutting must be present", field="cross_cutting")
@@ -190,6 +196,7 @@ def validate_design_rules(
             )
         )
 
+    # DES-101 / DES-102：与 Spec 的交叉校验
     if spec is not None:
         covered_ac = set()
         for task in design.dev_tasks:
@@ -235,6 +242,7 @@ def validate_design_rules(
                         )
                     )
 
+    # DES-103 / DES-104：路径安全与文件计划
     for task in design.dev_tasks:
         if _path_escapes(task.path):
             violations.append(
