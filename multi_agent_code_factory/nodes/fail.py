@@ -7,7 +7,7 @@ from datetime import UTC, datetime
 from multi_agent_code_factory.log import get_logger
 from multi_agent_code_factory.schemas.run_meta import RunStatus
 from multi_agent_code_factory.state import PipelineState
-from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
+from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
 logger = get_logger("nodes.fail")
 

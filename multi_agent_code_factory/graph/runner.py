@@ -5,16 +5,16 @@ from __future__ import annotations
 from dataclasses import dataclass
 from pathlib import Path
 
-from multi_agent_code_factory.agents.base import StubScenario
+from multi_agent_code_factory.agents.stub.fixtures import StubScenario
 from multi_agent_code_factory.agents.llm import LlmRunner
 from multi_agent_code_factory.config import FactoryConfig
 from multi_agent_code_factory.graph.pipeline_run_context import PipelineRunContext
 from multi_agent_code_factory.graph.graph_builder import build_graph
 from multi_agent_code_factory.log import get_logger
-from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.run_meta import RunStatus
 from multi_agent_code_factory.state import PipelineState
-from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
+from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
 logger = get_logger("graph")
 

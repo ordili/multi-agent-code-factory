@@ -4,97 +4,15 @@ from __future__ import annotations
 
 import os
 import re
-from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
 import yaml
-from pydantic import BaseModel, Field, field_validator
 
 from multi_agent_code_factory._paths import profiles_dir, repo_root
+from multi_agent_code_factory.profile_config.models import ProfileConfig, ProfileLoadError
 
 _ENV_VAR_PATTERN = re.compile(r"\$\{([^}]+)\}")
-
-V1_PROFILE_IDS = frozenset(
-    {
-        "python",
-        "go",
-        "java",
-        "rust",
-        "solidity",
-    }
-)
-
-
-class ProfileLoadError(ValueError):
-    """Raised when a profile cannot be loaded or validated."""
-
-
-class ValidationBlockOn(StrEnum):
-    """校验门禁：达到何种严重级别时阻断流水线。"""
-
-    ERROR = "error"
-    WARN = "warn"
-    NEVER = "never"
-
-
-class ToolchainConfig(BaseModel):
-    setup: str | None = None
-    build: str | None = None
-    test_command: str
-    test_parser: str = "exit_code_only"
-    test_artifacts: list[str] = Field(default_factory=list)
-    lint_command: str | None = None
-    test_dir_glob: str | None = None
-
-
-class ValidationGateConfig(BaseModel):
-    enabled: bool = True
-    block_on: ValidationBlockOn = ValidationBlockOn.ERROR
-    require_hitl: bool = False
-    validate_mermaid: bool = False
-    require_hitl_if_flags: list[str] = Field(default_factory=list)
-
-    @field_validator("block_on", mode="before")
-    @classmethod
-    def _coerce_block_on(cls, value: object) -> object:
-        if isinstance(value, str):
-            return value.lower()
-        return value
-
-
-class ValidationConfig(BaseModel):
-    spec: ValidationGateConfig = Field(default_factory=ValidationGateConfig)
-    design: ValidationGateConfig = Field(default_factory=ValidationGateConfig)
-
-
-class HitlConfig(BaseModel):
-    sensitive_globs: list[str] = Field(default_factory=list)
-    flags: list[str] = Field(default_factory=list)
-
-
-class ProfileConfig(BaseModel):
-    id: str
-    language: str | None = None
-    code_root: Path
-    code_root_raw: str
-    prompts_dir: Path
-    tools: list[str]
-    toolchain: ToolchainConfig
-    validation: ValidationConfig = Field(default_factory=ValidationConfig)
-    context_schema: dict[str, Any] | None = None
-    auto_generate_tests: bool = False
-    hitl: HitlConfig = Field(default_factory=HitlConfig)
-    subscriptions: dict[str, list[str]] | None = None
-    sandbox: str | None = None
-    mcp_servers: list[dict[str, Any]] | None = None
-
-    @field_validator("code_root", "prompts_dir", mode="before")
-    @classmethod
-    def _coerce_path(cls, value: object) -> object:
-        if isinstance(value, str):
-            return Path(value)
-        return value
 
 
 def expand_env_vars(value: str) -> str:

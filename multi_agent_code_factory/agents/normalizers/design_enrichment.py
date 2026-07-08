@@ -1,32 +1,9 @@
-"""Live 模式下 Agent 产物的后处理与规范化。"""
+"""Design 产物校验前补全与默认值生成。"""
 
 from __future__ import annotations
 
-from multi_agent_code_factory.profiles import ProfileConfig
 from multi_agent_code_factory.schemas.design import DesignArtifact, DevTask
 from multi_agent_code_factory.schemas.spec import SpecArtifact
-from multi_agent_code_factory.state import PipelineState
-
-
-def normalize_spec(
-    spec: SpecArtifact,
-    profile: ProfileConfig,
-    state: PipelineState,
-) -> SpecArtifact:
-    """补全 spec 的 profile、revision 与 language 等元数据。"""
-    revision = state.spec.revision + 1 if state.spec is not None else 1
-    if state.spec_revision_count > 0:
-        revision = max(revision, state.spec_revision_count + 1)
-    context = dict(spec.context)
-    if profile.language:
-        context["language"] = profile.language
-    return spec.model_copy(
-        update={
-            "profile": profile.id,
-            "revision": revision,
-            "context": context,
-        }
-    )
 
 
 def _dedupe_dev_tasks_by_path(tasks: list[DevTask]) -> list[DevTask]:
@@ -131,39 +108,3 @@ def enrich_design_for_validation(
     if not updates:
         return design
     return design.model_copy(update=updates)
-
-
-def normalize_design(
-    design: DesignArtifact,
-    state: PipelineState,
-) -> DesignArtifact:
-    """规范化 design 的 revision、spec_ref，并补全校验缺口。"""
-    spec_title = state.spec.title if state.spec is not None else design.spec_ref
-    revision = state.design.revision + 1 if state.design is not None else 1
-    if state.design_revision_count > 0:
-        revision = max(revision, state.design_revision_count + 1)
-    enriched = enrich_design_for_validation(design, spec=state.spec)
-    return enriched.model_copy(
-        update={
-            "spec_ref": spec_title,
-            "revision": revision,
-        }
-    )
-
-
-def format_design_validation_feedback(state: PipelineState) -> str | None:
-    """将上次 design 校验失败项格式化为 Architect 重试时的 extra_system 提示。"""
-    validation = state.design_validation
-    if validation is None or validation.passed:
-        return None
-    lines = [
-        "Previous design failed validation. Fix every item before resubmitting:",
-    ]
-    for item in validation.violations:
-        field = f" ({item.field})" if item.field else ""
-        lines.append(f"- [{item.rule_id}]{field}: {item.message}")
-    if state.design is not None:
-        lines.append(
-            "Keep valid modules/dev_tasks/traceability; only patch failing fields."
-        )
-    return "\n".join(lines)

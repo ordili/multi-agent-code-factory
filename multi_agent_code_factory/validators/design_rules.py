@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import PurePosixPath
 
-from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.design import DesignArtifact, DevTask
 from multi_agent_code_factory.schemas.spec import FeaturePriority, SpecArtifact
 from multi_agent_code_factory.schemas.validation_report import Violation

@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from multi_agent_code_factory.prompt_context import build_prompt_context
-from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.run_meta import DeployStatus, RunStatus
 from multi_agent_code_factory.state import PipelineState
-from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
+from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
 
 def run_deploy(
@@ -17,7 +16,7 @@ def run_deploy(
     writer: RunArtifactWriter,
 ) -> dict[str, object]:
     """标记 run 为 COMPLETED，并根据 deploy HITL 结果设置 deploy_status。"""
-    _ = build_prompt_context("deploy", state, profile)
+    del profile
     hitl = state.hitl
     deploy_status = DeployStatus.SKIPPED
     if hitl is not None and hitl.stage.value == "deploy" and hitl.approved:

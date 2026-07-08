@@ -12,7 +12,7 @@ from multi_agent_code_factory.prompt_context import (
     resolve_watch,
 )
 from multi_agent_code_factory.graph import run_pipeline
-from multi_agent_code_factory.profiles import load_profile
+from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.dev_manifest import (
     ChangedFile,

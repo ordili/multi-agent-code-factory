@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from multi_agent_code_factory.agents.base import StubScenario
+from multi_agent_code_factory.agents.stub.fixtures import StubScenario
 from multi_agent_code_factory.agents.llm import LlmRunner
 from multi_agent_code_factory.config import LoopLimits
-from multi_agent_code_factory.profiles import ProfileConfig
-from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
+from multi_agent_code_factory.profile_config import ProfileConfig
+from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
 
 @dataclass(frozen=True, slots=True)

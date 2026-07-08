@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from multi_agent_code_factory.agents.llm.prompt.style_snippet import style_snippet_path
-from multi_agent_code_factory.profiles import load_profile
+from multi_agent_code_factory.profile_config import load_profile
 
 
 def test_style_snippet_path_resolves_per_language() -> None:

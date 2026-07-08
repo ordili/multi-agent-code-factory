@@ -8,7 +8,7 @@ from multi_agent_code_factory.graph_routing import (
     route_after_spec_validate,
     route_after_test,
 )
-from multi_agent_code_factory.profiles import (
+from multi_agent_code_factory.profile_config import (
     ProfileConfig,
     ValidationConfig,
     ValidationGateConfig,

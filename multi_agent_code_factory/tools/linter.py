@@ -6,7 +6,7 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.profile_config import ProfileConfig
 
 
 @dataclass(frozen=True)

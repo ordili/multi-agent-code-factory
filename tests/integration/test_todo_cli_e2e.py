@@ -13,7 +13,7 @@ from multi_agent_code_factory.llm import (
     provider_spec,
     resolve_factory_llm_provider,
 )
-from multi_agent_code_factory.profiles import load_profile
+from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.schemas.run_meta import RunMeta, RunStatus
 from multi_agent_code_factory.schemas.test_report import TestReport
 

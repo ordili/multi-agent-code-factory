@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-from multi_agent_code_factory.agents.artifact_normalizers import normalize_spec
+from multi_agent_code_factory.agents.normalizers.spec import normalize_spec
 from multi_agent_code_factory.agents.pm import run_pm
 from multi_agent_code_factory.config import LoopLimits
 from multi_agent_code_factory.llm import (
@@ -12,12 +12,12 @@ from multi_agent_code_factory.llm import (
     create_chat_model,
     llm_available,
     resolve_chat_model_id,
-    resolve_stub_mode,
 )
-from multi_agent_code_factory.profiles import load_profile
+from multi_agent_code_factory.runtime.stub_mode import resolve_stub_mode
+from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.state import PipelineState
-from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
+from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
 from tests.conftest import load_snippet_json
 

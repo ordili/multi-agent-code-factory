@@ -13,7 +13,7 @@ from multi_agent_code_factory.agents.llm.usage.models import LlmCallUsage, Token
 from multi_agent_code_factory.config import FactoryConfig
 from multi_agent_code_factory.llm import LlmRuntimeConfig
 from multi_agent_code_factory.log import get_logger
-from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
+from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
 logger = get_logger("agents.llm.usage.recorder")
 

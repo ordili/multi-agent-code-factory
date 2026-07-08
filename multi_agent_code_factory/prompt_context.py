@@ -8,7 +8,7 @@ from typing import Any
 from pydantic import BaseModel, Field
 
 from multi_agent_code_factory.agent_roles import AgentRole
-from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.dev_manifest import DevManifest
 from multi_agent_code_factory.schemas.review import ReviewReport
@@ -171,7 +171,3 @@ def build_prompt_context(
             context["retry_bundle"] = bundle.model_dump(mode="json")
 
     return trim_context_for_role(role_id, context)
-
-
-# 兼容旧名；新代码请使用 build_prompt_context。
-build_node_context = build_prompt_context

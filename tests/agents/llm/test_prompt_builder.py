@@ -6,7 +6,7 @@ import pytest
 
 from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.agents.llm.prompt.builder import build_llm_messages
-from multi_agent_code_factory.profiles import load_profile
+from multi_agent_code_factory.profile_config import load_profile
 
 
 @pytest.mark.parametrize(

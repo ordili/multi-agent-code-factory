@@ -5,7 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 from multi_agent_code_factory.log import get_logger, log_validation_result
-from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.schemas.validation_report import (
@@ -13,7 +13,7 @@ from multi_agent_code_factory.schemas.validation_report import (
     ValidationTarget,
     Violation,
 )
-from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
+from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 from multi_agent_code_factory.validators._report import build_validation_report, warn
 from multi_agent_code_factory.validators.design_rules import validate_design_rules
 

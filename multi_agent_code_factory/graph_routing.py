@@ -8,7 +8,7 @@ from typing import Any
 from multi_agent_code_factory.config import LoopLimits
 from multi_agent_code_factory.pipeline_nodes import PipelineNode
 from multi_agent_code_factory.log import get_logger
-from multi_agent_code_factory.profiles import ProfileConfig, ValidationBlockOn
+from multi_agent_code_factory.profile_config import ProfileConfig, ValidationBlockOn
 from multi_agent_code_factory.schemas.review import ReviewNextStage
 from multi_agent_code_factory.state import PipelineState
 

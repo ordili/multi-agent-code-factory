@@ -3,18 +3,17 @@
 from __future__ import annotations
 
 from multi_agent_code_factory.agent_roles import AgentRole
-from multi_agent_code_factory.agents.base import (
+from multi_agent_code_factory.agents.stub.fixtures import (
     StubScenario,
-    agent_context,
     default_stub_fixtures,
     load_json_fixture,
 )
 from multi_agent_code_factory.log import agent_run, get_logger
-from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.test_report import TestReport
 from multi_agent_code_factory.state import PipelineState
 from multi_agent_code_factory.tools.run_tests import run_tests
-from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
+from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
 logger = get_logger("agents.qa")
 
@@ -28,12 +27,9 @@ def run_qa(
     stub_scenario: StubScenario = StubScenario.HAPPY,
 ) -> dict[str, object]:
     """运行 QA 节点，执行测试并产出 ``test_report.json``。"""
-    _ = agent_context(AgentRole.QA, state, profile)
-
     with agent_run(logger, role_id=AgentRole.QA, stub=stub):
         if stub:
             fixtures = default_stub_fixtures()
-            # 按 stub 场景选择通过/失败 fixture，模拟 impl 重试回路
             if stub_scenario == StubScenario.QA_ALWAYS_FAIL:
                 report = TestReport.model_validate(
                     load_json_fixture(fixtures.test_report_fail)

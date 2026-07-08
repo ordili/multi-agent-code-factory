@@ -3,39 +3,19 @@
 from __future__ import annotations
 
 from multi_agent_code_factory.agent_roles import AgentRole
-from multi_agent_code_factory.agents.base import (
-    agent_context,
-    default_stub_fixtures,
-    load_json_fixture,
-)
+from multi_agent_code_factory.agents.base import agent_context
+from multi_agent_code_factory.agents.developer_output import apply_developer_output
+from multi_agent_code_factory.agents.live import require_llm_runner
 from multi_agent_code_factory.agents.llm import LlmRunner
 from multi_agent_code_factory.agents.llm.schemas import DeveloperLLMOutput
+from multi_agent_code_factory.agents.stub.fixtures import default_stub_fixtures, load_json_fixture
 from multi_agent_code_factory.log import agent_run, get_logger
-from multi_agent_code_factory.profiles import ProfileConfig
-from multi_agent_code_factory.schemas.dev_manifest import (
-    ChangedFile,
-    ChangeType,
-    DevManifest,
-)
+from multi_agent_code_factory.profile_config import ProfileConfig
+from multi_agent_code_factory.schemas.dev_manifest import DevManifest
 from multi_agent_code_factory.state import PipelineState
-from multi_agent_code_factory.tools.linter import run_linter
-from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
-from multi_agent_code_factory.tools.write_file import write_file
+from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
 logger = get_logger("agents.developer")
-
-
-def _manifest_from_output(output: DeveloperLLMOutput) -> DevManifest:
-    changed = [
-        ChangedFile(path=item.path, change_type=ChangeType.CREATE)
-        for item in output.source_files
-    ]
-    return DevManifest(
-        version="1",
-        tasks_completed=output.tasks_completed,
-        changed_files=changed,
-        notes=output.notes,
-    )
 
 
 def run_developer(
@@ -54,27 +34,16 @@ def run_developer(
                 load_json_fixture(default_stub_fixtures().dev_manifest)
             )
         else:
-            if llm_runner is None:
-                msg = "llm_runner is required when stub=False"
-                raise ValueError(msg)
+            runner = require_llm_runner(llm_runner)
             if state.spec is None or state.design is None:
                 msg = "developer requires spec and design in live mode"
                 raise ValueError(msg)
-            output = llm_runner.invoke_structured(
+            output = runner.invoke_structured(
                 role_id=AgentRole.DEVELOPER,
                 output_schema=DeveloperLLMOutput,
                 context=agent_context(AgentRole.DEVELOPER, state, profile),
             )
-            # 将 LLM 返回的源文件写入 profile.code_root
-            code_root = profile.code_root
-            code_root.mkdir(parents=True, exist_ok=True)
-            for source_file in output.source_files:
-                write_file(code_root, source_file.path, source_file.content)
-            manifest = _manifest_from_output(output)
-            if "linter" in profile.tools:
-                manifest = manifest.model_copy(
-                    update={"lint_passed": run_linter(profile).passed}
-                )
+            manifest = apply_developer_output(profile, output)
 
         writer.write_model("dev_manifest.json", manifest)
     return {"dev_manifest": manifest}

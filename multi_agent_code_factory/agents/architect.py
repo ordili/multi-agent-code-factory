@@ -3,24 +3,25 @@
 from __future__ import annotations
 
 from multi_agent_code_factory.agent_roles import AgentRole
-from multi_agent_code_factory.agents.base import (
+from multi_agent_code_factory.agents.base import agent_context
+from multi_agent_code_factory.agents.live import require_llm_runner
+from multi_agent_code_factory.agents.llm import LlmRunner
+from multi_agent_code_factory.agents.llm.prompt.validation_feedback import (
+    format_design_validation_feedback,
+)
+from multi_agent_code_factory.agents.llm.schemas import ArchitectLLMOutput
+from multi_agent_code_factory.agents.normalizers.design import normalize_design
+from multi_agent_code_factory.agents.stub.fixtures import (
     StubScenario,
-    agent_context,
     default_stub_fixtures,
     load_json_fixture,
 )
-from multi_agent_code_factory.agents.artifact_normalizers import (
-    format_design_validation_feedback,
-    normalize_design,
-)
-from multi_agent_code_factory.agents.llm import LlmRunner
-from multi_agent_code_factory.agents.llm.schemas import ArchitectLLMOutput
 from multi_agent_code_factory.log import agent_run, get_logger
-from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.renderers.design_md import render_design_md
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.state import PipelineState
-from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
+from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
 logger = get_logger("agents.architect")
 
@@ -39,7 +40,6 @@ def run_architect(
     with agent_run(logger, role_id=AgentRole.ARCHITECT, stub=stub, extra=extra):
         if stub:
             fixtures = default_stub_fixtures()
-            # 首次修订使用无效 design fixture，触发 design_validate 重试
             if (
                 stub_scenario == StubScenario.DESIGN_VALIDATE_RETRY
                 and state.design_revision_count == 0
@@ -50,13 +50,11 @@ def run_architect(
             design = DesignArtifact.model_validate(data)
             flow_text = fixtures.flow_mmd.read_text(encoding="utf-8")
         else:
-            if llm_runner is None:
-                msg = "llm_runner is required when stub=False"
-                raise ValueError(msg)
+            runner = require_llm_runner(llm_runner)
             if state.spec is None:
                 msg = "architect requires spec in live mode"
                 raise ValueError(msg)
-            output = llm_runner.invoke_structured(
+            output = runner.invoke_structured(
                 role_id=AgentRole.ARCHITECT,
                 output_schema=ArchitectLLMOutput,
                 context=agent_context(AgentRole.ARCHITECT, state, profile),

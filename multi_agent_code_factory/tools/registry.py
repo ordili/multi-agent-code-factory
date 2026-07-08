@@ -6,7 +6,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
-from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.test_report import TestReport
 from multi_agent_code_factory.tools.linter import LintResult, run_linter
 from multi_agent_code_factory.tools.read_file import read_file

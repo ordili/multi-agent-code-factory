@@ -8,9 +8,9 @@ import pytest
 
 from multi_agent_code_factory.agents.llm.budget.guard import check_llm_budget
 from multi_agent_code_factory.config import BudgetConfig, FactoryConfig, LoopLimits
-from multi_agent_code_factory.llm import LlmBudgetExceededError
-from multi_agent_code_factory.profiles import load_profile
-from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
+from multi_agent_code_factory.agents.llm.budget.errors import LlmBudgetExceededError
+from multi_agent_code_factory.profile_config import load_profile
+from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
 
 def test_check_llm_budget_raises_when_call_limit_reached(tmp_path: Path) -> None:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from multi_agent_code_factory.profiles import load_profile
+from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.tools.registry import available_tools, build_tool_registry
 
 

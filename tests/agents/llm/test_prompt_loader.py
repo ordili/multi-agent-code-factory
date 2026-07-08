@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.agents.llm.prompt.loader import load_role_prompt
-from multi_agent_code_factory.profiles import load_profile
+from multi_agent_code_factory.profile_config import load_profile
 
 
 def test_language_agnostic_roles_use_shared_prompts() -> None:

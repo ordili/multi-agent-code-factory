@@ -6,7 +6,7 @@ from pathlib import Path
 
 from multi_agent_code_factory._paths import profiles_dir
 from multi_agent_code_factory.agent_roles import AgentRole
-from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.profile_config import ProfileConfig
 
 _SHARED_PROMPTS_DIR = profiles_dir() / "_shared" / "prompts"
 

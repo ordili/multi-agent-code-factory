@@ -3,19 +3,20 @@
 from __future__ import annotations
 
 from multi_agent_code_factory.agent_roles import AgentRole
-from multi_agent_code_factory.agents.base import (
+from multi_agent_code_factory.agents.base import agent_context
+from multi_agent_code_factory.agents.live import require_llm_runner
+from multi_agent_code_factory.agents.llm import LlmRunner
+from multi_agent_code_factory.agents.stub.fixtures import (
     StubScenario,
-    agent_context,
     default_stub_fixtures,
     load_json_fixture,
 )
-from multi_agent_code_factory.agents.llm import LlmRunner
 from multi_agent_code_factory.log import agent_run, get_logger
-from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.renderers.review_md import render_review_md
 from multi_agent_code_factory.schemas.review import ReviewReport
 from multi_agent_code_factory.state import PipelineState
-from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
+from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
 logger = get_logger("agents.reviewer")
 
@@ -33,7 +34,6 @@ def run_reviewer(
     with agent_run(logger, role_id=AgentRole.REVIEWER, stub=stub):
         if stub:
             fixtures = default_stub_fixtures()
-            # 首次修订时返回升环 fixture，模拟 reviewer 回退 architect/pm
             if (
                 stub_scenario == StubScenario.REVIEWER_ESCALATE_ARCHITECT
                 and state.design_revision_count == 0
@@ -53,10 +53,8 @@ def run_reviewer(
                     load_json_fixture(fixtures.review)
                 )
         else:
-            if llm_runner is None:
-                msg = "llm_runner is required when stub=False"
-                raise ValueError(msg)
-            review = llm_runner.invoke_structured(
+            runner = require_llm_runner(llm_runner)
+            review = runner.invoke_structured(
                 role_id=AgentRole.REVIEWER,
                 output_schema=ReviewReport,
                 context=agent_context(AgentRole.REVIEWER, state, profile),

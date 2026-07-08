@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import yaml
 from multi_agent_code_factory._paths import repo_root
-from multi_agent_code_factory.profiles import (
+from multi_agent_code_factory.profile_config import (
     V1_PROFILE_IDS,
     ProfileLoadError,
     assert_code_root_outside_repo,

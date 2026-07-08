@@ -3,10 +3,10 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from multi_agent_code_factory.agents.base import StubScenario
+from multi_agent_code_factory.agents.stub.fixtures import StubScenario
 from multi_agent_code_factory.config import FactoryConfig, LoopLimits
 from multi_agent_code_factory.graph import run_pipeline
-from multi_agent_code_factory.profiles import load_profile
+from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.schemas.run_meta import RunMeta, RunStatus
 
 

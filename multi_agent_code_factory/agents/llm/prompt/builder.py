@@ -8,7 +8,7 @@ from typing import Any
 from multi_agent_code_factory.agent_roles import STYLE_SNIPPET_ROLES, AgentRole
 from multi_agent_code_factory.agents.llm.prompt.loader import load_role_prompt
 from multi_agent_code_factory.agents.llm.prompt.style_snippet import load_style_snippet
-from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.profile_config import ProfileConfig
 
 
 def build_llm_messages(

@@ -3,20 +3,21 @@
 from __future__ import annotations
 
 from multi_agent_code_factory.agent_roles import AgentRole
-from multi_agent_code_factory.agents.base import (
+from multi_agent_code_factory.agents.base import agent_context
+from multi_agent_code_factory.agents.live import require_llm_runner
+from multi_agent_code_factory.agents.llm import LlmRunner
+from multi_agent_code_factory.agents.normalizers.spec import normalize_spec
+from multi_agent_code_factory.agents.stub.fixtures import (
     StubScenario,
-    agent_context,
     default_stub_fixtures,
     load_json_fixture,
 )
-from multi_agent_code_factory.agents.artifact_normalizers import normalize_spec
-from multi_agent_code_factory.agents.llm import LlmRunner
 from multi_agent_code_factory.log import agent_run, get_logger
-from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.renderers.spec_md import render_spec_md
 from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.state import PipelineState
-from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
+from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
 logger = get_logger("agents.pm")
 
@@ -35,7 +36,6 @@ def run_pm(
         if stub:
             fixtures = default_stub_fixtures()
             data = load_json_fixture(fixtures.spec)
-            # 首次修订时清空验收标准，触发 spec_validate 重试路径
             if (
                 stub_scenario == StubScenario.SPEC_VALIDATE_RETRY
                 and state.spec_revision_count == 0
@@ -43,10 +43,8 @@ def run_pm(
                 data["acceptance_criteria"] = []
             spec = SpecArtifact.model_validate(data)
         else:
-            if llm_runner is None:
-                msg = "llm_runner is required when stub=False"
-                raise ValueError(msg)
-            spec = llm_runner.invoke_structured(
+            runner = require_llm_runner(llm_runner)
+            spec = runner.invoke_structured(
                 role_id=AgentRole.PM,
                 output_schema=SpecArtifact,
                 context=agent_context(AgentRole.PM, state, profile),

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
-from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.test_report import TestReport
 from multi_agent_code_factory.tools.test_parsers._types import CommandResult
 from multi_agent_code_factory.tools.test_parsers.exit_code_only import (

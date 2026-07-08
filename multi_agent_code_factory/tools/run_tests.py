@@ -6,7 +6,7 @@ import subprocess
 import time
 from pathlib import Path
 
-from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.test_report import TestReport
 from multi_agent_code_factory.tools.test_parsers._types import CommandResult
 from multi_agent_code_factory.tools.test_parsers.registry import get_parser

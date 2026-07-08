@@ -16,7 +16,8 @@ from multi_agent_code_factory.agents.llm.usage import (
     extract_token_usage,
     merge_usage_totals,
 )
-from multi_agent_code_factory.llm import LlmBudgetExceededError, LlmInvokeError, provider_spec
+from multi_agent_code_factory.agents.llm.budget.errors import LlmBudgetExceededError
+from multi_agent_code_factory.llm import LlmInvokeError, provider_spec
 
 
 def uses_prompted_json(provider: str) -> bool:

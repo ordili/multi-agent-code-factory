@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.spec import (
     ConsistencyModel,
     SpecArtifact,

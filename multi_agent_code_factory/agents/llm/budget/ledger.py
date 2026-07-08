@@ -5,7 +5,7 @@ from __future__ import annotations
 from multi_agent_code_factory.agents.llm.usage.models import LlmCallUsage
 from multi_agent_code_factory.config import FactoryConfig
 from multi_agent_code_factory.schemas.run_meta import BudgetUsage
-from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
+from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
 
 def resolved_call_tokens(call: LlmCallUsage) -> int:

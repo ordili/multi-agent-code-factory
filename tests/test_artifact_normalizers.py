@@ -3,9 +3,11 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
-from multi_agent_code_factory.agents.artifact_normalizers import (
-    enrich_design_for_validation,
+from multi_agent_code_factory.agents.llm.prompt.validation_feedback import (
     format_design_validation_feedback,
+)
+from multi_agent_code_factory.agents.normalizers.design_enrichment import (
+    enrich_design_for_validation,
 )
 from multi_agent_code_factory.schemas.design import DesignArtifact, DevTask, ModuleSpec
 from multi_agent_code_factory.schemas.spec import SpecArtifact

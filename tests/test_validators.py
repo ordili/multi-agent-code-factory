@@ -7,7 +7,7 @@ from multi_agent_code_factory.config import LoopLimits
 from multi_agent_code_factory.graph_routing import route_after_spec_validate
 from multi_agent_code_factory.nodes.design_validate import run_design_validate
 from multi_agent_code_factory.nodes.spec_validate import run_spec_validate
-from multi_agent_code_factory.profiles import load_profile
+from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.state import PipelineState

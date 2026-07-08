@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from multi_agent_code_factory.profiles import ValidationBlockOn
+from multi_agent_code_factory.profile_config import ValidationBlockOn
 from multi_agent_code_factory.schemas.validation_report import (
     ValidationReport,
     ValidationTarget,

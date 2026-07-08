@@ -15,7 +15,7 @@ from multi_agent_code_factory.agents.llm.usage import (
     extract_token_usage,
     merge_usage_totals,
 )
-from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
+from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
 
 def test_extract_token_usage_from_usage_metadata() -> None:
