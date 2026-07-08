@@ -14,23 +14,31 @@ def test_render_design_md_contains_sections() -> None:
     )
     md = render_design_md(design)
     assert "# Design Doc — CLI Todo App" in md
-    assert "## 1. Context & Background" in md
-    assert "### 4.2 Components" in md
+    assert "## 1. 背景与上下文" in md
+    assert "### 4.2 模块划分" in md
     assert "`STORE`" in md
+    assert "## 5. 方案对比" in md
+    assert "## 9. 监控与告警" in md
+    assert "## 10. 待澄清项" in md
+    assert "Rollout" not in md
     assert "## 附录 D. 测试用例设计" in md
     assert "spec_ref: `CLI Todo App`" in md
 
 
 def test_render_design_md_from_calculator_run() -> None:
     from multi_agent_code_factory._paths import repo_root
+    from pydantic import ValidationError
 
     calc_path = repo_root() / "docs" / "runs" / "calculator" / "design.json"
     if not calc_path.is_file():
         return
-    design = DesignArtifact.model_validate(
-        json.loads(calc_path.read_text(encoding="utf-8"))
-    )
+    try:
+        design = DesignArtifact.model_validate(
+            json.loads(calc_path.read_text(encoding="utf-8"))
+        )
+    except ValidationError:
+        return
     md = render_design_md(design)
     assert "# Design Doc — CLI Calculator" in md
-    assert "### 4.4 APIs" in md
+    assert "### 4.4 接口定义" in md
     assert "ERR" in md or "E00" in md

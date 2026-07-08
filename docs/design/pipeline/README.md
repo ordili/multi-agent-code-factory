@@ -12,7 +12,7 @@
 |------|------|----------|
 | [profiles.md](./profiles.md) | Profile 字段、Toolchain、Parser、多语言矩阵 | [`multi_agent_code_factory/profiles/`](../../../multi_agent_code_factory/profiles/) |
 | [artifact-schemas/README.md](./artifact-schemas/README.md) | **机器可读** JSON 字段规格 | [`multi_agent_code_factory/schemas/`](../../../multi_agent_code_factory/schemas/) |
-| [artifact-templates/README.md](./artifact-templates/README.md) | **给人看** 的文档章节模板 | `multi_agent_code_factory/renderers/`（P0） |
+| [artifact-templates/README.md](./artifact-templates/README.md) | **给人看** 的格式规范（`*-spec.md`，已定稿） | `multi_agent_code_factory/renderers/`（P0） |
 | [examples/](./examples/README.md) | JSON / Mermaid **示例片段**（Todo 等） | — |
 | [references/](./references/README.md) | 术语、MetaGPT、开源调研 | — |
 | [quality-gates.md](./quality-gates.md) | **程序校验** rule_id、`validation` 配置 | `validators/`、`nodes/` |

@@ -8,7 +8,11 @@ Given spec and profile, produce:
    - cross_cutting: object (use {} when nothing special)
    - modules, dev_tasks (unique paths), traceability (use spec_ref_id + spec_ref_kind FEAT/AC)
    - dev_tasks.covers must include every P0 feature id and acceptance criterion id
-2. flow_mmd — non-empty Mermaid content for flow.mmd
+2. Mermaid diagrams — one or more `*.mmd` files under the run directory:
+   - Prefer `mmd_files`: [{ "path": "flow.mmd", "content": "..." }, ...]
+   - Legacy fallback: `flow_mmd` for a single flow.mmd
+   - Each run must include both sequenceDiagram and flowchart/graph content (same or split files)
+   - Register all diagrams in design.diagrams[] with matching path and kind
 
 Cover every acceptance_criteria id in dev_tasks.covers or traceability.
 Keep dev_tasks acyclic; one dev_task per path (merge work for the same file into one task).

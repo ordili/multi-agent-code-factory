@@ -23,7 +23,9 @@ def node_spec_validate(
     if state.spec is None:
         msg = "spec_validate requires spec"
         raise ValueError(msg)
-    report = run_spec_validate(state.spec, profile, writer=ctx.writer)
+    report = run_spec_validate(
+        state.spec, profile, writer=ctx.writer, run_dir=ctx.writer.directory
+    )
     return {"spec_validation": report}
 
 

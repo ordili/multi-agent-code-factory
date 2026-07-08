@@ -1,4 +1,4 @@
-"""design.json → design.md 渲染器（P1）。"""
+"""design.json → design.md 渲染器（中文固定章节 §1–§10 + 附录 A–E）。"""
 
 from __future__ import annotations
 
@@ -60,7 +60,7 @@ def _render_module_row(module: ModuleSpec) -> str:
     )
 
 
-def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd") -> str:
+def render_design_md(design: DesignArtifact) -> str:
     """将 DesignArtifact 渲染为人类可读的 Markdown 设计文档。"""
     title = design.spec_ref
     lines: list[str] = [
@@ -73,7 +73,8 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
         lines.append(f"- **Status：** {design.status.value}")
     if design.supersedes_revision is not None:
         lines.append(f"- **Supersedes：** r{design.supersedes_revision}")
-    lines.extend(["", "## 1. Context & Background", ""])
+
+    lines.extend(["", "## 1. 背景与上下文", ""])
     if design.summary:
         lines.append(design.summary)
         lines.append("")
@@ -99,20 +100,20 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
                     lines.append(f"- {item}")
             lines.append("")
 
-    lines.extend(["## 2. Goals", ""])
+    lines.extend(["## 2. 设计目标", ""])
     if design.design_goals:
         for goal in design.design_goals:
             lines.append(f"- {goal}")
     else:
         lines.append("—")
-    lines.extend(["", "## 3. Non-Goals", ""])
+    lines.extend(["", "## 3. 非目标", ""])
     if design.non_goals:
         for item in design.non_goals:
             lines.append(f"- {item}")
     else:
         lines.append("—")
 
-    lines.extend(["", "## 4. Design", "", "### 4.1 Overview", ""])
+    lines.extend(["", "## 4. 方案设计", "", "### 4.1 概述", ""])
     if design.architecture:
         strategy = design.architecture.get("solution_strategy")
         style = design.architecture.get("style")
@@ -120,13 +121,13 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
             lines.append(str(strategy))
             lines.append("")
         if style:
-            lines.append(f"**Style：** `{style}`")
+            lines.append(f"**架构风格：** `{style}`")
             lines.append("")
     if not design.architecture:
         lines.append("—")
         lines.append("")
 
-    lines.extend(["### 4.2 Components", ""])
+    lines.extend(["### 4.2 模块划分", ""])
     if design.modules:
         lines.extend(
             [
@@ -140,7 +141,7 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
         lines.append("—")
     lines.append("")
 
-    lines.extend(["### 4.3 External Dependencies", ""])
+    lines.extend(["### 4.3 外部依赖", ""])
     if design.external_dependencies:
         lines.extend(
             [
@@ -162,7 +163,7 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
         lines.append("无外部中间件。")
     lines.append("")
 
-    lines.extend(["### 4.4 APIs", ""])
+    lines.extend(["### 4.4 接口定义", ""])
     if design.interfaces:
         for iface in design.interfaces:
             name = iface.get("name", "Interface")
@@ -181,7 +182,7 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
         lines.append("—")
         lines.append("")
 
-    lines.extend(["### 4.5 Data Model & Table Schema", ""])
+    lines.extend(["### 4.5 数据模型与表结构", ""])
     if design.data_model:
         lines.append("**逻辑模型：**")
         lines.append("")
@@ -245,30 +246,28 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
         lines.append("—")
         lines.append("")
 
-    lines.extend(["### 4.6 Flow", ""])
+    lines.extend(["### 4.6 流程与时序", ""])
     if design.diagrams:
         for diagram in design.diagrams:
             path = diagram.path
-            if path.endswith(".mmd") and path != flow_filename:
-                path = flow_filename
             kind = (
                 diagram.kind.value if hasattr(diagram.kind, "value") else diagram.kind
             )
             title = diagram.title or kind
             lines.append(f"- **{title}** (`{kind}`): `{path}`")
     else:
-        lines.append(f"- 见 `{flow_filename}`")
+        lines.append("- 见 Run 目录 `*.mmd`")
     lines.append("")
 
-    lines.extend(["## 5. Alternatives Considered", ""])
+    lines.extend(["## 5. 方案对比", ""])
     decisions = (
         (design.architecture or {}).get("decisions") if design.architecture else None
     )
     if decisions:
         lines.extend(
             [
-                "| Option | Decision | 理由 |",
-                "|--------|----------|------|",
+                "| 方案 | 决策 | 理由 |",
+                "|------|------|------|",
             ]
         )
         for decision in decisions:
@@ -280,9 +279,9 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
                 )
     else:
         lines.append("—")
-    lines.extend(["", "## 6. Cross-cutting Concerns", ""])
+    lines.extend(["", "## 6. 横切关注点", ""])
 
-    lines.extend(["### 6.1 Data Consistency & Transactions", ""])
+    lines.extend(["### 6.1 数据一致性与事务", ""])
     if design.transaction_constraints:
         lines.extend(
             [
@@ -299,7 +298,7 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
         lines.append("—")
     lines.append("")
 
-    lines.extend(["### 6.2 Errors & Error Codes", ""])
+    lines.extend(["### 6.2 异常与错误码", ""])
     if design.error_catalog:
         lines.extend(
             [
@@ -319,11 +318,11 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
 
     if design.cross_cutting:
         for key, value in design.cross_cutting.items():
-            if value:
+            if value and key not in {"test_strategy", "monitoring"}:
                 lines.append(f"**{key}：** {value}")
                 lines.append("")
 
-    lines.extend(["## 7. Performance & Reliability", ""])
+    lines.extend(["## 7. 性能与可靠性", ""])
     if design.non_functional:
         lines.extend(
             [
@@ -338,17 +337,28 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
             )
     else:
         lines.append("N/A")
-    lines.extend(["", "## 8. Testing Plan", ""])
+    lines.extend(["", "## 8. 测试计划", ""])
     test_strategy = (design.cross_cutting or {}).get("test_strategy")
     if test_strategy:
-        lines.append(str(test_strategy))
+        if isinstance(test_strategy, dict):
+            approach = test_strategy.get("approach", "—")
+            paths = test_strategy.get("paths") or []
+            lines.append(f"- **方式：** {approach}")
+            if paths:
+                lines.append(f"- **路径：** {', '.join(f'`{p}`' for p in paths)}")
+        else:
+            lines.append(str(test_strategy))
     elif design.test_cases:
         lines.append(f"见附录 D（{len(design.test_cases)} 条用例）。")
     else:
         lines.append("—")
-    lines.extend(["", "## 9. Rollout & Deployment", "", "N/A", ""])
-    lines.extend(["## 10. Monitoring & Alerting", "", "N/A", ""])
-    lines.extend(["## 11. Open Questions", ""])
+    lines.extend(["", "## 9. 监控与告警", ""])
+    monitoring = (design.cross_cutting or {}).get("monitoring")
+    if monitoring:
+        lines.append(str(monitoring))
+    else:
+        lines.append("N/A")
+    lines.extend(["", "## 10. 待澄清项", ""])
     if design.notes:
         lines.append(design.notes)
     else:
@@ -387,6 +397,7 @@ def render_design_md(design: DesignArtifact, *, flow_filename: str = "flow.mmd")
             purpose = (
                 item.get("purpose")
                 or item.get("operation")
+                or item.get("action")
                 or item.get("reason")
                 or "—"
             )

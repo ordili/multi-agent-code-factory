@@ -37,10 +37,9 @@
 
 | 状态 | 项 | 落点 | 参考 |
 |------|-----|------|------|
-| [x] | **`design.md` 渲染** | `renderers/design_md.py`；`architect.py` 写入 | [artifact-templates/design.md](./artifact-templates/design.md) |
-| [x] | **`review.md` 渲染** | `renderers/review_md.py`；`reviewer.py` 写入 | [artifact-templates/review.md](./artifact-templates/review.md) |
-| [x] | `spec.md` 渲染 | `renderers/spec_md.py` | — |
-| [x] | `flow.mmd` 写出 | `architect.py` | [artifact-templates/flow.md](./artifact-templates/flow.md) |
+| [x] | **`design.md` 渲染** | `renderers/design_md.py`；`architect.py` 写入 | [artifact-templates/design-spec.md](./artifact-templates/design-spec.md)（中文 §1–§10） |
+| [x] | **`spec.md` 渲染** | `renderers/spec_md.py` | [artifact-templates/prd-spec.md](./artifact-templates/prd-spec.md)（中文 §1–§12） |
+| [x] | `flow.mmd` / 多 `*.mmd` 写出 | `architect.py`（`mmd_files[]`） | [artifact-templates/flow-spec.md](./artifact-templates/flow-spec.md) |
 
 ---
 
@@ -52,22 +51,22 @@
 
 | 状态 | 项 | 落点 |
 |------|-----|------|
-| [ ] | SPEC-101–114、201–202（可测性，多为 warn） | `validators/spec_rules.py` |
-| [ ] | SPEC-301–308（`spec.md` 格式） | `validators/spec_md_rules.py` |
+| [x] | SPEC-101–114、201–202（可测性，多为 warn） | `validators/spec_rules.py` + `spec_rules_extended.py` |
+| [x] | SPEC-301–313（`spec.md` 格式） | `validators/spec_md_rules.py` |
 
 ### 2.2 Design
 
 | 状态 | 项 | 落点 |
 |------|-----|------|
-| [ ] | DES-012–033（域模型、错误码、接口、test_cases 等） | `validators/design_rules.py` |
-| [ ] | DES-201–221（`design.md` / `flow.mmd` 格式） | `validators/design_md_rules.py`（新建） |
+| [x] | DES-012–034（域模型、错误码、接口、test_cases 等） | `validators/design_rules.py` + `design_rules_extended.py` |
+| [x] | DES-201–223（`design.md` / `*.mmd` 格式） | `validators/design_md_rules.py` |
 
 ### 2.3 Mermaid
 
 | 状态 | 项 | 落点 |
 |------|-----|------|
-| [ ] | DES-203 等 Mermaid 语法校验 | `validators/mermaid.py` |
-| [~] | `validate_mermaid` Profile 开关 | 已有字段，默认 `false`；依赖上项 |
+| [x] | DES-203/214 等 Mermaid 语法校验 | `validators/mermaid.py` |
+| [x] | `validate_mermaid` Profile 开关 | `design_validate.py` 已接入 |
 
 ---
 
@@ -176,7 +175,7 @@
 - [x] `docs/runs/<task_id>/` 含 **`design.md`**
 - [ ] `go_json` / `cargo_json` / `forge_json` Parser + Profile 各跑通一例
 - [ ] `resume --task-id` 从 checkpoint 续跑
-- [ ] `design.md` 符合 [artifact-templates/design.md](./artifact-templates/design.md)
+- [ ] `design.md` 符合 [artifact-templates/design-spec.md](./artifact-templates/design-spec.md)
 
 ---
 

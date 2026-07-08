@@ -1,4 +1,4 @@
-# DevManifest — Developer 输出
+# dev-manifest-spec.md — DevManifest（Developer JSON 契约）
 
 > **实现：** `multi_agent_code_factory/schemas/dev_manifest.py`  
 > **Run 路径：** `dev_manifest.json`  

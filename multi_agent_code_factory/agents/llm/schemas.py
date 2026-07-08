@@ -9,22 +9,42 @@ from pydantic import BaseModel, Field
 from multi_agent_code_factory.schemas.design import DesignArtifact
 
 
+class MermaidFileWrite(BaseModel):
+    """Run 目录下的单个 Mermaid 文件。"""
+
+    path: str = Field(description="Relative path under run directory, e.g. flow.mmd")
+    content: str = Field(description="Mermaid diagram source")
+
+
 class ArchitectLLMOutput(BaseModel):
     """Architect LLM 返回：设计产物 + Mermaid 流程图。"""
 
     __llm_example__: ClassVar[dict[str, Any]] = {
         "design": DesignArtifact.__llm_example__,
-        "flow_mmd": (
-            "flowchart LR\n"
-            "  User --> CLI\n"
-            "  CLI --> Store\n"
-            "  Store --> JSON[(todos.json)]"
-        ),
+        "mmd_files": [
+            {
+                "path": "flow.mmd",
+                "content": (
+                    "sequenceDiagram\n"
+                    "  participant U as User\n"
+                    "  participant CLI as TodoCLI\n"
+                    "  U->>CLI: command\n"
+                    "flowchart LR\n"
+                    "  CLI --> Store\n"
+                    "  Store --> JSON[(todos.json)]"
+                ),
+            }
+        ],
     }
 
     design: DesignArtifact
-    flow_mmd: str = Field(
-        description="Mermaid diagram for flow.mmd (sequence or flowchart)"
+    flow_mmd: str | None = Field(
+        default=None,
+        description="Legacy single-file Mermaid content for flow.mmd",
+    )
+    mmd_files: list[MermaidFileWrite] = Field(
+        default_factory=list,
+        description="One or more *.mmd files (preferred over flow_mmd)",
     )
 
 

@@ -2,16 +2,29 @@
   "version": "1",
   "spec_ref": "CLI Todo App",
   "revision": 1,
-  "summary": "CLI Todo：CLI + JSON Store",
-  "non_goals": ["Web UI", "多用户"],
+  "summary": "CLI Todo 增删查与 JSON 持久化。",
   "design_goals": ["CRUD 稳定", "持久化可单测"],
+  "non_goals": ["Web UI", "多用户"],
   "context_view": {
     "actors": ["User", "TodoCLI", "TodoStore"]
   },
   "architecture": {
-    "solution_strategy": "CLI 子命令 + JSON 文件持久化"
+    "solution_strategy": "CLI + JSON Store",
+    "style": "layered",
+    "decisions": [
+      {
+        "option": "JSON 文件",
+        "decision": "accepted",
+        "rationale": "spec json_file；零依赖"
+      },
+      {
+        "option": "SQLite",
+        "decision": "rejected",
+        "rationale": "超出 scope"
+      }
+    ],
+    "code_delta": { "summary": "空仓库" }
   },
-  "cross_cutting": {},
   "modules": [
     {
       "name": "TodoCLI",
@@ -22,7 +35,7 @@
     {
       "name": "TodoStore",
       "path": "src/todo_store.py",
-      "responsibility": "JSON 读写",
+      "responsibility": "JSON IO",
       "code_domain": "STORE"
     }
   ],
@@ -31,16 +44,222 @@
       "name": "todos.json",
       "kind": "filesystem",
       "code_domain": "STORE",
+      "technology": "local file",
       "purpose": "持久化",
-      "criticality": "required"
+      "criticality": "required",
+      "failure_behavior": "不可写则 ERR-STORE-002"
+    }
+  ],
+  "interfaces": [
+    {
+      "name": "TodoCLI",
+      "module_ref": "TodoCLI",
+      "file": "src/cli.py",
+      "protocol": "cli",
+      "description": "命令行子命令入口",
+      "operations": [
+        {
+          "name": "add",
+          "summary": "添加待办",
+          "inputs": [
+            {
+              "name": "text",
+              "type": "string",
+              "required": true,
+              "description": "待办正文"
+            }
+          ],
+          "outputs": [
+            {
+              "name": "exit_code",
+              "type": "integer",
+              "required": true,
+              "description": "0 成功"
+            }
+          ],
+          "errors": ["ERR-CLI-001"]
+        },
+        {
+          "name": "list",
+          "summary": "列出待办",
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "todos",
+              "type": "Todo[]",
+              "required": true,
+              "description": "stdout 输出"
+            }
+          ],
+          "errors": ["ERR-STORE-001"]
+        }
+      ]
+    },
+    {
+      "name": "TodoStore",
+      "module_ref": "TodoStore",
+      "file": "src/todo_store.py",
+      "protocol": "internal",
+      "description": "JSON 文件持久化",
+      "operations": [
+        {
+          "name": "load",
+          "summary": "读取 todos 文件",
+          "inputs": [],
+          "outputs": [
+            {
+              "name": "todos",
+              "type": "Todo[]",
+              "required": true,
+              "description": "解析结果"
+            }
+          ],
+          "errors": ["ERR-STORE-001"]
+        },
+        {
+          "name": "save",
+          "summary": "原子写入全量列表",
+          "inputs": [
+            {
+              "name": "todos",
+              "type": "Todo[]",
+              "required": true,
+              "description": "全量数据"
+            }
+          ],
+          "outputs": [],
+          "errors": ["ERR-STORE-002"]
+        }
+      ]
+    }
+  ],
+  "data_model": [
+    {
+      "name": "Todo",
+      "description": "待办项",
+      "storage": "todos.json"
+    }
+  ],
+  "table_schemas": [
+    {
+      "name": "todos (JSON array item)",
+      "storage": "todos.json",
+      "columns": [
+        {
+          "name": "id",
+          "type": "string(uuid)",
+          "nullable": false,
+          "pk": true,
+          "description": "主键"
+        },
+        {
+          "name": "text",
+          "type": "string",
+          "nullable": false,
+          "description": "待办正文"
+        },
+        {
+          "name": "done",
+          "type": "boolean",
+          "nullable": false,
+          "description": "是否完成"
+        },
+        {
+          "name": "created_at",
+          "type": "string(ISO8601)",
+          "nullable": false,
+          "description": "创建时间"
+        },
+        {
+          "name": "updated_at",
+          "type": "string(ISO8601)",
+          "nullable": false,
+          "description": "最后修改时间"
+        }
+      ],
+      "indexes": [],
+      "notes": "personal 规模全量 load；无额外索引"
+    }
+  ],
+  "transaction_constraints": [
+    {
+      "id": "TX-STORE-001",
+      "scope": "save",
+      "boundary": "单文件原子写 temp+rename",
+      "notes": "spec local_only"
     }
   ],
   "error_catalog": [
     {
-      "code": "ERR-STORE-001",
-      "when": "JSON 损坏",
-      "message": "Invalid JSON",
+      "code": "ERR-CLI-001",
+      "message": "Invalid argument",
+      "when": "空标题等参数非法",
       "retryable": false
+    },
+    {
+      "code": "ERR-STORE-001",
+      "message": "Invalid JSON",
+      "when": "load 解析失败",
+      "retryable": false
+    },
+    {
+      "code": "ERR-STORE-002",
+      "message": "Write failed",
+      "when": "磁盘不可写",
+      "retryable": true
+    }
+  ],
+  "cross_cutting": {
+    "configuration": "默认路径 ./todos.json",
+    "test_strategy": {
+      "approach": "pytest",
+      "paths": ["tests/test_todo.py"]
+    }
+  },
+  "test_cases": [
+    {
+      "id": "TC-HAP-CLI-001",
+      "kind": "happy",
+      "title": "添加待办",
+      "expected": "列表含 a",
+      "covers": ["AC-1", "US-1"]
+    },
+    {
+      "id": "TC-HAP-STORE-001",
+      "kind": "happy",
+      "title": "重启持久化",
+      "expected": "数据仍在",
+      "covers": ["US-1"]
+    },
+    {
+      "id": "TC-NEG-CLI-001",
+      "kind": "negative",
+      "title": "空标题",
+      "expected": "exit 2 ERR-CLI-001",
+      "covers": ["US-1"],
+      "error_code": "ERR-CLI-001"
+    },
+    {
+      "id": "TC-NEG-STORE-001",
+      "kind": "negative",
+      "title": "损坏 JSON",
+      "expected": "exit 1 ERR-STORE-001",
+      "covers": ["AC-1"],
+      "error_code": "ERR-STORE-001"
+    },
+    {
+      "id": "TC-NEG-STORE-002",
+      "kind": "negative",
+      "title": "磁盘不可写",
+      "expected": "ERR-STORE-002 可重试提示",
+      "error_code": "ERR-STORE-002"
+    },
+    {
+      "id": "TC-BND-CLI-001",
+      "kind": "boundary",
+      "title": "超长标题",
+      "expected": "截断至 500 或拒绝",
+      "covers": ["US-1"]
     }
   ],
   "traceability": [
@@ -50,6 +269,10 @@
       "design_ref": "TodoCLI"
     }
   ],
+  "file_plan": [
+    { "path": "src/cli.py", "action": "create", "reason": "CLI" },
+    { "path": "src/todo_store.py", "action": "create", "reason": "Store" }
+  ],
   "dev_tasks": [
     {
       "id": "T1",
@@ -57,10 +280,18 @@
       "description": "load/save",
       "depends_on": [],
       "covers": ["AC-1"]
+    },
+    {
+      "id": "T2",
+      "path": "src/cli.py",
+      "description": "子命令",
+      "depends_on": ["T1"],
+      "covers": ["AC-1"]
     }
   ],
   "diagrams": [
-    { "path": "flow.mmd", "kind": "sequence", "title": "add 时序" },
-    { "path": "flow.mmd", "kind": "flowchart", "title": "异常分支" }
-  ]
+    { "path": "flow.mmd", "kind": "sequence", "title": "add 命令时序" },
+    { "path": "flow.mmd", "kind": "flowchart", "title": "持久化与异常分支" }
+  ],
+  "hitl_flags": []
 }

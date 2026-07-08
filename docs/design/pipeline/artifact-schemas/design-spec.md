@@ -1,6 +1,6 @@
-﻿# DesignArtifact — Architect 输出（JSON）
+﻿# design-spec.md — DesignArtifact（Architect JSON 契约）
 
-> **人读基线：** [Google Design Doc](https://google.github.io/eng-practices/) + 七项工程必备 → [artifact-templates/design.md](../artifact-templates/design.md)  
+> **人读基线：** [Google Design Doc](https://google.github.io/eng-practices/) + 七项工程必备 → [artifact-templates/design-spec.md](../artifact-templates/design-spec.md)  
 > **实现：** `multi_agent_code_factory/schemas/design.py`  
 > **Run 路径：** `design.json`（+ `design.md`、`*.mmd`）  
 > **下游：** 须通过 [design_validate](../quality-gates.md#4-design_validate--规则清单)
@@ -17,7 +17,7 @@
 | `supersedes_revision` | integer? | 上一轮 revision |
 | `status` | enum? | `draft` \| `in-review` \| `approved` |
 
-### 正文 — Design Doc（§1–§11）
+### 正文 — Design Doc（§1–§10）
 
 | 字段 | 类型 | § |
 |------|------|---|
@@ -33,17 +33,15 @@
 | `interfaces` | InterfaceSpec[] | §4.4 |
 | `data_model` | DataEntity[] | §4.5 逻辑模型 |
 | `table_schemas` | TableSchema[] | **§4.5 表结构** |
-| `decisions` | AdrItem[] | §5 |
+| `decisions` / `architecture.decisions` | AdrItem[] | §5 |
 | `cross_cutting` | CrossCuttingSpec | §6（安全/配置/观测） |
 | `transaction_constraints` | TransactionConstraint[] | **§6.1 事务/一致性** |
 | `error_catalog` | ErrorCatalogItem[] | **§6.2 错误码** |
 | `non_functional` | NfrSpec[]? | §7 |
-| `test_strategy` | TestStrategy | §8 |
-| `deployment` | DeploymentSpec? | §9 |
-| `rollout` | RolloutSpec? | §9 |
-| `monitoring` | MonitoringSpec? | §10 |
-| `open_items` | string[]? | §11 |
-| `risks` | RiskItem[]? | §11 |
+| `test_strategy` / `cross_cutting.test_strategy` | TestStrategy | §8 |
+| `cross_cutting.monitoring` | MonitoringSpec? | §9 |
+| `notes` / `open_items` | string[]? | §10 |
+| `risks` | RiskItem[]? | §10 |
 
 ### 附录 — 实现蓝图
 
@@ -67,11 +65,11 @@
 
 ### 嵌套类型
 
-**ExternalDependency：** `{ "name", "kind", "code_domain"?, "technology"?, "purpose", "endpoint"?, "criticality"?: "required"|"optional", "failure_behavior"?: string }` — **`code_domain` 必填**（**`kind=none` 可省略**）；非 `filesystem` 依赖须独立域（见 [artifact-templates/design.md](../artifact-templates/design.md) §域前缀注册）
+**ExternalDependency：** `{ "name", "kind", "code_domain"?, "technology"?, "purpose", "endpoint"?, "criticality"?: "required"|"optional", "failure_behavior"?: string }` — **`code_domain` 必填**（**`kind=none` 可省略**）；非 `filesystem` 依赖须独立域（见 [artifact-templates/design-spec.md](../artifact-templates/design-spec.md) §域前缀注册）
 
 **ModuleSpec：** `{ "name", "path", "responsibility", "code_domain", "depends_on"?: string[] }` — **`code_domain` 必填**，模块间唯一
 
-**InterfaceSpec：** `{ "name", "module_ref", "file", "protocol", "description"?, "operations": OperationSpec[] }` — **`module_ref`** 须匹配 `modules[].name`；见 [artifact-templates/design.md](../artifact-templates/design.md) §4.4
+**InterfaceSpec：** `{ "name", "module_ref", "file", "protocol", "description"?, "operations": OperationSpec[] }` — **`module_ref`** 须匹配 `modules[].name`；见 [artifact-templates/design-spec.md](../artifact-templates/design-spec.md) §4.4
 
 **OperationSpec：** `{ "name", "summary", "description"?, "inputs": ParamSpec[], "outputs": ParamSpec[], "errors"?: string[], "http"?, "idempotent"?, "notes"? }`
 
@@ -91,17 +89,17 @@
 
 **TransactionConstraint：** `{ "id", "scope", "boundary", "isolation"?, "idempotency"?, "consistency_ref"?, "notes"?: string }`
 
-**ErrorCatalogItem：** `{ "code", ... }` — **`code` 必填**，格式 `ERR-{域}-{序号}`（见 artifact-templates/design.md §编码规范）
+**ErrorCatalogItem：** `{ "code", ... }` — **`code` 必填**，格式 `ERR-{域}-{序号}`（见 artifact-templates/design-spec.md §编码规范）
 
 **TestCase：** `{ "id", "kind", ... "error_code"?: string }` — **`id` 必填**，格式 `TC-{HAP|NEG|BND}-{域}-{序号}`；`error_code` 须为已定义的 `ERR-*`
 
-**ContextView / ArchitectureOverview / DataEntity / CrossCuttingSpec / NfrSpec / AdrItem / RiskItem / TraceRow / FilePlanItem / DevTask / CodeDelta / TestStrategy / RolloutSpec / MonitoringSpec / DiagramRef** — 见 [artifact-templates/design.md](../artifact-templates/design.md)。
+**ContextView / ArchitectureOverview / DataEntity / CrossCuttingSpec / NfrSpec / AdrItem / RiskItem / TraceRow / FilePlanItem / DevTask / CodeDelta / TestStrategy / RolloutSpec / MonitoringSpec / DiagramRef** — 见 [artifact-templates/design-spec.md](../artifact-templates/design-spec.md)。
 
 **DiagramRef `kind`：** `sequence` | `flowchart` | `class` | `context` | `deployment`
 
 ## 示例 — default Profile（CLI Todo）
 
-> **说明：** 与 [`artifact-templates/design.md`](../artifact-templates/design.md) 样例文档一致；Todo 为 **Profile=default** 教学 fixture。长运行 / 多服务类任务见 artifact-templates 正文「多服务」示例（V2 领域见 [domains/](../../../../domains/README.md)）。
+> **说明：** 与 [`artifact-templates/design-spec.md`](../artifact-templates/design-spec.md) 样例文档一致；Todo 为 **Profile=default** 教学 fixture。长运行 / 多服务类任务见 artifact-templates 正文「多服务」示例（V2 领域见 [domains/](../../../../domains/README.md)）。
 
 ```json
 {
@@ -297,4 +295,4 @@
 }
 ```
 
-人读章节见 [artifact-templates/design.md](../artifact-templates/design.md)。更多 JSON 片段见 [examples/snippets/](../examples/snippets/)。
+人读章节见 [artifact-templates/design-spec.md](../artifact-templates/design-spec.md)。更多 JSON 片段见 [examples/snippets/](../examples/snippets/)。

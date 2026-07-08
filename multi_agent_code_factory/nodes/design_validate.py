@@ -11,29 +11,14 @@ from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.schemas.validation_report import (
     ValidationReport,
     ValidationTarget,
-    Violation,
 )
 from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
-from multi_agent_code_factory.validators._report import build_validation_report, warn
+from multi_agent_code_factory.validators._report import build_validation_report
+from multi_agent_code_factory.validators.design_md_rules import validate_design_md_file
 from multi_agent_code_factory.validators.design_rules import validate_design_rules
+from multi_agent_code_factory.validators.mermaid import validate_mermaid_files
 
 logger = get_logger("nodes.design_validate")
-
-
-def _check_flow_mmd(run_dir: Path | None) -> list[Violation]:
-    """MVP 检查：run 目录下 flow.mmd 是否存在且非空。"""
-    if run_dir is None:
-        return []
-    flow_path = run_dir / "flow.mmd"
-    if not flow_path.is_file() or not flow_path.read_text(encoding="utf-8").strip():
-        return [
-            warn(
-                "DES-017",
-                "flow.mmd should exist and be non-empty in run directory (MVP check)",
-                field="flow.mmd",
-            )
-        ]
-    return []
 
 
 def run_design_validate(
@@ -46,6 +31,7 @@ def run_design_validate(
 ) -> ValidationReport:
     """校验 design 并可选写入 ``design_validation.json``。"""
     gate = profile.validation.design
+    flow_dir = run_dir or (writer.directory if writer else None)
     if not gate.enabled:
         report = build_validation_report(
             ValidationTarget.DESIGN,
@@ -54,10 +40,14 @@ def run_design_validate(
         )
     else:
         violations, require_hitl = validate_design_rules(design, profile, spec)
-        # 未启用 Mermaid 校验时，仍做 flow.mmd 存在性 MVP 检查
-        if not gate.validate_mermaid:
-            flow_dir = run_dir or (writer.directory if writer else None)
-            violations.extend(_check_flow_mmd(flow_dir))
+        violations.extend(validate_design_md_file(design, flow_dir))
+        violations.extend(
+            validate_mermaid_files(
+                design,
+                flow_dir,
+                strict=gate.validate_mermaid,
+            )
+        )
         report = build_validation_report(
             ValidationTarget.DESIGN,
             violations,

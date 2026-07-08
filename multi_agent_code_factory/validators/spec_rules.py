@@ -11,6 +11,9 @@ from multi_agent_code_factory.schemas.spec import (
 )
 from multi_agent_code_factory.schemas.validation_report import Violation
 from multi_agent_code_factory.validators._report import error
+from multi_agent_code_factory.validators.spec_rules_extended import (
+    validate_spec_extended_rules,
+)
 
 
 def _duplicate_ids(items: list[Any], id_attr: str = "id") -> list[str]:
@@ -155,12 +158,6 @@ def validate_spec_rules(
             error("SPEC-010", f"duplicate feature id: {feature_id}", field="features")
         )
 
-    if not spec.success_metrics:
-        violations.append(
-            error(
-                "SPEC-011", "success_metrics must not be empty", field="success_metrics"
-            )
-        )
     for metric_id in _duplicate_ids(spec.success_metrics):
         violations.append(
             error(
@@ -228,5 +225,7 @@ def validate_spec_rules(
                     field="consistency_profile.notes",
                 )
             )
+
+    violations.extend(validate_spec_extended_rules(spec))
 
     return violations

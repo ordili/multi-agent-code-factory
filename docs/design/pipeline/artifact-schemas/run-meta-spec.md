@@ -1,4 +1,4 @@
-﻿# RunMeta — run 元数据
+﻿# run-meta-spec.md — RunMeta（run 元数据 JSON 契约）
 
 > **实现：** `multi_agent_code_factory/schemas/run_meta.py`  
 > **Run 路径：** `docs/runs/<task_id>/run_meta.json`

@@ -4,11 +4,17 @@
   "revision": 1,
   "title": "CLI Todo App",
   "summary": "命令行增删查 Todo，数据存本地 JSON",
-  "context": {
+    "context": {
     "language": "python",
     "runtime": "python",
     "interface": "cli",
-    "storage": "json_file"
+    "storage": "json_file",
+    "glossary": [
+      {
+        "term": "待办",
+        "definition": "用户通过 CLI 管理的单条任务记录"
+      }
+    ]
   },
   "success_metrics": [
     {

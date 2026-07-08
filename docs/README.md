@@ -1,4 +1,4 @@
-# 文档目录
+﻿# 文档目录
 
 本仓库文档分 **三类**，避免与流水线 run 产物混淆：
 
@@ -25,6 +25,11 @@
 
 | 名称 | 设计 Spec（规格书） | Run 落盘（实例） |
 |------|---------------------|------------------|
-| Spec | `design/pipeline/artifact-schemas/spec.md` | `runs/<task_id>/spec.json` |
-| 人读 PRD | `design/pipeline/artifact-templates/spec.md` | `runs/<task_id>/spec.md` |
+| Spec JSON | `design/pipeline/artifact-schemas/prd-spec.md` | `runs/<task_id>/spec.json` |
+| 人读 PRD | `design/pipeline/artifact-templates/prd-spec.md` | `runs/<task_id>/spec.md` |
+| Design JSON | `design/pipeline/artifact-schemas/design-spec.md` | `runs/<task_id>/design.json` |
+| 人读 Design | `design/pipeline/artifact-templates/design-spec.md` | `runs/<task_id>/design.md` |
+| Mermaid 图 | `design/pipeline/artifact-templates/flow-spec.md` | `runs/<task_id>/*.mmd` |
+| Review JSON | `design/pipeline/artifact-schemas/review-spec.md` | `runs/<task_id>/review.json` |
+| 人读 Review | `design/pipeline/artifact-templates/review-spec.md` | `runs/<task_id>/review.md` |
 | Python 规范 | `design/pipeline/python-style.md` | — |

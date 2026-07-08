@@ -95,6 +95,7 @@ class RequirementItem(BaseModel):
     description: str
     priority: FeaturePriority | str
     feature_id: str | None = None
+    depends_on: list[str] = Field(default_factory=list)
 
 
 class AcceptanceCriterion(BaseModel):

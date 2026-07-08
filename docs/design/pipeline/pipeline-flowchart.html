@@ -1,0 +1,937 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Multi-Agent Pipeline — 流水线流程图</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --accent: #2563eb;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f172a;
+        --card: #1e293b;
+        --text: #f1f5f9;
+        --muted: #94a3b8;
+        --border: #334155;
+        --accent: #60a5fa;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+    }
+    header {
+      padding: 2rem 1.5rem 1rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .layout {
+      display: flex;
+      gap: 1.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 1.5rem 3rem;
+      align-items: flex-start;
+    }
+    .sidebar {
+      flex: 0 0 240px;
+      position: sticky;
+      top: 1rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.1rem;
+      max-height: calc(100vh - 2rem);
+      overflow-y: auto;
+    }
+    .sidebar h2 {
+      font-size: 0.95rem;
+      margin: 0 0 0.75rem;
+      color: var(--text);
+    }
+    .toc-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .toc-actions button {
+      font-size: 0.75rem;
+      padding: 0.25rem 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .toc-actions button:hover { border-color: var(--accent); color: var(--accent); }
+    .toc-list { list-style: none; margin: 0; padding: 0; }
+    .toc-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      margin-bottom: 0.35rem;
+      font-size: 0.875rem;
+    }
+    .toc-item input { flex-shrink: 0; cursor: pointer; accent-color: var(--accent); }
+    .toc-item a {
+      color: var(--text);
+      text-decoration: none;
+      flex: 1;
+      line-height: 1.35;
+    }
+    .toc-item a:hover, .toc-item a.active { color: var(--accent); }
+    .toc-item.hidden-row { opacity: 0.45; }
+    .content { flex: 1; min-width: 0; }
+    main { max-width: none; margin: 0; padding: 0; }
+    section {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.25rem;
+      scroll-margin-top: 1rem;
+    }
+    section.is-collapsed .chapter-body { display: none; }
+    section.is-hidden { display: none; }
+    .chapter-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      cursor: pointer;
+      user-select: none;
+    }
+    .chapter-head h2 {
+      margin: 0;
+      font-size: 1.15rem;
+      color: var(--accent);
+    }
+    .collapse-btn {
+      flex-shrink: 0;
+      width: 1.75rem;
+      height: 1.75rem;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--bg);
+      color: var(--muted);
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+    }
+    .collapse-btn:hover { border-color: var(--accent); color: var(--accent); }
+    section.is-collapsed .chapter-head { margin-bottom: 0; }
+    section.is-collapsed .collapse-btn::after { content: "+"; }
+    .collapse-btn::after { content: "−"; }
+    h1 { margin: 0 0 0.5rem; font-size: 1.75rem; }
+    .subtitle { color: var(--muted); margin: 0; font-size: 0.95rem; }
+    h3.sub-heading {
+      font-size: 1rem;
+      margin: 1.25rem 0 0.5rem;
+    }
+    @media (max-width: 900px) {
+      .layout { flex-direction: column; }
+      .sidebar {
+        position: static;
+        flex: none;
+        width: 100%;
+        max-height: none;
+      }
+    }
+    .diagram-wrap {
+      overflow-x: auto;
+      padding: 0.5rem 0;
+    }
+    .mermaid { min-width: 900px; }
+    .mermaid-simple { min-width: 480px; max-width: 720px; margin: 0 auto; }
+    .mermaid-seq { min-width: 0; max-width: 100%; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    th { background: var(--bg); }
+    code {
+      font-family: ui-monospace, Consolas, monospace;
+      font-size: 0.85em;
+      background: var(--bg);
+      padding: 0.1em 0.35em;
+      border-radius: 4px;
+    }
+    ul { margin: 0.25rem 0; padding-left: 1.25rem; }
+    .legend-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 0.75rem;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+    .swatch {
+      width: 1rem;
+      height: 1rem;
+      border-radius: 3px;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.8rem;
+      padding: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Multi-Agent Code Factory — 流水线流程图</h1>
+    <p class="subtitle">
+      时序图（推荐入门）+ 流程图（全分支）· 与代码对齐：
+      <code>graph/graph_builder.py</code> ·
+      <code>graph_routing.py</code>
+    </p>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" aria-label="文档目录">
+      <h2>目录</h2>
+      <div class="toc-actions">
+        <button type="button" id="btn-show-all">全部显示</button>
+        <button type="button" id="btn-hide-all">全部隐藏</button>
+        <button type="button" id="btn-expand-all">全部展开</button>
+        <button type="button" id="btn-collapse-all">全部折叠</button>
+      </div>
+      <ul class="toc-list" id="toc">
+        <li class="toc-item" data-target="legend">
+          <input type="checkbox" id="vis-legend" checked aria-label="显示图例" />
+          <a href="#legend">图例</a>
+        </li>
+        <li class="toc-item" data-target="seq-happy">
+          <input type="checkbox" id="vis-seq-happy" checked aria-label="显示 Happy Path 时序图" />
+          <a href="#seq-happy">时序图 · Happy Path</a>
+        </li>
+        <li class="toc-item" data-target="seq-retry">
+          <input type="checkbox" id="vis-seq-retry" checked aria-label="显示失败升环时序图" />
+          <a href="#seq-retry">时序图 · 失败/升环</a>
+        </li>
+        <li class="toc-item" data-target="flow-graph">
+          <input type="checkbox" id="vis-flow-graph" checked aria-label="显示图节点流程" />
+          <a href="#flow-graph">流程图 · 图节点（含 route）</a>
+        </li>
+        <li class="toc-item" data-target="flow-simple">
+          <input type="checkbox" id="vis-flow-simple" aria-label="显示简化主流程" />
+          <a href="#flow-simple">流程图 · 简化</a>
+        </li>
+        <li class="toc-item" data-target="flow-full">
+          <input type="checkbox" id="vis-flow-full" aria-label="显示完整流程图" />
+          <a href="#flow-full">流程图 · 完整</a>
+        </li>
+        <li class="toc-item" data-target="routing">
+          <input type="checkbox" id="vis-routing" checked aria-label="显示路由决策表" />
+          <a href="#routing">路由决策表</a>
+        </li>
+        <li class="toc-item" data-target="limits">
+          <input type="checkbox" id="vis-limits" checked aria-label="显示循环上限" />
+          <a href="#limits">循环上限</a>
+        </li>
+        <li class="toc-item" data-target="nodes">
+          <input type="checkbox" id="vis-nodes" checked aria-label="显示节点清单" />
+          <a href="#nodes">节点清单</a>
+        </li>
+      </ul>
+    </nav>
+
+    <main class="content">
+    <section id="legend" class="chapter" data-chapter="legend">
+      <div class="chapter-head">
+        <h2>图例</h2>
+        <button type="button" class="collapse-btn" aria-label="折叠/展开图例"></button>
+      </div>
+      <div class="chapter-body">
+      <div class="legend-grid">
+        <div class="legend-item"><span class="swatch" style="background:#dbeafe;border-color:#2563eb"></span> LLM Agent（五角色）</div>
+        <div class="legend-item"><span class="swatch" style="background:#fef3c7;border-color:#d97706"></span> 程序校验 / 路由节点</div>
+        <div class="legend-item"><span class="swatch" style="background:#fce7f3;border-color:#db2777"></span> HITL 人工节点</div>
+        <div class="legend-item"><span class="swatch" style="background:#f3f4f6;border-color:#6b7280"></span> 产物（artifact）</div>
+        <div class="legend-item"><span class="swatch" style="background:#d1fae5;border-color:#059669"></span> 终止 / 部署成功</div>
+        <div class="legend-item"><span class="swatch" style="background:#fee2e2;border-color:#dc2626"></span> 失败终止</div>
+        <div class="legend-item"><span class="swatch" style="background:#fff;border-color:#9333ea;border-style:dashed"></span> 升环触顶（escalation）</div>
+      </div>
+      </div>
+    </section>
+
+    <section id="seq-happy" class="chapter" data-chapter="seq-happy">
+      <div class="chapter-head">
+        <h2>时序图 — Happy Path（推荐入门）</h2>
+        <button type="button" class="collapse-btn" aria-label="折叠/展开时序图"></button>
+      </div>
+      <div class="chapter-body">
+      <p style="color:var(--muted);font-size:0.9rem;margin:0 0 1rem">
+        按<strong>时间顺序</strong>展示一次成功 run 的调用链；不画回边，读起来比流程图更线性。
+        失败重试与升环见下一节时序图。
+      </p>
+      <div class="diagram-wrap">
+        <pre class="mermaid mermaid-seq">
+sequenceDiagram
+    autonumber
+    actor U as 用户
+    participant PM
+    participant SV as requirements_validate
+    participant R1 as route_after_requirements_validate
+    participant SH as requirements_hitl
+    participant A as Architect
+    participant DV as design_validate
+    participant R2 as route_after_design_validate
+    participant DH as design_hitl
+    participant D as Developer
+    participant QA
+    participant R3 as route_after_qa
+    participant R as Reviewer
+    participant R4 as route_after_reviewer
+    participant DP as deploy_hitl
+    participant DEP as deploy
+
+    U->>PM: user_request
+    PM->>PM: requirements.json · requirements.md
+    PM->>SV: 规则校验
+    SV->>R1: requirements_validation
+
+    alt passed · require_hitl
+        R1->>SH: route
+        SH-->>A: approved
+    else passed · 无 hitl
+        R1->>A: route → architect
+    end
+
+    A->>A: design.json · flow.mmd
+    A->>DV: 规则校验
+    DV->>R2: design_validation
+
+    alt passed · require_hitl
+        R2->>DH: route
+        DH-->>D: approved
+    else passed
+        R2->>D: route → developer
+    end
+
+    D->>D: 代码 · dev_manifest
+    D->>QA: run_tests
+    QA->>R3: test_report
+    R3->>R: route → reviewer
+
+    R->>R: review approved · deploy
+    R->>R4: review
+    alt deploy · require_hitl
+        R4->>DP: route
+        DP-->>DEP: approved
+    else deploy · skip hitl
+        R4->>DEP: route → deploy
+    end
+    DEP-->>U: END success
+        </pre>
+      </div>
+      <table style="margin-top:1rem">
+        <thead>
+          <tr><th>视图</th><th>适合看什么</th><th>不擅长什么</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>时序图</strong></td>
+            <td>谁先谁后、Agent 与门禁/HITL 的交互顺序</td>
+            <td>多条回边、触顶 fail 同时呈现</td>
+          </tr>
+          <tr>
+            <td><strong>流程图</strong></td>
+            <td>所有分支与回路一览</td>
+            <td>节点多时交叉线多，不易读</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+
+    <section id="seq-retry" class="chapter" data-chapter="seq-retry">
+      <div class="chapter-head">
+        <h2>时序图 — 失败 / 升环 / 触顶</h2>
+        <button type="button" class="collapse-btn" aria-label="折叠/展开失败时序图"></button>
+      </div>
+      <div class="chapter-body">
+      <p style="color:var(--muted);font-size:0.9rem;margin:0 0 1rem">
+        用 <code>alt</code> 块概括异常路径；计数器与路由细节仍以「路由决策表」为准。
+      </p>
+      <div class="diagram-wrap">
+        <pre class="mermaid mermaid-seq">
+sequenceDiagram
+    participant G as validate / qa
+    participant Ag as pm · architect · developer
+    participant R as reviewer
+    participant F as fail
+
+    alt spec 或 design 校验失败
+        G->>Ag: violations
+        Ag->>G: 修订后再入 validate
+    else QA 测试失败
+        G->>Ag: test failed
+        Ag->>G: 修订后再入 qa
+    else Reviewer 升环
+        R->>Ag: next_stage = pm / architect / developer
+        Ag->>G: 从对应再入点继续
+    else 循环触顶
+        G->>F: fail 或 escalation_hitl
+    end
+        </pre>
+      </div>
+      </div>
+    </section>
+
+    <section id="flow-graph" class="chapter" data-chapter="flow-graph">
+      <div class="chapter-head">
+        <h2>图节点流程（与 LangGraph 一致，含 route 节点）</h2>
+        <button type="button" class="collapse-btn" aria-label="折叠/展开图节点流程"></button>
+      </div>
+      <div class="chapter-body">
+      <p style="color:var(--muted);font-size:0.9rem;margin:0 0 1rem">
+        与 <code>graph_builder.py</code> 注册节点一一对应：校验节点只写
+        <code>*_validation</code>；<strong>分支决策在相邻的
+        <code>route_after_*</code> 节点</strong>（调用
+        <code>graph_routing.decide_after_*</code>）。
+      </p>
+      <div class="diagram-wrap">
+        <pre class="mermaid mermaid-simple">
+flowchart TD
+    START([START]) --> PM[pm]
+    PM --> SV[requirements_validate]
+    SV --> R1[route_after_requirements_validate]
+    R1 -->|violations| PM
+    R1 -->|pass + hitl| SH[requirements_hitl]
+    R1 -->|pass| ARCH[architect]
+    SH --> ARCH
+
+    ARCH --> DV[design_validate]
+    DV --> R2[route_after_design_validate]
+    R2 -->|violations| ARCH
+    R2 -->|pass + hitl| DH[design_hitl]
+    R2 -->|pass| DEV[developer]
+    DH --> DEV
+
+    DEV --> QA[qa]
+    QA --> R3[route_after_qa]
+    R3 -->|failed| DEV
+    R3 -->|passed| REV[reviewer]
+
+    REV --> R4[route_after_reviewer]
+    R4 -->|next=pm| PM
+    R4 -->|next=architect| ARCH
+    R4 -->|next=developer| DEV
+    R4 -->|deploy approved| DHITL[deploy_hitl]
+    DHITL --> DEP[deploy]
+    DEP --> OK([END])
+
+    R1 -.->|limit| FAIL([fail])
+    R2 -.-> FAIL
+    R3 -.-> FAIL
+    R4 -.-> FAIL
+    FAIL --> ENDFAIL([END])
+
+    classDef agent fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef gate fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef hitl fill:#fce7f3,stroke:#db2777,color:#831843
+    classDef terminal fill:#d1fae5,stroke:#059669,color:#064e3b
+    classDef failnode fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+
+    class PM,ARCH,DEV,QA,REV agent
+    class SV,R1,DV,R2,R3,R4 gate
+    class SH,DH,DHITL hitl
+    class DEP,OK terminal
+    class FAIL,ENDFAIL failnode
+        </pre>
+      </div>
+      <ul style="color:var(--muted);font-size:0.9rem;margin:0.75rem 0 0">
+        <li><code>requirements_validate</code> → <code>route_after_requirements_validate</code>：固定边，见 graph_builder</li>
+        <li>同理：<code>design_validate</code> → <code>route_after_design_validate</code>；<code>qa</code> → <code>route_after_qa</code>；<code>reviewer</code> → <code>route_after_reviewer</code></li>
+        <li>「简化主流程」把 validate + route 合并成菱形，便于读逻辑；本节对齐代码结构</li>
+      </ul>
+      </div>
+    </section>
+
+    <section id="flow-simple" class="chapter" data-chapter="flow-simple">
+      <div class="chapter-head">
+        <h2>简化主流程（Happy Path + 主要回路）</h2>
+        <button type="button" class="collapse-btn" aria-label="折叠/展开简化主流程"></button>
+      </div>
+      <div class="chapter-body">
+      <p style="color:var(--muted);font-size:0.9rem;margin:0 0 1rem">
+        <strong>逻辑视图</strong>：将 <code>requirements_validate</code> 与
+        <code>route_after_requirements_validate</code> 合并为菱形决策（便于阅读）；
+        不含独立 route 节点。与代码结构对齐见上一节「图节点流程」。
+      </p>
+      <div class="diagram-wrap">
+        <pre class="mermaid mermaid-simple">
+flowchart TD
+    START([START]) --> PM[PM · 需求规格]
+    PM --> SV{requirements_validate}
+    SV -->|violations| PM
+    SV -->|pass| SH{requirements_hitl?}
+    SH -->|require| H1[requirements_hitl]
+    SH -->|skip| ARCH[Architect · 设计]
+    H1 --> ARCH
+
+    ARCH --> DV{design_validate}
+    DV -->|violations| ARCH
+    DV -->|pass| DH{design_hitl?}
+    DH -->|require| H2[design_hitl]
+    DH -->|skip| DEV[Developer · 实现]
+    H2 --> DEV
+
+    DEV --> QA[QA · 测试]
+    QA -->|failed| DEV
+    QA -->|passed| REV[Reviewer · 评审]
+
+    REV --> RR{next_stage?}
+    RR -->|pm| PM
+    RR -->|architect| ARCH
+    RR -->|developer| DEV
+    RR -->|deploy · approved| H3{deploy_hitl?}
+    H3 -->|require| H4[deploy_hitl]
+    H3 -->|skip| DEPLOY[deploy]
+    H4 --> DEPLOY
+    DEPLOY --> OK([END · success])
+
+    SV -.->|loop limit| FAIL([fail → END])
+    DV -.-> FAIL
+    QA -.-> FAIL
+    RR -.-> FAIL
+
+    classDef agent fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef gate fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef hitl fill:#fce7f3,stroke:#db2777,color:#831843
+    classDef terminal fill:#d1fae5,stroke:#059669,color:#064e3b
+    classDef failnode fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+
+    class PM,ARCH,DEV,QA,REV agent
+    class SV,DV,SH,DH,H3,RR gate
+    class H1,H2,H4 hitl
+    class DEPLOY,OK terminal
+    class FAIL failnode
+        </pre>
+      </div>
+      <ul style="color:var(--muted);font-size:0.9rem;margin:0.75rem 0 0">
+        <li><strong>再入点：</strong>PM 修订 → <code>requirements_validate</code>；Architect → <code>design_validate</code>；Developer → <code>qa</code></li>
+        <li><strong>升环：</strong>Reviewer 可将问题打回 PM / Architect / Developer（对应计数器 +1）</li>
+        <li><strong>HITL：</strong>Profile 开启时出现；MVP 默认自动批准，不中断流水线</li>
+      </ul>
+      </div>
+    </section>
+
+    <section id="flow-full" class="chapter" data-chapter="flow-full">
+      <div class="chapter-head">
+        <h2>完整流程图（含全部条件边）</h2>
+        <button type="button" class="collapse-btn" aria-label="折叠/展开完整流程图"></button>
+      </div>
+      <div class="chapter-body">
+      <div class="diagram-wrap">
+        <pre class="mermaid">
+flowchart TB
+    START([START]) --> PM
+
+    PM --> PM_OUT[["requirements.json · requirements.md"]]
+    PM_OUT --> SV[requirements_validate]
+    SV --> SV_OUT[["requirements_validation.json"]]
+    SV_OUT --> RSPEC[route_after_requirements_validate]
+
+    RSPEC -->|"violations · 未触顶<br/>requirements_revision_count++"| PM
+    RSPEC -->|"pass · require_hitl"| SH[requirements_hitl]
+    RSPEC -->|"pass · 无 hitl"| ARCH
+    RSPEC -->|"触顶 · on_limit=fail"| FAIL
+    RSPEC -->|"触顶 · on_limit=escalation_hitl"| ESC
+
+    SH --> ARCH
+
+    ARCH[Architect] --> A_OUT[["design.json · design.md · flow.mmd"]]
+    A_OUT --> DV[design_validate]
+    DV --> DV_OUT[["design_validation.json"]]
+    DV_OUT --> RDES[route_after_design_validate]
+
+    RDES -->|"violations · 未触顶<br/>design_revision_count++"| ARCH
+    RDES -->|"pass · require_hitl"| DH[design_hitl]
+    RDES -->|"pass · 无 hitl"| DEV
+    RDES -->|"触顶 · fail"| FAIL
+    RDES -->|"触顶 · escalation_hitl"| ESC
+
+    DH --> DEV
+
+    DEV[Developer] --> D_OUT[["dev_manifest.json<br/>code_root/**"]]
+    D_OUT --> QA[QA · run_tests]
+    QA --> QA_OUT[["test_report.json"]]
+    QA --> RQA[route_after_qa]
+
+    RQA -->|"test passed"| REV
+    RQA -->|"test failed · 未触顶<br/>impl_retry_count++"| DEV
+    RQA -->|"触顶 · fail / escalation_hitl"| FAIL
+    RQA -->|"触顶 · escalation_hitl"| ESC
+
+    REV[Reviewer] --> R_OUT[["review.json · review.md"]]
+    R_OUT --> RREV[route_after_reviewer]
+
+    RREV -->|"next=deploy · approved"| DHITL[deploy_hitl]
+    RREV -->|"next=deploy · rejected<br/>impl_retry_count++"| DEV
+    RREV -->|"next=developer<br/>impl_retry_count++"| DEV
+    RREV -->|"next=architect<br/>design_revision_count++"| ARCH
+    RREV -->|"next=pm<br/>requirements_revision_count++"| PM
+    RREV -->|"各环触顶"| FAIL
+    RREV -->|"各环触顶 · escalation"| ESC
+
+    DHITL --> DEPLOY[deploy]
+    DEPLOY --> ENDNODE([END · success])
+
+    ESC[escalation_hitl] --> FAIL
+    FAIL[fail] --> ENDFAIL([END · run_meta=failed])
+
+    classDef agent fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef gate fill:#fef3c7,stroke:#d97706,color:#78350f
+    classDef hitl fill:#fce7f3,stroke:#db2777,color:#831843
+    classDef artifact fill:#f3f4f6,stroke:#6b7280,stroke-dasharray:4 4,color:#374151
+    classDef terminal fill:#d1fae5,stroke:#059669,color:#064e3b
+    classDef failnode fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+    classDef escalation fill:#fff,stroke:#9333ea,stroke-dasharray:6 3,color:#581c87
+
+    class PM,ARCH,DEV,QA,REV agent
+    class SV,DV,RSPEC,RDES,RQA,RREV gate
+    class SH,DH,DHITL hitl
+    class PM_OUT,SV_OUT,A_OUT,DV_OUT,D_OUT,QA_OUT,R_OUT artifact
+    class DEPLOY,ENDNODE terminal
+    class FAIL,ENDFAIL failnode
+    class ESC escalation
+        </pre>
+      </div>
+      <p style="color:var(--muted);font-size:0.9rem;margin:0.75rem 0 0">
+        <strong>再入点：</strong>PM 修订后 → <code>requirements_validate</code>；
+        Architect 修订后 → <code>design_validate</code>；
+        Developer 修订后 → <code>qa</code>（非直接回 Reviewer）。
+      </p>
+      </div>
+    </section>
+
+    <section id="routing" class="chapter" data-chapter="routing">
+      <div class="chapter-head">
+        <h2>路由决策表（与 graph_routing.py 一致）</h2>
+        <button type="button" class="collapse-btn" aria-label="折叠/展开路由决策表"></button>
+      </div>
+      <div class="chapter-body">
+
+      <h3 class="sub-heading">route_after_requirements_validate</h3>
+      <table>
+        <thead>
+          <tr><th>条件</th><th>下一节点</th><th>状态变更</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>requirements_validation.passed=false</code> 且 <code>block_on=error</code>，未触顶</td>
+            <td><code>pm</code></td>
+            <td><code>requirements_revision_count++</code>；清空 design / dev / test / review</td>
+          </tr>
+          <tr>
+            <td>校验通过 + <code>require_hitl</code></td>
+            <td><code>requirements_hitl</code> → 固定到 <code>architect</code></td>
+            <td>MVP 自动批准，不中断</td>
+          </tr>
+          <tr>
+            <td>校验通过 + 无 hitl</td>
+            <td><code>architect</code></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><code>requirements_revision_count ≥ max_requirements_revisions</code></td>
+            <td><code>fail</code> 或 <code>escalation_hitl</code></td>
+            <td>由 <code>on_limit_exceeded</code> 决定</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub-heading">route_after_design_validate</h3>
+      <table>
+        <thead>
+          <tr><th>条件</th><th>下一节点</th><th>状态变更</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>design_validation.passed=false</code> 且 <code>block_on=error</code>，未触顶</td>
+            <td><code>architect</code></td>
+            <td><code>design_revision_count++</code>；清空 dev / test / review</td>
+          </tr>
+          <tr>
+            <td>校验通过 + hitl 需要</td>
+            <td><code>design_hitl</code> → 固定到 <code>developer</code></td>
+            <td>MVP 自动批准</td>
+          </tr>
+          <tr>
+            <td>校验通过 + 无 hitl</td>
+            <td><code>developer</code></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>触顶</td>
+            <td><code>fail</code> / <code>escalation_hitl</code></td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub-heading">route_after_qa</h3>
+      <table>
+        <thead>
+          <tr><th>条件</th><th>下一节点</th><th>状态变更</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>test_report.passed=true</code></td>
+            <td><code>reviewer</code></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td>测试失败，未触顶</td>
+            <td><code>developer</code></td>
+            <td><code>impl_retry_count++</code></td>
+          </tr>
+          <tr>
+            <td><code>impl_retry_count ≥ max_impl_retries</code></td>
+            <td><code>fail</code> / <code>escalation_hitl</code></td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 class="sub-heading">route_after_reviewer</h3>
+      <table>
+        <thead>
+          <tr><th>review.next_stage</th><th>条件</th><th>下一节点</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>deploy</code></td>
+            <td><code>approved=true</code></td>
+            <td><code>deploy_hitl</code> → <code>deploy</code> → END</td>
+          </tr>
+          <tr>
+            <td><code>deploy</code></td>
+            <td><code>approved=false</code>，未触顶</td>
+            <td><code>developer</code>（<code>impl_retry_count++</code>）</td>
+          </tr>
+          <tr>
+            <td><code>developer</code></td>
+            <td>未触顶 / 触顶</td>
+            <td><code>developer</code> 或 fail / escalation</td>
+          </tr>
+          <tr>
+            <td><code>architect</code></td>
+            <td>未触顶 / 触顶</td>
+            <td><code>architect</code>（<code>design_revision_count++</code>）或 fail</td>
+          </tr>
+          <tr>
+            <td><code>pm</code></td>
+            <td>未触顶 / 触顶</td>
+            <td><code>pm</code>（<code>requirements_revision_count++</code>）或 fail</td>
+          </tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+
+    <section id="limits" class="chapter" data-chapter="limits">
+      <div class="chapter-head">
+        <h2>默认循环上限（LoopLimits）</h2>
+        <button type="button" class="collapse-btn" aria-label="折叠/展开循环上限"></button>
+      </div>
+      <div class="chapter-body">
+      <table>
+        <thead>
+          <tr><th>配置项</th><th>默认值</th><th>计数器字段</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>max_requirements_revisions</code></td><td>1</td><td><code>requirements_revision_count</code></td></tr>
+          <tr><td><code>max_design_revisions</code></td><td>2</td><td><code>design_revision_count</code></td></tr>
+          <tr><td><code>max_impl_retries</code></td><td>3</td><td><code>impl_retry_count</code></td></tr>
+          <tr><td><code>on_limit_exceeded</code></td><td><code>fail</code></td><td>可选 <code>escalation_hitl</code></td></tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+
+    <section id="nodes" class="chapter" data-chapter="nodes">
+      <div class="chapter-head">
+        <h2>节点清单（21 个图节点）</h2>
+        <button type="button" class="collapse-btn" aria-label="折叠/展开节点清单"></button>
+      </div>
+      <div class="chapter-body">
+      <table>
+        <thead>
+          <tr><th>节点 ID</th><th>类型</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>pm</code></td><td>Agent</td><td>产出 spec</td></tr>
+          <tr><td><code>requirements_validate</code></td><td>校验</td><td>规则校验 spec，写 requirements_validation</td></tr>
+          <tr><td><code>route_after_requirements_validate</code></td><td>路由</td><td>读 requirements_validation，决定 pm / hitl / architect / fail</td></tr>
+          <tr><td><code>requirements_hitl</code></td><td>HITL</td><td>规格人工门（MVP 自动批准）</td></tr>
+          <tr><td><code>architect</code></td><td>Agent</td><td>产出 design</td></tr>
+          <tr><td><code>design_validate</code></td><td>校验</td><td>规则校验 design</td></tr>
+          <tr><td><code>route_after_design_validate</code></td><td>路由</td><td>决定 architect / hitl / developer / fail</td></tr>
+          <tr><td><code>design_hitl</code></td><td>HITL</td><td>设计人工门（MVP 自动批准）</td></tr>
+          <tr><td><code>developer</code></td><td>Agent</td><td>写代码 + dev_manifest</td></tr>
+          <tr><td><code>qa</code></td><td>Agent/工具</td><td>跑测试，写 test_report</td></tr>
+          <tr><td><code>route_after_qa</code></td><td>路由</td><td>决定 reviewer / developer / fail</td></tr>
+          <tr><td><code>reviewer</code></td><td>Agent</td><td>产出 review，含 next_stage</td></tr>
+          <tr><td><code>route_after_reviewer</code></td><td>路由</td><td>升环或进入 deploy_hitl</td></tr>
+          <tr><td><code>deploy_hitl</code></td><td>HITL</td><td>部署前人工门</td></tr>
+          <tr><td><code>deploy</code></td><td>终端</td><td>部署成功 → END</td></tr>
+          <tr><td><code>fail</code></td><td>终端</td><td>run_meta.status=failed → END</td></tr>
+          <tr><td><code>escalation_hitl</code></td><td>HITL</td><td>触顶升环占位 → fail</td></tr>
+        </tbody>
+      </table>
+      </div>
+    </section>
+    </main>
+  </div>
+
+  <footer>
+    打开方式：浏览器直接打开本文件，或 <code>python -m http.server</code> 后访问。
+    源码：<code>multi_agent_code_factory/graph/graph_builder.py</code>
+  </footer>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "default",
+      flowchart: { curve: "basis", htmlLabels: true, useMaxWidth: false },
+      securityLevel: "loose",
+    });
+
+    (function () {
+      const STORAGE_KEY = "pipeline-flowchart-prefs";
+      const chapters = Array.from(document.querySelectorAll(".chapter"));
+      const tocItems = Array.from(document.querySelectorAll(".toc-item"));
+
+      function loadPrefs() {
+        try {
+          return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+        } catch {
+          return {};
+        }
+      }
+
+      function savePrefs(prefs) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs));
+      }
+
+      const prefs = loadPrefs();
+
+      function applyVisibility(id, visible) {
+        const section = document.getElementById(id);
+        const tocItem = document.querySelector('.toc-item[data-target="' + id + '"]');
+        const checkbox = document.getElementById("vis-" + id);
+        if (section) section.classList.toggle("is-hidden", !visible);
+        if (tocItem) tocItem.classList.toggle("hidden-row", !visible);
+        if (checkbox) checkbox.checked = visible;
+        prefs.visible = prefs.visible || {};
+        prefs.visible[id] = visible;
+        savePrefs(prefs);
+      }
+
+      function applyCollapsed(id, collapsed) {
+        const section = document.getElementById(id);
+        if (section) section.classList.toggle("is-collapsed", collapsed);
+        prefs.collapsed = prefs.collapsed || {};
+        prefs.collapsed[id] = collapsed;
+        savePrefs(prefs);
+      }
+
+      chapters.forEach(function (section) {
+        const id = section.dataset.chapter;
+        const checkbox = document.getElementById("vis-" + id);
+        const visible =
+          prefs.visible?.[id] ?? (checkbox ? checkbox.checked : true);
+        const collapsed = prefs.collapsed?.[id] === true;
+        applyVisibility(id, visible);
+        if (collapsed) applyCollapsed(id, true);
+
+        const head = section.querySelector(".chapter-head");
+        const btn = section.querySelector(".collapse-btn");
+        function toggleCollapse() {
+          applyCollapsed(id, !section.classList.contains("is-collapsed"));
+        }
+        if (head) head.addEventListener("click", function (e) {
+          if (e.target.closest("a")) return;
+          toggleCollapse();
+        });
+        if (btn) btn.addEventListener("click", function (e) {
+          e.stopPropagation();
+          toggleCollapse();
+        });
+      });
+
+      tocItems.forEach(function (item) {
+        const id = item.dataset.target;
+        const checkbox = item.querySelector('input[type="checkbox"]');
+        if (checkbox) {
+          checkbox.addEventListener("change", function () {
+            applyVisibility(id, checkbox.checked);
+          });
+        }
+      });
+
+      document.getElementById("btn-show-all").addEventListener("click", function () {
+        chapters.forEach(function (s) { applyVisibility(s.dataset.chapter, true); });
+      });
+      document.getElementById("btn-hide-all").addEventListener("click", function () {
+        chapters.forEach(function (s) { applyVisibility(s.dataset.chapter, false); });
+      });
+      document.getElementById("btn-expand-all").addEventListener("click", function () {
+        chapters.forEach(function (s) { applyCollapsed(s.dataset.chapter, false); });
+      });
+      document.getElementById("btn-collapse-all").addEventListener("click", function () {
+        chapters.forEach(function (s) { applyCollapsed(s.dataset.chapter, true); });
+      });
+
+      const tocLinks = Array.from(document.querySelectorAll(".toc-item a"));
+      const observer = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              const id = entry.target.id;
+              tocLinks.forEach(function (link) {
+                link.classList.toggle("active", link.getAttribute("href") === "#" + id);
+              });
+            }
+          });
+        },
+        { rootMargin: "-20% 0px -60% 0px", threshold: 0 }
+      );
+      chapters.forEach(function (s) { observer.observe(s); });
+    })();
+  </script>
+</body>
+</html>

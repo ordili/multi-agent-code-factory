@@ -1,8 +1,8 @@
-﻿# ReviewReport — Reviewer 输出
+﻿# review-spec.md — ReviewReport（Reviewer JSON 契约）
 
 > **实现：** `multi_agent_code_factory/schemas/review.py`  
 > **Run 路径：** `review.json`（+ `review.md`）  
-> **人读格式：** [artifact-templates/review.md](../artifact-templates/review.md)  
+> **人读格式：** [artifact-templates/review-spec.md](../artifact-templates/review-spec.md)  
 > **产生方式：** LLM Structured Output（`role_id=reviewer`）
 
 ## 字段

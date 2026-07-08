@@ -9,6 +9,9 @@ from multi_agent_code_factory.schemas.design import DesignArtifact, DevTask
 from multi_agent_code_factory.schemas.spec import FeaturePriority, SpecArtifact
 from multi_agent_code_factory.schemas.validation_report import Violation
 from multi_agent_code_factory.validators._report import error
+from multi_agent_code_factory.validators.design_rules_extended import (
+    validate_design_extended_rules,
+)
 
 
 def _path_escapes(path: str) -> bool:
@@ -277,5 +280,7 @@ def validate_design_rules(
 
     if _hitl_required(design, profile):
         require_hitl = True
+
+    violations.extend(validate_design_extended_rules(design, spec))
 
     return violations, require_hitl

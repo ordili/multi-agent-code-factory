@@ -13,7 +13,7 @@
 | [snippets/spec-default.json](./snippets/spec-default.json) | Profile=`default` 的 `SpecArtifact` 节选 |
 | [snippets/spec-context-rust.json](./snippets/spec-context-rust.json) | Rust `spec.context` + AC 节选 |
 | [snippets/spec-context-solidity.json](./snippets/spec-context-solidity.json) | Solidity `spec.context` + AC 节选 |
-| [snippets/design-todo-excerpt.json](./snippets/design-todo-excerpt.json) | Todo `DesignArtifact` 节选（完整见 schemas/design.md） |
+| [snippets/design-todo-excerpt.json](./snippets/design-todo-excerpt.json) | Todo `DesignArtifact` 节选（完整见 [design-spec.md](../artifact-schemas/design-spec.md)） |
 | [snippets/flow-todo.mmd](./snippets/flow-todo.mmd) | Todo 时序图节选 |
 | [snippets/pipeline-overview.mmd](./snippets/pipeline-overview.mmd) | **全线流程图**（产物 + 条件回路 + **再入点** + escalation；§1 / §4.1） |
 

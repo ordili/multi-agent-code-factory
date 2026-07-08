@@ -1,4 +1,4 @@
-# TestReport — QA 输出
+# test-report-spec.md — TestReport（QA JSON 契约）
 
 > **实现：** `multi_agent_code_factory/schemas/test_report.py`  
 > **Run 路径：** `test_report.json`  

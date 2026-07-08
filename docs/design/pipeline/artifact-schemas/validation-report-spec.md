@@ -1,4 +1,4 @@
-﻿# ValidationReport — 校验输出
+﻿# validation-report-spec.md — ValidationReport（校验 JSON 契约）
 
 > **实现：** `multi_agent_code_factory/schemas/validation_report.py`  
 > **产生方式：** **程序规则**（`spec_validate` / `design_validate`），非 LLM  

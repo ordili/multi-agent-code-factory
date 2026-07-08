@@ -113,7 +113,7 @@ run_tests Tool：setup（可选）→ build（可选）→ test_command → test
 | `forge_json` | Solidity（Foundry） | `forge test --json` stdout |
 | `exit_code_only` | 兜底 | `exit_code` + stderr 尾部 |
 
-详见 [test-report.md](./artifact-schemas/test-report.md)。
+详见 [test-report.md](./artifact-schemas/test-report-spec.md)。
 
 ---
 

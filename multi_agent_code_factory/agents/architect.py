@@ -26,6 +26,29 @@ from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 logger = get_logger("agents.architect")
 
 
+def _write_mermaid_artifacts(
+    writer: RunArtifactWriter,
+    *,
+    mmd_files: list[object] | None = None,
+    flow_mmd: str | None = None,
+    fallback_text: str | None = None,
+) -> None:
+    """将 Architect 产出的 Mermaid 写入 Run 目录（支持多文件）。"""
+    if mmd_files:
+        for item in mmd_files:
+            path = getattr(item, "path", None) or (
+                item.get("path") if isinstance(item, dict) else None
+            )
+            content = getattr(item, "content", None) or (
+                item.get("content") if isinstance(item, dict) else None
+            )
+            if isinstance(path, str) and isinstance(content, str):
+                writer.write_text(path, content)
+        return
+    text = flow_mmd or fallback_text or ""
+    writer.write_text("flow.mmd", text)
+
+
 def run_architect(
     state: PipelineState,
     profile: ProfileConfig,
@@ -61,9 +84,15 @@ def run_architect(
                 extra_system=format_design_validation_feedback(state),
             )
             design = normalize_design(output.design, state)
-            flow_text = output.flow_mmd
+            flow_text = None
+            _write_mermaid_artifacts(
+                writer,
+                mmd_files=output.mmd_files,
+                flow_mmd=output.flow_mmd,
+            )
 
         writer.write_model("design.json", design)
-        writer.write_text("flow.mmd", flow_text)
+        if stub:
+            _write_mermaid_artifacts(writer, fallback_text=flow_text)
         writer.write_text("design.md", render_design_md(design))
     return {"design": design}

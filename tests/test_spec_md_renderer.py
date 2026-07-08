@@ -13,6 +13,12 @@ def test_render_spec_md_contains_sections(snippets_dir: Path) -> None:
     spec = SpecArtifact.model_validate(data)
     md = render_spec_md(spec)
     assert "# CLI Todo App" in md
+    assert "## 术语与领域概念" in md
+    assert "## 背景与上下文" in md
+    assert "## 业务指标" in md
+    assert "## 用户故事" in md
+    assert "## 需求池" in md
     assert "## 验收标准" in md
+    assert "## 约束" in md
     assert "**AC-1**" in md
     assert "task_profile: `python`" in md

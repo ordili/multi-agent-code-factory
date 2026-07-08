@@ -2,7 +2,8 @@
 
 > **主线：** [multi-agent-pipeline-design.md §4.1.2](./multi-agent-pipeline-design.md#412-产物校验与-hitlpm--architect)  
 > **原则：** **规则校验（程序）** 为主、**可选人工 HITL** 为辅；均在 **Developer 写代码之前** 拦截 PM / Architect 产物。  
-> **实现：** `multi_agent_code_factory/validators/` · [`validation-report.md`](./artifact-schemas/validation-report.md)
+> **实现：** `multi_agent_code_factory/validators/` · [`validation-report-spec.md`](./artifact-schemas/validation-report-spec.md)  
+> **规格基线（定稿）：** [artifact-schemas/*-spec.md](./artifact-schemas/README.md)（JSON 契约）· [artifact-templates/*-spec.md](./artifact-templates/README.md)（人读 MD / Mermaid）
 
 ---
 
@@ -74,7 +75,7 @@ validation:
 | `block_on` | `error` 阻断；`warn` 只记录；`never` 仅落盘报告 |
 | `require_hitl` | 规则通过后是否强制 `spec_hitl` / `design_hitl` |
 | `require_hitl_if_flags` | 命中 `design.hitl_flags` 时强制 `design_hitl` |
-| `validate_mermaid` | 是否解析 `flow.mmd` |
+| `validate_mermaid` | 是否解析 Run 目录 `*.mmd`（须含可识别的 sequence + flowchart；见 [flow-spec.md](./artifact-templates/flow-spec.md)） |
 
 **生产级 Profile 示例（P1）：** 可设 `validation.spec.require_hitl: true`、`validation.design.require_hitl: true`，并配置 `hitl.sensitive_globs` / `hitl.flags` 触发 `deploy_hitl`。
 
@@ -82,7 +83,8 @@ validation:
 
 ## 3. spec_validate — 规则清单
 
-实现：`multi_agent_code_factory/validators/spec_rules.py`。
+实现：`multi_agent_code_factory/validators/spec_rules.py`。  
+JSON 契约：[artifact-schemas/prd-spec.md](./artifact-schemas/prd-spec.md)；人读格式：[artifact-templates/prd-spec.md](./artifact-templates/prd-spec.md)。
 
 ### 3.1 结构与必填（error）
 
@@ -98,8 +100,8 @@ validation:
 | `SPEC-008` | story / requirement / feature / metric 各类 `id` 无重复 |
 | `SPEC-009` | `features` 非空 |
 | `SPEC-010` | `features[].id` 唯一 |
-| `SPEC-011` | `success_metrics` 非空 |
-| `SPEC-012` | `success_metrics[].id` 唯一；`target` 非空 |
+| `SPEC-011` | — | `success_metrics` **可选**（§4 可省略，JSON 可为 `[]`；无 empty 门禁） |
+| `SPEC-012` | error | 当 `success_metrics` 非空时：`id` 唯一且每条 `target` 非空 |
 | `SPEC-013` | `operational_profile` 非空 |
 | `SPEC-014` | `user_scale`、`high_concurrency`、`performance.tier` 必填 |
 | `SPEC-015` | `consistency_profile` 非空 |
@@ -124,7 +126,7 @@ validation:
 ### 3.3 spec.md 格式（P1，warn）
 
 实现：`multi_agent_code_factory/validators/spec_md_rules.py`（读 run 目录 `spec.md`，对照 `spec.json`）。  
-模板：[artifact-templates/spec.md](./artifact-templates/spec.md)。
+模板：[artifact-templates/prd-spec.md](./artifact-templates/prd-spec.md)（**中文固定章节**）。
 
 | rule_id | 严重度 | 检查 |
 |---------|--------|------|
@@ -133,9 +135,14 @@ validation:
 | `SPEC-303` | warn | 须含 `## 范围` |
 | `SPEC-304` | warn | MD 中出现的 `AC-*` id 与 `spec.json` 一致 |
 | `SPEC-305` | warn | 文末元数据含 `task_profile`、`revision` |
-| `SPEC-306` | warn | 须含 `## 成功指标` |
+| `SPEC-306` | warn | 当 `success_metrics` 非空时须含 `## 业务指标` |
 | `SPEC-307` | warn | 须含 `## 功能` |
-| `SPEC-308` | warn | 须含 `## 稳定性、性能与数据一致性`（或等价含「数据一致性」子节） |
+| `SPEC-308` | warn | 须含 `## 稳定性、性能与数据一致性` |
+| `SPEC-309` | warn | 须含 `## 术语与领域概念` |
+| `SPEC-310` | warn | 须含 `## 背景与上下文` |
+| `SPEC-311` | warn | 须含 `## 用户故事` |
+| `SPEC-312` | warn | 须含 `## 需求池` |
+| `SPEC-313` | warn | 须含 `## 约束` |
 
 **失败：** `route_after_spec_validate` → **pm**；violations 注入 PM prompt。
 
@@ -143,7 +150,8 @@ validation:
 
 ## 4. design_validate — 规则清单
 
-实现：`multi_agent_code_factory/validators/design_rules.py`。
+实现：`multi_agent_code_factory/validators/design_rules.py`。  
+JSON 契约：[artifact-schemas/design-spec.md](./artifact-schemas/design-spec.md)；人读格式：[artifact-templates/design-spec.md](./artifact-templates/design-spec.md) + [flow-spec.md](./artifact-templates/flow-spec.md)。
 
 ### 4.1 JSON 结构（error / warn）
 
@@ -153,7 +161,7 @@ validation:
 | `DES-008` | `context_view`、`architecture.solution_strategy`、`non_goals` 非空 |
 | `DES-009` | `traceability` 非空；P0 `FEAT` 在 `traceability` 或 `dev_tasks.covers` 可追溯 |
 | `DES-010` | `cross_cutting` 非空（或 §6 其它字段齐全时可空对象） |
-| `DES-011` | error | spec §8 非 trivial 时 `non_functional` 非空 |
+| `DES-011` | error | prd-spec **§9**（`operational_profile`）非 trivial 时 `non_functional` 非空 |
 | `DES-012` | `external_dependencies` 非空（无中间件时显式 `filesystem`/`none` 说明） |
 | `DES-013` | `table_schemas` 非空，或 `data_model` + 字段级 `table_schemas.columns` |
 | `DES-014` | `transaction_constraints` 非空（落实 spec `consistency_profile`） |
@@ -164,7 +172,7 @@ validation:
 | `DES-019` | error | `storage` 为关系型 DB 时：须含 `created_at`、`updated_at` 列；`indexes` 非空或 `notes` 说明仅 PK；`require_version` 为 true 时须含 `version` 列 |
 | `DES-020` | warn | 每个 `indexes[]` 条目须含 `purpose`（索引注释） |
 | `DES-021` | error | 每个 `error_catalog[].code` 至少 1 条 `test_cases[]` 且 `kind=negative` 且 `error_code` 匹配 |
-| `DES-022` | warn | `test_cases[]` 须同时含 `kind=happy` 与 `kind=negative`；P0 FEAT/US 各有 happy 覆盖 |
+| `DES-022` | warn | `test_cases[]` 须同时含 `happy`、`negative`、**`boundary`**；P0 FEAT/US 各有 happy；每个 `error_catalog` 有 `negative` |
 | `DES-023` | error | `error_catalog[].code` 匹配 `^ERR-[A-Z][A-Z0-9_]{1,11}-\d{3}$` |
 | `DES-024` | error | `test_cases[].id` 匹配 `^TC-(HAP|NEG|BND)-[A-Z][A-Z0-9_]{1,11}-\d{3}$` |
 | `DES-025` | error | `test_cases[].error_code`（若有）须存在于 `error_catalog[].code` |
@@ -179,35 +187,38 @@ validation:
 | `DES-034` | warn | `operations[].errors[]`（若有）须存在于 `error_catalog[].code` |
 | `DES-101`–`104` | AC 追溯、scope_out、路径逃逸 |
 
-### 4.2 design.md / flow.mmd 格式（P1）
+### 4.2 design.md / `*.mmd` 格式（P1）
 
-模板：[artifact-templates/design.md](./artifact-templates/design.md)、[artifact-templates/flow.md](./artifact-templates/flow.md)。
+模板：[artifact-templates/design-spec.md](./artifact-templates/design-spec.md)、[artifact-templates/flow-spec.md](./artifact-templates/flow-spec.md)。  
+Run `design.md` 须 **中文固定章节**（§1–§10 + 附录 A–E）；**不含** Rollout & Deployment。
 
 | rule_id | 严重度 | 检查 |
 |---------|--------|------|
-| `DES-201` | warn | 须含 §1–§6 标题（Context…Cross-cutting；Google Design Doc 核心） |
-| `DES-202` | warn | 须含附录 A–C |
-| `DES-203` | error* | `flow.mmd` 可解析 |
-| `DES-204` | warn | sequence participant 与 `modules` / `interfaces` 一致 |
-| `DES-205` | warn | §8 Testing Plan 或 `test_strategy.approach` 非空 |
-| `DES-206` | warn | §4 Design 须含 Flow 子节或引用 `flow.mmd` |
+| `DES-201` | warn | 须含 §1–§6 中文标题（背景与上下文…横切关注点）及 §8、§10 |
+| `DES-202` | warn | 须含附录 A–E（需求追溯…与现有代码对照） |
+| `DES-203` | error* | Run `*.mmd` 可解析（至少 1 个含 sequence + flowchart 的文件） |
+| `DES-204` | warn | sequence participant / 节点与 `modules` / `interfaces` 一致 |
+| `DES-205` | warn | 须含 `## 8. 测试计划` 或 `test_strategy` 非空 |
+| `DES-206` | warn | §4 须含 `### 4.6 流程与时序` 或引用 `*.mmd` |
 | `DES-207` | warn | 须含附录 E |
-| `DES-208` | warn | Profile 含 deploy 时须含 §9 Rollout & Deployment |
-| `DES-209` | warn | 须含 §3 Non-Goals |
-| `DES-210` | warn | 须含 §11 Open Questions |
-| `DES-211` | warn | Profile 为长运行服务时 §10 Monitoring 非 N/A |
-| `DES-212` | warn | 须含 `### 4.3 External Dependencies` |
-| `DES-220` | warn | 须含 `### 4.2 Components` 且表格含 `code_domain` 列 |
-| `DES-221` | warn | 须含 `### 4.4 APIs` 且各模块 API 表含「入参」「出参」列（或等价结构化描述） |
-| `DES-213` | warn | 须含 `### 4.5 Data Model & Table Schema` |
-| `DES-214` | error* | `diagrams[]` 须同时登记 sequence 与 flowchart；`flow.mmd` 内须可识别两类图 |
+| `DES-208` | — | **已废弃**（原 §9 Rollout）；Run **不得**含 Rollout 章节 |
+| `DES-209` | warn | 须含 `## 3. 非目标` |
+| `DES-210` | warn | 须含 `## 10. 待澄清项` |
+| `DES-211` | warn | 长运行服务时 `## 9. 监控与告警` 非「不适用」（本地 CLI 可 N/A） |
+| `DES-212` | warn | 须含 `### 4.3 外部依赖` |
+| `DES-213` | warn | 须含 `### 4.5 数据模型与表结构` |
+| `DES-214` | error* | `diagrams[]` 须同时登记 `sequence` 与 `flowchart`；对应 `.mmd` 内可识别两类图 |
 | `DES-215` | warn | 须含 `## 附录 D. 测试用例设计` 或 `test_cases` 非空 |
-| `DES-216` | warn | 须含 `### 6.1` 事务/一致性 与 `### 6.2` 错误码 |
-| `DES-217` | warn | 须含 `### 4.6 Flow` 且引用 `flow.mmd` |
+| `DES-216` | warn | 须含 `### 6.1` 事务/一致性 与 `### 6.2` 异常与错误码 |
+| `DES-217` | warn | 须含 `### 4.6 流程与时序` 且引用 `*.mmd` |
 | `DES-218` | warn | §4.5 表格须含「可空」「注释」列 |
-| `DES-219` | warn | 附录 D 须含「类型」列（happy/negative/boundary） |
+| `DES-219` | warn | 附录 D 须含「类型」列（happy / negative / boundary） |
+| `DES-220` | warn | 须含 `### 4.2 模块划分` 且表格含 `code_domain` 列 |
+| `DES-221` | warn | 须含 `### 4.4 接口定义`；HTTP 模块宜分「入参 / 出参」表 |
+| `DES-222` | warn | 须含 `## 5. 方案对比`（宜 2 行：1 选用 + 1 拒绝） |
+| `DES-223` | warn | 模块 ≥2 或 §4.3 有外部依赖时，宜有 `kind=context` 架构图（`architecture-*.mmd`） |
 
-\* `DES-203` 在 `validation.design.validate_mermaid: false` 时降为 warn 或跳过。
+\* `DES-203` / `DES-214` 在 `validation.design.validate_mermaid: false` 时降为 warn 或跳过。
 
 ### 4.4 HITL 标志
 
@@ -219,12 +230,12 @@ validation:
 
 ## 5. HITL 节点（spec_hitl / design_hitl / deploy_hitl / escalation_hitl）
 
-LangGraph **`interrupt_before`**；[`HitlDecision.stage`](./artifact-schemas/hitl.md)：
+LangGraph **`interrupt_before`**；[`HitlDecision.stage`](./artifact-schemas/hitl-spec.md)：
 
 | `stage` | 节点 | 审批人阅读 | 驳回 / 终止 |
 |---------|------|------------|-------------|
 | `spec` | spec_hitl | `spec.md`、`spec_validation.json` | → PM |
-| `design` | design_hitl | `design.md`、`flow.mmd`、`design_validation.json` | → Architect |
+| `design` | design_hitl | `design.md`、`*.mmd`、`design_validation.json` | → Architect |
 | `deploy` | deploy_hitl | `review.md`、diff、敏感变更 | 续跑 → Developer；终止 → `run_meta.status=failed` |
 | `escalation` | escalation_hitl | run 摘要、回路计数、最近失败产物 | → `run_meta.status=failed` |
 
@@ -255,7 +266,7 @@ LangGraph **`interrupt_before`**；[`HitlDecision.stage`](./artifact-schemas/hit
 
 ```text
 multi_agent_code_factory/
-├── validators/          # spec_rules.py, spec_md_rules.py (P1), design_rules.py, mermaid.py
+├── validators/          # spec_rules.py, spec_md_rules.py (P1), design_rules.py, mermaid.py (P1)
 ├── nodes/
 │   ├── spec_validate.py
 │   ├── design_validate.py

@@ -27,11 +27,11 @@ Code = SOP(Team)
 | SOP 有序主线 | LangGraph 顺序图 + 条件回路 | 主线 §4.1 |
 | 结构化产物 | JSON Schema + MD + Mermaid | 主线 §2、[artifact-schemas/](../artifact-schemas/README.md) |
 | PRD → 设计 → 代码 | `spec` → `design` → Profile.`code_root` | [profiles.md](../profiles.md) |
-| Architect 交付物 | 文件列表、接口、序列图、`dev_tasks` | [artifact-schemas/design.md](../artifact-schemas/design.md) |
-| Executable feedback | `run_tests` Tool + Parser + RetryBundle | 主线 §4.5.1、[test-report.md](../artifact-schemas/test-report.md) |
+| Architect 交付物 | 文件列表、接口、序列图、`dev_tasks` | [artifact-schemas/design-spec.md](../artifact-schemas/design-spec.md) |
+| Executable feedback | `run_tests` Tool + Parser + RetryBundle | 主线 §4.5.1、[test-report.md](../artifact-schemas/test-report-spec.md) |
 | **Watch / 订阅** | 消息池 + `watch` | `context.py`（主线 §4.5） |
-| **PM 产物** | KPI、Features、User Stories、Requirement Pool | [artifact-schemas/spec.md](../artifact-schemas/spec.md) |
-| **设计文档模板** | Google Design Doc + 七项工程 | [artifact-templates/design.md](../artifact-templates/design.md) |
+| **PM 产物** | KPI、Features、User Stories、Requirement Pool | [artifact-schemas/prd-spec.md](../artifact-schemas/prd-spec.md) |
+| **设计文档模板** | Google Design Doc + 七项工程 | [artifact-templates/design-spec.md](../artifact-templates/design-spec.md) |
 | **断点恢复** | `recover_path` | checkpoint（主线 §4.6） |
 | **运行预算** | `investment` | `budget` / `run_meta`（主线 §4.4） |
 | **增量开发** | PlanAndChange | `parent_task_id`、`revision`（主线 §4.7） |
@@ -47,7 +47,7 @@ Code = SOP(Team)
 | `context.py`：按 `watch` 组装 `NodeContext` | 主线 §4.5 | P0 |
 | RetryBundle + 失败文件片段 Tool | 主线 §4.5.1 | P0 |
 | Developer Tool 收敛（SWE-agent ACI，[open-source-survey.md](./open-source-survey.md)） | 主线 §4.2 | P0 |
-| `DevManifest.reflection`（Reflexion） | [dev-manifest.md](../artifact-schemas/dev-manifest.md) | P0 |
+| `DevManifest.reflection`（Reflexion） | [dev-manifest.md](../artifact-schemas/dev-manifest-spec.md) | P0 |
 | 各角色 prompt 显式列出 `watch` 字段 | 主线 §4.5 | P0 |
 | `spec_validate` / `design_validate` + `validators/` | [quality-gates.md](../quality-gates.md) | P0 |
 | `spec_hitl` / `design_hitl` | 主线 §4.1.2 | P1 |
@@ -57,7 +57,7 @@ Code = SOP(Team)
 | `Profile.sandbox`（OpenHands） | [profiles.md](../profiles.md) | P1 |
 | Reviewer `git_diff` Tool（Aider） | [open-source-survey.md](./open-source-survey.md) | P1 |
 | `profiles/*/agents.yaml`（CrewAI 风格） | [profiles.md](../profiles.md) | P1 |
-| QA `tests_missing` 检测；`auto_generate_tests` | [test-report.md](../artifact-schemas/test-report.md) | P1 |
+| QA `tests_missing` 检测；`auto_generate_tests` | [test-report.md](../artifact-schemas/test-report-spec.md) | P1 |
 | `--parent-task-id` 增量 merge | 主线 §4.7 | P2 |
 | `budget` 触顶熔断 | 主线 §4.4 | P2 |
 | `Profile.mcp_servers` | [open-source-survey.md](./open-source-survey.md) | P2 |

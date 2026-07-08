@@ -5,3 +5,11 @@ sequenceDiagram
     U->>CLI: todo add "buy milk"
     CLI->>S: append(item)
     S->>S: save todos.json
+
+flowchart TD
+    Start([用户命令]) --> Parse{参数合法?}
+    Parse -->|否| ErrCLI[ERR-CLI-001]
+    Parse -->|是| Store[TodoStore.save]
+    Store --> Write{写入成功?}
+    Write -->|否| ErrStore[ERR-STORE-002]
+    Write -->|是| Done([完成])

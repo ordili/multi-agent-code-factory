@@ -1,4 +1,4 @@
-﻿# HitlDecision — 人工审批记录
+﻿# hitl-spec.md — HitlDecision（HITL JSON 契约）
 
 > **实现：** `multi_agent_code_factory/schemas/hitl.py`  
 > **Run 路径：** `hitl.json`  
