@@ -16,6 +16,7 @@ from multi_agent_code_factory.agents.llm_runner import LlmRunner
 from multi_agent_code_factory.agents.llm_schemas import ArchitectLLMOutput
 from multi_agent_code_factory.log import agent_run, get_logger
 from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.renderers.design_md import render_design_md
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.state import PipelineState
 from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
@@ -63,4 +64,5 @@ def run_architect(
 
         writer.write_model("design.json", design)
         writer.write_text("flow.mmd", flow_text)
+        writer.write_text("design.md", render_design_md(design))
     return {"design": design}

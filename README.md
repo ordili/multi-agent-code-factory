@@ -203,7 +203,8 @@ multi-agent-code-factory/
 | [docs/README.md](docs/README.md)                                                                           | 文档总览与易混淆对照            |
 | [docs/design/00-master-overview.md](docs/design/00-master-overview.md)                                     | 项目目标与 V1/V2 边界        |
 | [docs/design/pipeline/multi-agent-pipeline-design.md](docs/design/pipeline/multi-agent-pipeline-design.md) | 流水线主线（角色、路由、产物）       |
-| [docs/design/pipeline/implementation-plan.md](docs/design/pipeline/implementation-plan.md)                 | V1 实现阶段与 PR 拆分        |
+| [docs/design/pipeline/implementation-plan.md](docs/design/pipeline/implementation-plan.md) | V1 实现阶段与 PR 拆分        |
+| [docs/design/pipeline/P1-backlog.md](docs/design/pipeline/P1-backlog.md) | P1 待办汇总（可勾选 checklist） |
 | [docs/design/pipeline/README.md](docs/design/pipeline/README.md)                                           | Profile、Schema、示例细目索引 |
 | [multi_agent_code_factory/profiles/README.md](multi_agent_code_factory/profiles/README.md)                 | 内置 Profile 列表         |
 

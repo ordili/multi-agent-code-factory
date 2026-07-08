@@ -11,6 +11,7 @@ from multi_agent_code_factory.agents.base import (
 from multi_agent_code_factory.agents.llm_runner import LlmRunner
 from multi_agent_code_factory.log import agent_run, get_logger
 from multi_agent_code_factory.profiles import ProfileConfig
+from multi_agent_code_factory.renderers.review_md import render_review_md
 from multi_agent_code_factory.schemas.review import ReviewReport
 from multi_agent_code_factory.state import PipelineState
 from multi_agent_code_factory.tools.write_artifact import RunArtifactWriter
@@ -59,6 +60,7 @@ def run_reviewer(
             )
 
         writer.write_model("review.json", review)
+        writer.write_text("review.md", render_review_md(review))
         logger.info(
             "review outcome approved=%s next_stage=%s",
             review.approved,
