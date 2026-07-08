@@ -1,11 +1,16 @@
-﻿# Python code standards (Profile default) — inject into Developer system prompt
+﻿# Python code standards (Profile default) — injected for PM, Architect, Developer system prompts
 # Full spec: docs/design/pipeline/python-style.md
 
 - Python >= 3.11; follow PEP 8 (enforced by Ruff).
 - Format: ruff format (Black-compatible, line length 88, double quotes).
 - Naming: snake_case functions/vars, PascalCase classes, UPPER constants.
 - Public functions/classes: type hints + Google-style docstrings.
+- Single responsibility: one clear job per function/class; split when mixing I/O, parsing, and business rules.
+- Error handling: catch specific exceptions; use `raise ... from e`; never bare `except:` or silent `pass`.
+- Security: no eval/exec; validate external input; subprocess without shell=True unless required.
+- Resources: use context managers (`with`) for files, locks, and connections.
+- Dependencies: prefer stdlib; add third-party packages only when spec requires them.
 - Tests: pytest under tests/test_*.py; no network in unit tests unless specified.
 - Logging: use logging module; no print except CLI user output.
 - No hardcoded secrets; use environment variables.
-- Before finishing: code must pass `python -m ruff check . && python -m ruff format --check .` and `python -m pytest -q`.
+- Before finishing: code must pass `python -m ruff check . && python -m ruff format --check .` and `python -m pytest -q --junitxml=reports/junit.xml`.

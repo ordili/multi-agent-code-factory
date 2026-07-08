@@ -69,6 +69,9 @@ python -m ruff check . && python -m ruff format --check .
 | 常量 | `UPPER_SNAKE_CASE` |
 | 私有 | 单下划线 `_helper`；双下划线仅用于 name mangling |
 | import | 标准库 → 第三方 → 本地；每组之间空一行（Ruff isort 自动） |
+| 职责 | 函数/类单一职责；I/O、解析、业务逻辑分开；避免 god module |
+
+**单一职责：** 每个函数/类只做一件事；混用 I/O、解析与业务规则时拆成独立函数或模块。
 
 ### 4.2 类型注解
 
@@ -104,11 +107,22 @@ def route_after_test(state: PipelineState, limits: LoopLimits) -> str:
 | `logging.getLogger(__name__)` | 裸 `print`（CLI 用户输出除外） |
 | 项目异常层次（如 `FactoryError`） | 裸 `except:` / `except Exception:` 吞掉错误 |
 | `raise X from e` 链式异常 | 静默 `pass` 忽略失败 |
+| `with` / context manager 管理文件、锁、连接 | 手动 open/close 且缺少 finally |
+
+- 捕获**具体**异常类型；仅在明确边界处捕获较宽异常并立即 re-raise 或包装。
 
 ### 4.5 安全
 
 - 禁止硬编码密钥、token、私钥；使用环境变量。
+- 禁止 `eval` / `exec` 处理不可信输入。
+- 校验外部输入（CLI 参数、文件、HTTP payload）；SQL 使用参数化查询。
+- `subprocess` 默认 `shell=False`；仅在 spec 明确要求时使用 `shell=True`。
 - 与主线一致：全部角色禁止读写凭证文件（[multi-agent-pipeline-design.md §4.2](./multi-agent-pipeline-design.md#42-角色与-tool)）。
+
+### 4.6 依赖
+
+- 优先标准库；仅在 Spec / 验收标准明确要求时添加第三方包。
+- 新增依赖须写入 `pyproject.toml` 的 `[project]` / `[project.optional-dependencies]`。
 
 ---
 
