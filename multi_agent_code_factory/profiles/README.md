@@ -2,6 +2,12 @@
 
 每个 **语言** 一个可加载 Profile（`python`、`go`、`java`、`rust`、`solidity`）；公共字段在 `_base/common.yaml`，经 `extends` 合并。字段说明见 [docs/design/pipeline/profiles.md](../../docs/design/pipeline/profiles.md)。
 
+## 如何选择语言
+
+`run --profile <id>` **必填**（无默认，不从需求推断）。`--profile` 选的是**语言栈配置**（含测试命令与 prompts）；**V1 下 id 与语言同名**。首次推荐 **`python`**。
+
+Profile 是语言栈；具体项目用 `--task-id` + `--code-root` 区分，不是换 Profile id。
+
 ## Profile 与 `.env` 的分工
 
 | 放 **Profile**（本目录 YAML） | 放 **`.env`**（仓库根，不进 Git） |

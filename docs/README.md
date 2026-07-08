@@ -17,6 +17,7 @@
 | [design/pipeline/README.md](design/pipeline/README.md) | 工厂细目索引（Profile、产物规格、示例） |
 | [design/pipeline/implementation-plan.md](design/pipeline/implementation-plan.md) | V1 实现计划（阶段、PR、验收） |
 | [design/pipeline/P1-backlog.md](design/pipeline/P1-backlog.md) | **P1 待办汇总**（可勾选 checklist） |
+| [operations.md](operations.md) | Live LLM、Ollama、VM 脚本与排错 |
 
 **V2 领域设计**（当前不实现）：[domains/](../domains/README.md)
 
