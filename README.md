@@ -42,24 +42,26 @@ pip install -e ".[dev]"
 ```bash
 python -m multi_agent_code_factory run \
   --profile python \
-  --task-id todo-cli \
+  --task-id calculator \
   "实现一个支持加减乘除的计算器"
 ```
+
+> **Windows（PowerShell）**：不要用 bash 的 `\` 续行；请写单行，或用反引号 `` ` `` 续行。
 
 成功时终端输出 `status=completed`。然后可查看：
 
 
-| 路径                     | 内容                                                            |
-| ---------------------- | ------------------------------------------------------------- |
-| `docs/runs/todo-cli/`  | 本次 run 的 spec、design、test_report、review、`run_meta.json` 等     |
-| `../generated/python/` | 默认生成代码目录（仓库外）；计算器等多项目可加 `--code-root ../generated/calculator` |
+| 路径                        | 内容                                                            |
+| ------------------------- | ------------------------------------------------------------- |
+| `docs/runs/calculator/`   | 本次 run 的 spec、design、test_report、review、`run_meta.json` 等     |
+| `../generated/python/`    | 默认生成代码目录（仓库外）；多项目可加 `--code-root ../generated/calculator` |
 
 
 
 
 ## 使用真实 LLM（可选）
 
-安装 LLM 依赖并配置 DeepSeek（OpenAI 兼容 API）：
+安装 LLM 依赖并配置厂商（`deepseek` / `openai` / `anthropic` / `ollama`）：
 
 ```bash
 pip install -e ".[llm]"
@@ -67,7 +69,30 @@ cp .env.example .env   # Windows: copy .env.example .env
 # 编辑 .env：FACTORY_LLM_PROVIDER、FACTORY_LLM_MODEL、对应厂商 API Key
 ```
 
-CLI 启动时会自动加载仓库根目录的 `.env`（已设置的 shell 环境变量优先）。
+CLI 启动时会自动加载仓库根目录的 `.env`（已设置的 shell 环境变量优先）。`--live` 模式下，Ollama 会在 pipeline 启动前做 **preflight**（探测模型是否可响应），失败时提前报错并给出修复提示。
+
+### 云 API（DeepSeek 等）
+
+```env
+FACTORY_LLM_PROVIDER=deepseek
+FACTORY_LLM_MODEL=deepseek-chat
+DEEPSEEK_API_KEY=sk-...
+```
+
+### 本地 / VM Ollama
+
+```env
+FACTORY_LLM_PROVIDER=ollama
+FACTORY_LLM_MODEL=qwen3.5:9b
+OLLAMA_BASE_URL=http://127.0.0.1:11434
+OLLAMA_NUM_CTX=8192
+OLLAMA_NUM_PREDICT=4096
+OLLAMA_REASONING=false
+```
+
+- 先 `ollama pull qwen3.5:9b`（或 `.env` 里配置的模型）。
+- **`OLLAMA_BASE_URL` 请用 `127.0.0.1`**，不要用 `localhost`（Windows 上 `localhost` 可能走 IPv6 导致 HTTP 502）。
+- CPU 推理较慢：单 Agent 常需数分钟，整轮 pipeline 可能 **30–90 分钟**。
 
 指定输出目录并启用 live 模式：
 
@@ -76,8 +101,9 @@ python -m multi_agent_code_factory run \
   --profile python \
   --task-id calculator \
   --live \
+  --log-level INFO \
   --code-root "D:\\code\\agent-out-code\\calculator" \
-"实现支持加减乘除的计算器"
+  "实现支持加减乘除的计算器"
 ```
 
 常用参数：
@@ -88,18 +114,45 @@ python -m multi_agent_code_factory run \
 | `--profile`            | 语言 Profile id：`python`                        |
 | `--task-id`            | 本次 run 标识，产物写入 `docs/runs/<task_id>/`         |
 | `--stub`               | 强制 Stub（默认行为）                                 |
-| `--live`               | 真实 LLM（需当前 `FACTORY_LLM_PROVIDER` 对应 API Key） |
+| `--live`               | 真实 LLM（需当前 `FACTORY_LLM_PROVIDER` 对应配置）       |
 | `--code-root`          | 覆盖 Profile 的 `code_root`                      |
+| `--log-level`          | 日志级别（默认 `INFO`；或 `.env` 的 `FACTORY_LOG_LEVEL`） |
 | `--max-impl-retries` 等 | 覆盖回路次数，见 `config/autonomy_policy.yaml`        |
 
 
-环境变量（LLM）：`FACTORY_LLM_PROVIDER`（厂商）、`FACTORY_LLM_MODEL`（模型名）；按 provider 填对应 API Key（`DEEPSEEK_API_KEY`、`OPENAI_API_KEY`、`ANTHROPIC_API_KEY`、`OLLAMA_API_KEY`，未用留空）。Ollama 另可设 `OLLAMA_BASE_URL`。工厂策略：`FACTORY_MAX_IMPL_RETRIES` 等。
+环境变量摘要：
+
+| 变量 | 说明 |
+| ---- | ---- |
+| `FACTORY_LLM_PROVIDER` | 厂商：`deepseek` / `openai` / `anthropic` / `ollama` |
+| `FACTORY_LLM_MODEL` | 模型 id（如 `deepseek-chat`、`qwen3.5:9b`） |
+| `DEEPSEEK_API_KEY` 等 | 云厂商 API Key（未用留空） |
+| `OLLAMA_BASE_URL` | Ollama 地址（推荐 `http://127.0.0.1:11434`） |
+| `OLLAMA_NUM_CTX` / `OLLAMA_NUM_PREDICT` / `OLLAMA_REASONING` | Ollama 推理调优（见 `.env.example`） |
+| `FACTORY_LOG_LEVEL` | 默认日志级别（CLI `--log-level` 可覆盖） |
+| `FACTORY_MAX_IMPL_RETRIES` 等 | 覆盖 `config/autonomy_policy.yaml` 回路默认 |
 
 集成测试（需 API Key，CI 默认跳过）：
 
 ```bash
 pytest tests/integration/test_todo_cli_e2e.py -m integration
 ```
+
+## GCP / Linux VM 一键运行
+
+在已安装 Ollama 的 VM 上，可用脚本拉最新代码并跑 live pipeline：
+
+```bash
+chmod +x scripts/vm-run-pipeline.sh scripts/vm-run-calculator.sh
+
+# 通用：pull + venv + pip install + live run
+./scripts/vm-run-pipeline.sh --task-id calculator "实现支持加减乘除的计算器"
+
+# 计算器快捷入口（DEBUG 日志）
+./scripts/vm-run-calculator.sh
+```
+
+脚本默认代码输出到 `/data/generated/<task-id>`；需事先配置仓库根目录 `.env`（Ollama 同机时用 `OLLAMA_BASE_URL=http://127.0.0.1:11434`）。详见 `scripts/vm-run-pipeline.sh` 头部注释。
 
 
 
@@ -130,6 +183,7 @@ multi-agent-code-factory/
 ├── multi_agent_code_factory/   # 引擎（graph、agents、validators、schemas、tools）
 │   └── profiles/               # 语言 Profile（_base/common.yaml + python|go|…）
 ├── config/                     # 全局策略 autonomy_policy.yaml
+├── scripts/                    # VM 部署与 pipeline 脚本（vm-run-pipeline.sh 等）
 ├── .env.example                # 本机密钥与可选 FACTORY_*（复制为 .env）
 ├── docs/
 │   ├── design/                 # 设计 Spec（架构、Schema、实现计划）
