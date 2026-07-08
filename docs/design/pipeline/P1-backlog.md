@@ -25,7 +25,8 @@
 - [x] 五 Agent + validate + QA + Reviewer 图跑通
 - [x] `spec_validate` / `design_validate` MVP 白名单规则
 - [x] `run_tests` + `junit_xml` Parser
-- [x] Live LLM（DeepSeek / Ollama）+ prompted JSON 路径
+- [x] Live LLM（DeepSeek / Ollama `prompted_json`；OpenAI / Anthropic `native_structured`）
+- [x] LLM 调用分层（`agents/llm/`：pipeline、strategies、retry、budget、usage）
 - [x] `spec.md` 渲染（`renderers/spec_md.py`）
 - [x] `design.json` + `flow.mmd` 落盘
 - [x] `run_meta.budget.used_llm_calls` + `llm_usage.json` + 用量日志（2026-07 补充）
@@ -107,7 +108,8 @@
 | [ ] | **`cargo_json`** | rust | `tools/test_parsers/cargo_json.py` |
 | [ ] | **`forge_json`** | solidity | `tools/test_parsers/forge_json.py` |
 | [ ] | Go / Rust / Solidity **live e2e** 各一例 | — | `tests/integration/` |
-| [ ] | 非 Python 语言 **prompts** 补全 | go/java/rust/solidity | `profiles/*/prompts/` |
+| [x] | 多语言 **Developer prompt** + **style snippet** | go/java/rust/solidity/python | `profiles/*/prompts/developer.txt`、`{language}-style-snippet.txt` |
+| [x] | **共享** PM / Architect / Reviewer prompt（语言无关） | 全部 V1 Profile | `profiles/_shared/prompts/`；`agents/llm/prompt/loader.py` |
 
 ---
 
@@ -125,6 +127,7 @@
 
 | 状态 | 项 | 落点 |
 |------|-----|------|
+| [x] | 多语言 **style snippet** 解析 | `agents/llm/prompt/style_snippet.py` |
 | [ ] | **`Profile.sandbox`**（隔离执行测试） | `profiles.md`、OpenHands 式 |
 | [ ] | **`profiles/*/agents.yaml`**（CrewAI 风格 per-role） | `profiles.py` |
 | [ ] | Gradle Windows `gradlew.bat` 归一 | `profiles.py`（P2 提及，可选） |
@@ -135,9 +138,9 @@
 
 | 状态 | 项 | 落点 |
 |------|-----|------|
-| [x] | `used_llm_calls` / `used_tokens` 记录 | `llm_runner.py`、`run_meta.json` |
-| [x] | 每次 call 用量日志 + `llm_usage.json` | `agents/llm_usage.py` |
-| [ ] | **`budget` 触顶熔断**（超 `FACTORY_MAX_TOKENS` fail） | `llm_runner._check_budget` |
+| [x] | `used_llm_calls` / `used_tokens` 记录 | `agents/llm/usage/recorder.py`、`run_meta.json` |
+| [x] | 每次 call 用量日志 + `llm_usage.json` | `agents/llm/usage/` |
+| [x] | **`budget` 触顶熔断**（超 `FACTORY_MAX_TOKENS` / call 上限 fail） | `agents/llm/budget/guard.py` → `LlmBudgetExceededError` |
 | [ ] | LangSmith Trace 关联 `task_id` | 可选；`.env.example` 已有占位 |
 
 ---
@@ -149,7 +152,8 @@
 | `--parent-task-id` 增量 merge | [主线 §4.7](./multi-agent-pipeline-design.md) |
 | `Profile.mcp_servers` / MCP Tool | [open-source-survey.md §C.5](./references/open-source-survey.md#c5-实现-backlog) |
 | `solidity-hardhat` Profile | [profiles.md](./profiles.md) |
-| **V2** `domains/*` 领域包 | [domains/README.md](../../../domains/README.md) |
+| **V2** `domains/*` 领域包 | [domains/README.md](../../../domains/README.md) — **子任务清单见该文档** |
+| LLM 固定 system 前缀 **Prompt Cache**（省 API 费用） | 暂缓；后期讨论 |
 | AFlow 式工作流调参 | P3 |
 
 ---
@@ -176,4 +180,4 @@
 
 ---
 
-*最后更新：2026-07-08（与 calculator live run 现状对齐）*
+*最后更新：2026-07-08（多语言 profile prompts、LLM 分层、共享角色 prompt、budget 熔断已勾选）*
