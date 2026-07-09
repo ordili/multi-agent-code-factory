@@ -5,7 +5,7 @@ from __future__ import annotations
 from enum import StrEnum
 from typing import Any, ClassVar
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from multi_agent_code_factory.schemas._base import ARTIFACT_VERSION
 
@@ -62,6 +62,121 @@ class DiagramRef(BaseModel):
     path: str
     kind: DiagramKind
     title: str | None = None
+
+
+def _normalize_diagram_kind(kind: Any) -> Any:
+    if not isinstance(kind, str):
+        return kind
+    normalized = kind.strip().lower().replace("_", " ")
+    aliases = {
+        "sequencediagram": "sequence",
+        "sequence diagram": "sequence",
+        "flowchart lr": "flowchart",
+        "flowchart td": "flowchart",
+        "flowchart": "flowchart",
+        "classdiagram": "class",
+        "class diagram": "class",
+        "deploymentdiagram": "deployment",
+        "deployment diagram": "deployment",
+    }
+    if normalized in aliases:
+        return aliases[normalized]
+    if normalized.startswith("sequence"):
+        return "sequence"
+    if normalized.startswith("flowchart") or normalized.startswith("flow chart"):
+        return "flowchart"
+    if normalized.startswith("class"):
+        return "class"
+    if normalized.startswith("deployment"):
+        return "deployment"
+    if normalized.startswith("context"):
+        return "context"
+    return kind
+
+
+def _coerce_error_catalog(value: Any) -> list[Any]:
+    normalized: list[Any] = []
+    for item in _coerce_list(value):
+        if isinstance(item, dict):
+            patched = dict(item)
+            if "code" not in patched and isinstance(patched.get("error_code"), str):
+                patched["code"] = patched["error_code"]
+            normalized.append(patched)
+        else:
+            normalized.append(item)
+    return normalized
+
+
+def _coerce_diagrams(value: Any) -> list[Any]:
+    normalized: list[Any] = []
+    for item in _coerce_list(value):
+        if isinstance(item, dict):
+            patched = dict(item)
+            if "kind" in patched:
+                patched["kind"] = _normalize_diagram_kind(patched["kind"])
+            normalized.append(patched)
+        else:
+            normalized.append(item)
+    return normalized
+
+
+def _coerce_list(value: Any) -> list[Any]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, (dict, str)):
+        return [value]
+    return [value]
+
+
+def _coerce_str_list(value: Any) -> list[Any]:
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, str):
+        return [value]
+    return [value]
+
+
+_DESIGN_OBJECT_LIST_FIELDS = (
+    "modules",
+    "external_dependencies",
+    "error_catalog",
+    "dev_tasks",
+    "diagrams",
+    "interfaces",
+    "data_model",
+    "table_schemas",
+    "traceability",
+    "file_plan",
+    "test_cases",
+    "transaction_constraints",
+)
+
+
+def coerce_design_payload(data: Any) -> Any:
+    """Normalize common LLM JSON shapes before DesignArtifact validation."""
+    if not isinstance(data, dict):
+        return data
+    payload = dict(data)
+    payload.setdefault("version", "1")
+    payload.setdefault("revision", 1)
+    for key in ("design_goals", "non_goals", "hitl_flags"):
+        if key in payload:
+            payload[key] = _coerce_str_list(payload[key])
+    for key in _DESIGN_OBJECT_LIST_FIELDS:
+        if key in payload:
+            if key == "diagrams":
+                payload[key] = _coerce_diagrams(payload[key])
+            elif key == "error_catalog":
+                payload[key] = _coerce_error_catalog(payload[key])
+            else:
+                payload[key] = _coerce_list(payload[key])
+    if "non_functional" in payload and isinstance(payload["non_functional"], dict):
+        payload["non_functional"] = [payload["non_functional"]]
+    return payload
 
 
 class DesignArtifact(BaseModel):
@@ -124,3 +239,8 @@ class DesignArtifact(BaseModel):
     non_functional: list[dict[str, Any]] | None = None
     transaction_constraints: list[dict[str, Any]] = Field(default_factory=list)
     notes: str | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_llm_payload(cls, data: Any) -> Any:
+        return coerce_design_payload(data)

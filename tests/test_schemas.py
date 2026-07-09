@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from multi_agent_code_factory.agents.llm.schemas import ArchitectLLMOutput
 from multi_agent_code_factory.schemas import (
     DesignArtifact,
     DevManifest,
@@ -109,6 +110,65 @@ def test_design_rejects_bad_version(snippets_dir: Path) -> None:
     data["version"] = "2"
     with pytest.raises(ValidationError):
         DesignArtifact.model_validate(data)
+
+
+def test_design_coerces_traceability_dict_to_list() -> None:
+    design = DesignArtifact.model_validate(
+        {
+            "spec_ref": "Hello module",
+            "traceability": {
+                "spec_ref_id": "FEAT-1",
+                "spec_ref_kind": "FEAT",
+            },
+        }
+    )
+    assert len(design.traceability) == 1
+    assert design.traceability[0]["spec_ref_id"] == "FEAT-1"
+
+
+def test_design_coerces_error_catalog_error_code_alias() -> None:
+    design = DesignArtifact.model_validate(
+        {
+            "spec_ref": "Hello module",
+            "error_catalog": [
+                {
+                    "error_code": "ERR-HELLO-001",
+                    "when": "import fails",
+                    "message": "Module not found",
+                }
+            ],
+        }
+    )
+    assert design.error_catalog[0].code == "ERR-HELLO-001"
+
+
+def test_design_coerces_diagram_mermaid_kind_aliases() -> None:
+    design = DesignArtifact.model_validate(
+        {
+            "spec_ref": "Hello module",
+            "diagrams": [
+                {"path": "flow.mmd", "kind": "sequenceDiagram"},
+                {"path": "architecture.mmd", "kind": "flowchart LR"},
+            ],
+        }
+    )
+    assert design.diagrams[0].kind == "sequence"
+    assert design.diagrams[1].kind == "flowchart"
+
+
+def test_architect_llm_output_accepts_coerced_design_traceability() -> None:
+    output = ArchitectLLMOutput.model_validate(
+        {
+            "design": {
+                "spec_ref": "Hello module",
+                "traceability": {
+                    "spec_ref_id": "FEAT-1",
+                    "spec_ref_kind": "FEAT",
+                },
+            }
+        }
+    )
+    assert output.design.traceability[0]["spec_ref_kind"] == "FEAT"
 
 
 def test_test_report_example() -> None:

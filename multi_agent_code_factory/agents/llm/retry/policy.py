@@ -28,6 +28,16 @@ def is_transient_llm_error(exc: BaseException) -> bool:
     return "502" in message or "503" in message or "connection" in message
 
 
+def is_retryable_prompted_json_error(exc: BaseException) -> bool:
+    """prompted_json 模式：网络瞬态错误与 schema 解析失败均可重试。"""
+    if is_transient_llm_error(exc):
+        return True
+    # Local import avoids import cycle with agents.llm.errors.
+    from multi_agent_code_factory.agents.llm.errors import LlmParseError
+
+    return isinstance(exc, LlmParseError)
+
+
 @dataclass(frozen=True)
 class RetryPolicy:
     """LLM 调用的重试次数与线性退避配置。"""
@@ -43,7 +53,10 @@ class RetryPolicy:
 
 _DEFAULT_POLICIES: dict[LlmOutputMode, RetryPolicy] = {
     "native_structured": RetryPolicy(max_attempts=3),
-    "prompted_json": RetryPolicy(max_attempts=2),
+    "prompted_json": RetryPolicy(
+        max_attempts=2,
+        is_retryable=is_retryable_prompted_json_error,
+    ),
 }
 
 
