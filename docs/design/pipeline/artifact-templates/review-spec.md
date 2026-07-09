@@ -1,7 +1,7 @@
 ﻿# review-spec.md — Reviewer 人读摘要格式规范
 
 > **状态：** 定稿 · [artifact-templates 索引](./README.md)  
-> **配套规范：** [prd-spec.md](./prd-spec.md) · [design-spec.md](./design-spec.md) · [flow-spec.md](./flow-spec.md)  
+> **配套规范：** [prd-spec.md](./prd-spec.md) · [design-spec.md](./design-spec.md) · [flow-spec.md](./flow-spec.md) · [dev-principles-spec.md](./dev-principles-spec.md)  
 > **节点交接以：** [`../artifact-schemas/review-spec.md`](../artifact-schemas/review-spec.md)（`ReviewReport` / `review.json`）**为准**；本文件定义 Run `review.md` 的章节与写法。  
 > **Run 路径：** `docs/runs/<task_id>/review.md`  
 > **路由实现：** [multi-agent-pipeline-design.md §4.3](../multi-agent-pipeline-design.md) · `graph_routing.py` → `route_after_review`  
@@ -163,8 +163,8 @@ Reviewer 上下文（`multi_agent_code_factory/profiles/_shared/prompts/reviewer
 | `spec` | `acceptance_criteria[]`、scope、异常 US |
 | `design` | 模块 API、错误码、附录 D 覆盖 |
 | `test_report` | `passed`、失败用例、日志 |
+| `code_root` / `git_diff` | 实现是否与 design 一致；**README.md** 是否存在且含安装/用法/测试说明（[dev-principles-spec.md](./dev-principles-spec.md)） |
 | `dev_manifest` | 任务是否完成 |
-| diff / `code_root` | 实现与 design 是否一致 |
 
 **硬规则：** `test_report.passed=false` → **不得** `approved=true`；`next_stage` 应为 `developer`（或说明需设计/需求环时选 `architect` / `pm`）。
 

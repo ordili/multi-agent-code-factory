@@ -1,0 +1,15 @@
+# Universal dev principles (all languages) — injected into Developer system prompt
+# Full spec: docs/design/pipeline/artifact-templates/dev-principles-spec.md
+
+- Every new project MUST include README.md: intro, install/setup, usage, how to run tests.
+- Include the language dependency manifest (pyproject.toml, go.mod, pom.xml, Cargo.toml, etc.).
+- Align source and test layout with design.file_plan and design.test_strategy / profile test_dir_glob.
+- Single responsibility: one clear job per function/class/module; split I/O, parsing, and business rules.
+- Match module boundaries to design.modules[] and dev_tasks[]; avoid god modules.
+- Keep CLI/API layers thin; domain logic must be unit-testable without network unless spec requires.
+- Validate external input; fail with clear messages; never swallow exceptions silently.
+- No hardcoded secrets; use environment variables; never commit real credentials.
+- No eval/exec on untrusted input; prefer subprocess without shell unless spec requires shell.
+- Each business module needs corresponding tests covering P0 acceptance_criteria and design test cases.
+- Public APIs need idiomatic doc comments per language style snippet.
+- README usage examples must match CLI --help and profile toolchain test/lint commands.

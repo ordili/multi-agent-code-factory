@@ -4,7 +4,19 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from multi_agent_code_factory._paths import profiles_dir
 from multi_agent_code_factory.profile_config import ProfileConfig
+
+_DEV_PRINCIPLES_SNIPPET = (
+    profiles_dir() / "_shared" / "prompts" / "dev-principles-snippet.txt"
+)
+
+
+def load_dev_principles_snippet() -> str | None:
+    """读取跨语言 Developer 工程原则 snippet。"""
+    if not _DEV_PRINCIPLES_SNIPPET.is_file():
+        return None
+    return _DEV_PRINCIPLES_SNIPPET.read_text(encoding="utf-8")
 
 
 def style_snippet_candidates(profile: ProfileConfig) -> tuple[Path, ...]:

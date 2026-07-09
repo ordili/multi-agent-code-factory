@@ -4,6 +4,7 @@ Implement code under code_root per design.dev_tasks and spec.acceptance_criteria
 Write production code and pytest tests so `python -m pytest -q --junitxml=reports/junit.xml` passes.
 
 Required layout for default Python profile:
+- README.md with install, usage, and test instructions (see dev-principles-spec)
 - pyproject.toml with [project] name, dependencies, [project.optional-dependencies] dev with pytest
 - src/ package modules referenced in design
 - tests/test_*.py covering acceptance criteria
