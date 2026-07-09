@@ -162,9 +162,9 @@ Reviewer 上下文（`multi_agent_code_factory/profiles/_shared/prompts/reviewer
 |------|----------|
 | `spec` | `acceptance_criteria[]`、scope、异常 US |
 | `design` | 模块 API、错误码、附录 D 覆盖 |
-| `test_report` | `passed`、失败用例、日志 |
+| `test_report` | `passed`、失败用例、`tests_missing`（对照 [dev-manifest-spec.md](../artifact-schemas/dev-manifest-spec.md) / design 路径） |
 | `code_root` / `git_diff` | 实现是否与 design 一致；**README.md** 是否存在且含安装/用法/测试说明（[dev-principles-spec.md](./dev-principles-spec.md)） |
-| `dev_manifest` | 任务是否完成 |
+| `dev_manifest` | `tasks_completed` 是否覆盖 P0 `dev_tasks`；`changed_files` 与 design / 实际 diff 是否一致 |
 
 **硬规则：** `test_report.passed=false` → **不得** `approved=true`；`next_stage` 应为 `developer`（或说明需设计/需求环时选 `architect` / `pm`）。
 

@@ -47,7 +47,7 @@ Code = SOP(Team)
 | `context.py`：按 `watch` 组装 `NodeContext` | 主线 §4.5 | P0 |
 | RetryBundle + 失败文件片段 Tool | 主线 §4.5.1 | P0 |
 | Developer Tool 收敛（SWE-agent ACI，[open-source-survey.md](./open-source-survey.md)） | 主线 §4.2 | P0 |
-| `DevManifest.reflection`（Reflexion） | [dev-manifest.md](../artifact-schemas/dev-manifest-spec.md) | P0 |
+| `DevManifest.reflection`（Reflexion） | [dev-manifest-spec.md](../artifact-schemas/dev-manifest-spec.md) | P0 schema · P1 Live 填充 |
 | 各角色 prompt 显式列出 `watch` 字段 | 主线 §4.5 | P0 |
 | `spec_validate` / `design_validate` + `validators/` | [quality-gates.md](../quality-gates.md) | P0 |
 | `spec_hitl` / `design_hitl` | 主线 §4.1.2 | P1 |

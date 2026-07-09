@@ -11,7 +11,7 @@ Test 层 **语言无关**。pytest、`cargo test`、`go test`、`mvn test`、`fo
 ## 执行流程
 
 1. （可选）`toolchain.setup` / `build`  
-2. 对照 `test_dir_glob` 检测 `tests_missing`（P1）  
+2. 对照 `test_dir_glob` 检测 `tests_missing`：优先 `dev_manifest.changed_files`，无 manifest 时回退 `design.file_plan`  
 3. 执行 `test_command`（`cwd=code_root`）  
 4. `test_parser` 解析 → `TestReport`  
 5. `passed=false` → 实现环回 Developer
