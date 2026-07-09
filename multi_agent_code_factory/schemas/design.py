@@ -48,6 +48,7 @@ class ErrorCatalogItem(BaseModel):
     when: str | None = None
     message: str | None = None
     retryable: bool | None = None
+    recovery: str | None = None
 
 
 class DevTask(BaseModel):
