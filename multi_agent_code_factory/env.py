@@ -35,6 +35,12 @@ def load_env_file(*, root: Path | None = None, override: bool = False) -> bool:
 
     load_dotenv(dotenv_path=path, override=override)
     _ENV_LOADED = True
+    try:
+        from multi_agent_code_factory.observability import configure_tracing_env
+
+        configure_tracing_env()
+    except ImportError:
+        pass
     return True
 
 

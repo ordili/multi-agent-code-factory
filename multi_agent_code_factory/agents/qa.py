@@ -48,9 +48,20 @@ def run_qa(
                     load_json_fixture(fixtures.test_report)
                 )
         else:
-            report = run_tests(profile)
+            report = run_tests(
+                profile,
+                dev_manifest=state.dev_manifest,
+                design=state.design,
+            )
 
         writer.write_model("test_report.json", report)
+        if report.tests_missing:
+            logger.warning(
+                "qa tests_missing count=%s paths=%s auto_generate=%s",
+                len(report.tests_missing),
+                report.tests_missing,
+                profile.auto_generate_tests,
+            )
         if report.passed:
             logger.info("qa tests passed")
         else:

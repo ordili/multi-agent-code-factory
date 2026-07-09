@@ -17,6 +17,7 @@ from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.schemas.test_report import TestReport
 from multi_agent_code_factory.schemas.validation_report import ValidationReport
 from multi_agent_code_factory.state import PipelineState
+from multi_agent_code_factory.tools.git_diff import git_diff
 from multi_agent_code_factory.tools.read_file import read_file
 
 DEFAULT_WATCH: dict[AgentRole, list[str]] = {
@@ -169,5 +170,19 @@ def build_prompt_context(
         bundle = build_retry_bundle(state, profile)
         if bundle is not None:
             context["retry_bundle"] = bundle.model_dump(mode="json")
+        if profile.auto_generate_tests:
+            context["auto_generate_tests"] = True
+        if state.test_report is not None and state.test_report.tests_missing:
+            context["tests_missing"] = list(state.test_report.tests_missing)
+
+    if role_id == AgentRole.REVIEWER:
+        diff_paths: list[str] | None = None
+        if state.dev_manifest is not None:
+            diff_paths = [
+                item.path for item in state.dev_manifest.changed_files if item.path
+            ]
+        diff = git_diff(profile.code_root, paths=diff_paths or None)
+        if diff:
+            context["git_diff"] = diff
 
     return trim_context_for_role(role_id, context)

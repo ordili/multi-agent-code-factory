@@ -8,6 +8,7 @@ from typing import Any
 
 from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.test_report import TestReport
+from multi_agent_code_factory.tools.git_diff import git_diff
 from multi_agent_code_factory.tools.linter import LintResult, run_linter
 from multi_agent_code_factory.tools.read_file import read_file
 from multi_agent_code_factory.tools.run_tests import run_tests
@@ -31,6 +32,13 @@ def _wrap_write_file(profile: ProfileConfig) -> ToolFn:
     return tool
 
 
+def _wrap_git_diff(profile: ProfileConfig) -> ToolFn:
+    def tool(paths: list[str] | None = None) -> str:
+        return git_diff(profile.code_root, paths=paths)
+
+    return tool
+
+
 def _wrap_run_tests(profile: ProfileConfig) -> ToolFn:
     def tool(code_root: Path | None = None) -> TestReport:
         return run_tests(profile, code_root=code_root)
@@ -50,6 +58,7 @@ _TOOL_BUILDERS: dict[str, Callable[[ProfileConfig], ToolFn]] = {
     "write_file": _wrap_write_file,
     "run_tests": _wrap_run_tests,
     "linter": _wrap_linter,
+    "git_diff": _wrap_git_diff,
 }
 
 

@@ -7,9 +7,12 @@ import time
 from pathlib import Path
 
 from multi_agent_code_factory.profile_config import ProfileConfig
+from multi_agent_code_factory.schemas.design import DesignArtifact
+from multi_agent_code_factory.schemas.dev_manifest import DevManifest
 from multi_agent_code_factory.schemas.test_report import TestReport
 from multi_agent_code_factory.tools.test_parsers._types import CommandResult
 from multi_agent_code_factory.tools.test_parsers.registry import get_parser
+from multi_agent_code_factory.tools.tests_missing import detect_tests_missing
 
 
 def _run_shell(command: str, cwd: Path) -> CommandResult:
@@ -32,14 +35,34 @@ def _run_shell(command: str, cwd: Path) -> CommandResult:
     )
 
 
+def _apply_tests_missing(report: TestReport, tests_missing: list[str]) -> TestReport:
+    if not tests_missing:
+        return report
+    return report.model_copy(
+        update={
+            "tests_missing": tests_missing,
+            "passed": False,
+        }
+    )
+
+
 def run_tests(
     profile: ProfileConfig,
     *,
     code_root: Path | None = None,
+    dev_manifest: DevManifest | None = None,
+    design: DesignArtifact | None = None,
 ) -> TestReport:
     """在 code_root 下依次执行 setup/build/test 命令并解析输出为 TestReport。"""
     cwd = (code_root or profile.code_root).resolve()
     cwd.mkdir(parents=True, exist_ok=True)
+
+    tests_missing = detect_tests_missing(
+        profile,
+        cwd,
+        dev_manifest=dev_manifest,
+        design=design,
+    )
 
     toolchain = profile.toolchain
     # 可选：环境准备
@@ -47,16 +70,16 @@ def run_tests(
         setup = _run_shell(toolchain.setup, cwd)
         if setup.exit_code != 0:
             parser = get_parser("exit_code_only")
-            return parser(setup, profile, cwd)
+            return _apply_tests_missing(parser(setup, profile, cwd), tests_missing)
 
     # 可选：构建
     if toolchain.build:
         build = _run_shell(toolchain.build, cwd)
         if build.exit_code != 0:
             parser = get_parser("exit_code_only")
-            return parser(build, profile, cwd)
+            return _apply_tests_missing(parser(build, profile, cwd), tests_missing)
 
     # 执行测试并解析结果
     test_result = _run_shell(toolchain.test_command, cwd)
     parser = get_parser(toolchain.test_parser)
-    return parser(test_result, profile, cwd)
+    return _apply_tests_missing(parser(test_result, profile, cwd), tests_missing)

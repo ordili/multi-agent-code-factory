@@ -2,6 +2,8 @@ id: python
 extends: _base/common
 language: python
 code_root: ../generated/python
+auto_generate_tests: true
+tools: [read_file, write_file, run_tests, linter, git_diff]
 prompts_dir: multi_agent_code_factory/profiles/python/prompts
 toolchain:
   setup: pip install -e ".[dev]"

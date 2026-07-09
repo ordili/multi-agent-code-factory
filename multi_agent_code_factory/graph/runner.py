@@ -11,6 +11,7 @@ from multi_agent_code_factory.config import FactoryConfig
 from multi_agent_code_factory.graph.graph_builder import build_graph
 from multi_agent_code_factory.graph.pipeline_run_context import PipelineRunContext
 from multi_agent_code_factory.log import get_logger
+from multi_agent_code_factory.observability import build_run_config, is_tracing_enabled
 from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.run_meta import RunStatus
 from multi_agent_code_factory.state import PipelineState
@@ -78,7 +79,10 @@ def run_pipeline(
         llm_runner=llm_runner,
     )
     app = build_graph()
-    final_raw = app.invoke(initial, context=run_context)
+    run_config = build_run_config(task_id=task_id, profile_id=profile.id)
+    if is_tracing_enabled():
+        logger.info("langsmith tracing enabled task_id=%s", task_id)
+    final_raw = app.invoke(initial, context=run_context, config=run_config)
     if isinstance(final_raw, PipelineState):
         final_state = final_raw
     else:

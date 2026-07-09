@@ -116,9 +116,9 @@
 
 | 状态 | 项 | 落点 |
 |------|-----|------|
-| [ ] | `tests_missing` 检测（对照 `test_dir_glob`） | `agents/qa.py` |
-| [ ] | `auto_generate_tests`（缺测时） | Developer / QA 协作 |
-| [ ] | Reviewer **`git_diff` Tool** | `tools/`、[open-source-survey.md](./references/open-source-survey.md) |
+| [x] | `tests_missing` 检测（对照 `test_dir_glob`） | `tools/tests_missing.py` → `run_tests.py` / `agents/qa.py` |
+| [x] | `auto_generate_tests`（缺测时） | `passed=false` + Developer context 注入 `tests_missing` / `auto_generate_tests` |
+| [x] | Reviewer **`git_diff` Tool** | `tools/git_diff.py` → `prompt_context.py` / `tools/registry.py` |
 
 ---
 
@@ -140,7 +140,7 @@
 | [x] | `used_llm_calls` / `used_tokens` 记录 | `agents/llm/usage/recorder.py`、`run_meta.json` |
 | [x] | 每次 call 用量日志 + `llm_usage.json` | `agents/llm/usage/` |
 | [x] | **`budget` 触顶熔断**（超 `FACTORY_MAX_TOKENS` / call 上限 fail） | `agents/llm/budget/guard.py` → `LlmBudgetExceededError` |
-| [ ] | LangSmith Trace 关联 `task_id` | 可选；`.env.example` 已有占位 |
+| [x] | LangSmith Trace 关联 `task_id` | `observability/langsmith.py` → `graph/runner.py`（`run_name` + metadata/tags） |
 
 ---
 
@@ -179,4 +179,4 @@
 
 ---
 
-*最后更新：2026-07-08（多语言 profile prompts、LLM 分层、共享角色 prompt、budget 熔断已勾选）*
+*最后更新：2026-07-09（§6 tests_missing/git_diff、§8 LangSmith task_id 已对接）*
