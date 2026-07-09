@@ -22,7 +22,6 @@
 | [implementation-plan.md](./implementation-plan.md) | V1 **编码计划** | 阶段、PR 拆分、与 §10 验收对照 | `multi_agent_code_factory/` |
 | [P1-backlog.md](./P1-backlog.md) | P1 待办清单 | 可勾选 backlog，与验收对齐 | — |
 | [python-style.md](./python-style.md) | Python 工程规范 | PEP 8 / Ruff / pytest（工厂自身代码） | `pyproject.toml` |
-| [quality-gates.md](./quality-gates.md) | 迁移说明 | 已拆分至 `quality-gates/` 目录 | — |
 
 ---
 

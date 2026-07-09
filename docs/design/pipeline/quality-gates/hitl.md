@@ -1,7 +1,8 @@
 # HITL 节点与 Reviewer 分工
 
 > **索引：** [quality-gates/README.md](./README.md)  
-> **Schema：** [hitl-spec.md](../artifact-schemas/hitl-spec.md)
+> **Schema：** [hitl-spec.md](../artifact-schemas/hitl-spec.md)  
+> **规则清单：** [spec-validate.md](./spec-validate.md) · [design-validate.md](./design-validate.md)（HITL 无独立 `rule_id`，仅路由与 Profile 配置）
 
 ---
 

@@ -2,22 +2,35 @@
 
 > **主线：** [multi-agent-pipeline-design.md §4.1.2](../multi-agent-pipeline-design.md#412-产物校验与-hitlpm--architect)  
 > **原则：** **规则校验（程序）** 为主、**可选人工 HITL** 为辅；均在 **Developer 写代码之前** 拦截 PM / Architect 产物。  
-> **实现：** `multi_agent_code_factory/validators/` · [`validation-report-spec.md`](../artifact-schemas/validation-report-spec.md)  
-> **规格基线（定稿）：** [artifact-schemas/*-spec.md](../artifact-schemas/README.md)（JSON 契约）· [artifact-templates/*-spec.md](../artifact-templates/README.md)（人读 MD / Mermaid）
+> **实现：** `multi_agent_code_factory/validators/` · [`validation-report-spec.md`](../artifact-schemas/validation-report-spec.md)
+
+## 文档职责
+
+本目录定义 **怎么算过关**（`rule_id`、严重度、触发条件、判定）。**不重复** JSON 字段定义与人读章节写法。
+
+| 上游（只读引用） | 本目录 | 下游 |
+|------------------|--------|------|
+| [artifact-schemas/](../artifact-schemas/README.md) — JSON 字段、类型、「是否必填」交付 intent | **quality-gates/** — `SPEC-*` / `DES-*` 规则正文 | `validators/` 实现 · Profile `validation.*` |
+
+- JSON 契约 → 引 **artifact-schemas**（如 [design-spec.md](../artifact-schemas/design-spec.md)）  
+- 人读格式 → 引 **artifact-templates**（规则不展开写作篇幅）  
+- schema「是否必填 = 是」**≠** 每条都有 `DES-*` non-empty；见 [design-validate §JSON 契约 vs 规则](./design-validate.md#json-契约-vs-规则与-schema是否必填对齐)
 
 ## 文档地图
 
 | 文档 | 内容 |
 |------|------|
-| [spec-validate.md](./spec-validate.md) | `spec_validate` · `SPEC-*` · Run `spec.md` ↔ [`prd-spec.md`](../artifact-templates/prd-spec.md) |
-| [design-validate.md](./design-validate.md) | `design_validate` · `DES-*` · Run `design.md` / `*.mmd` |
+| [spec-validate.md](./spec-validate.md) | `spec_validate` · `SPEC-*` · Run `spec.md` |
+| [design-validate.md](./design-validate.md) | `design_validate` · `DES-*` · Run `design.json` / `design.md` / `*.mmd` |
 | [hitl.md](./hitl.md) | `spec_hitl` / `design_hitl` / `deploy_hitl` / `escalation_hitl` · 与 Reviewer 分工 |
 
-**rule_id 合计：** **106** 条（`SPEC-*` **44** · `DES-*` **62**；HITL 节点无独立 rule_id）。
+**rule_id 合计（定稿）：** **106** 条已定义（`SPEC-*` **44** · `DES-*` **62** = **57** 活跃 + **5** 废弃/合并；HITL 无独立 rule_id）。
 
-**条件规则 / 任务 tier：** 部分 `DES-*`（如 013/014）按 spec + design 推断是否要求非空，见 [design-validate.md §4.1](./design-validate.md#41-json-结构error--warn) 与 `validators/task_tier.py`。spec 侧传导见 [spec-validate.md §spec→design](./spec-validate.md#spec--design-传导只读)。
+**条件规则 / 任务 tier：** 部分 `DES-*`（如 013/014/017）按 spec + design 推断是否要求非空，见 [design-validate.md §4.1](./design-validate.md#41-json-结构error--warn) 与 `validators/task_tier.py`。spec 侧传导见 [spec-validate.md §spec→design](./spec-validate.md#spec--design-传导只读)。
 
-**Run 落盘 vs 格式规范：** Run 使用短 basename（`spec.json` / `spec.md`）；格式与 JSON 契约见 [`prd-spec.md`](../artifact-schemas/prd-spec.md)（schemas）与 [`prd-spec.md`](../artifact-templates/prd-spec.md)（templates）。规则清单不在此重复字段定义。
+**规范 vs 实现：** [design-validate.md §规范与实现对照](./design-validate.md#规范与实现对照) 列出定稿规则与当前 `validators/` 已知偏差（改代码时消项，不在此目录改规范迁就实现）。
+
+**Run 落盘 vs 格式规范：** Run 使用短 basename（`spec.json` / `design.json`）；字段定义见 **artifact-schemas**；章节模板见 **artifact-templates**。
 
 ---
 
@@ -99,7 +112,7 @@ validation:
 
 ```text
 multi_agent_code_factory/
-├── validators/          # spec_rules.py, spec_md_rules.py (P1), design_rules.py, mermaid.py (P1)
+├── validators/          # spec_rules.py, spec_md_rules.py, design_rules.py, design_md_rules.py, mermaid.py
 ├── nodes/
 │   ├── spec_validate.py
 │   ├── design_validate.py
