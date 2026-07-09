@@ -156,6 +156,34 @@ _DESIGN_OBJECT_LIST_FIELDS = (
 )
 
 
+def _merge_top_level_aliases(payload: dict[str, Any]) -> None:
+    """Merge LLM top-level aliases into canonical nested paths (in-place)."""
+    architecture = dict(payload.get("architecture") or {})
+    architecture_updated = False
+
+    if "decisions" in payload:
+        decisions = payload.pop("decisions")
+        if decisions and not architecture.get("decisions"):
+            architecture["decisions"] = decisions
+            architecture_updated = True
+
+    if "code_delta" in payload:
+        code_delta = payload.pop("code_delta")
+        if code_delta and not architecture.get("code_delta"):
+            architecture["code_delta"] = code_delta
+            architecture_updated = True
+
+    if architecture_updated or payload.get("architecture") is not None:
+        payload["architecture"] = architecture
+
+    if "test_strategy" in payload:
+        test_strategy = payload.pop("test_strategy")
+        if test_strategy:
+            cross_cutting = dict(payload.get("cross_cutting") or {})
+            cross_cutting.setdefault("test_strategy", test_strategy)
+            payload["cross_cutting"] = cross_cutting
+
+
 def coerce_design_payload(data: Any) -> Any:
     """Normalize common LLM JSON shapes before DesignArtifact validation."""
     if not isinstance(data, dict):
@@ -163,6 +191,7 @@ def coerce_design_payload(data: Any) -> Any:
     payload = dict(data)
     payload.setdefault("version", "1")
     payload.setdefault("revision", 1)
+    _merge_top_level_aliases(payload)
     for key in ("design_goals", "non_goals", "hitl_flags"):
         if key in payload:
             payload[key] = _coerce_str_list(payload[key])

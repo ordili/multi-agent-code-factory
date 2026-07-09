@@ -2,7 +2,7 @@
 
 > **状态：** 定稿 · [artifact-templates 索引](./README.md)  
 > **Run 路径：** `docs/runs/<task_id>/spec.md`  
-> **范围：** 本文 **只描述 Run `spec.md` 怎么写**（面向 PM / HITL）。正文 **宜中文**（Connextra 句式可中英）。机器契约见 [`artifact-schemas/prd-spec.md`](../artifact-schemas/prd-spec.md)；校验见 [quality-gates/spec-validate.md](../quality-gates/spec-validate.md)。
+> **范围：** 本文 **只描述 Run `spec.md` 怎么写**（面向 PM / HITL）。正文 **宜中文**（Connextra 句式可中英）。机器契约见 [`artifact-schemas/prd-spec.md`](../artifact-schemas/prd-spec.md)（`spec.json` 字段与类型）。**JSON ↔ 人读 § 映射见 [§章节一览](#章节一览)。** 校验见 [quality-gates/spec-validate.md](../quality-gates/spec-validate.md)。
 
 ---
 

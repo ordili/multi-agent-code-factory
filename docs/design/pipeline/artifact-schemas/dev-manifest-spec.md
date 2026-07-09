@@ -3,7 +3,7 @@
 > **实现：** `multi_agent_code_factory/schemas/dev_manifest.py`  
 > **Run 路径：** `dev_manifest.json`  
 > **产生方式：** Developer 节点（`role_id=developer`）；Live 为 Structured Output + Tool 写盘  
-> **人读工程原则（非本 JSON）：** [dev-principles-spec.md](../artifact-templates/dev-principles-spec.md)（README、SRP、测试纪律等）
+> **上游：** [design-spec.md](./design-spec.md) → `dev_tasks[]`、`file_plan[]`
 
 ## 原则
 
@@ -12,11 +12,10 @@ DevManifest 层 **语言无关**。源码与测试文件写入 Profile.`code_roo
 | 分工 | 落点 |
 |------|------|
 | **代码正文** | `{code_root}/**`（Developer Tool：`write_file`） |
-| **工程规范** | [dev-principles-spec.md](../artifact-templates/dev-principles-spec.md) + Profile 语言 style snippet |
 | **任务拓扑** | 上游 `design.json` → `dev_tasks[]`、`file_plan[]` |
 | **本契约** | `dev_manifest.json` |
 
-**校验：** 仅 Pydantic 结构校验；**无** `dev_validate` 节点或 quality-gates `DES-*` 规则。实现质量由 QA（`run_tests`）与 Reviewer 把关。
+**校验：** 仅 Pydantic 结构校验；**无**独立 `dev_validate` 节点。实现质量由 QA（`run_tests`）与 Reviewer 把关。
 
 **MVP 未 enforce 的契约意图（Reviewer / 人工可对照）：** `tasks_completed` 须对应 `design.dev_tasks[].id`；`changed_files[].path` 须相对 `code_root`、禁止 `..` 与绝对路径（design validate 对 design 路径有类似规则，manifest 本身不二次校验）。
 
@@ -66,7 +65,7 @@ DevManifest 层 **语言无关**。源码与测试文件写入 Profile.`code_roo
 
 **路径约定：**
 
-- 与 `design.file_plan[].path` 及 [dev-principles-spec.md](../artifact-templates/dev-principles-spec.md) 项目布局一致（如 `src/`、`tests/`）。  
+- 与 `design.file_plan[].path` 布局一致（如 `src/`、`tests/`）。
 - **Live 现状：** 每轮写入的 `source_files` 均记为 `create`（含覆盖写）；`modify` / `delete` 为 schema 预留，供增量 run 或显式删文件时使用。  
 - **stale 策略：** **实现环**（`test_report.passed=false` / Reviewer `next_stage=developer`）重试 Developer 时，`dev_manifest.json` **不**标记 stale，State 保留上一轮 manifest。**升环**至 Architect/PM 时，`dev_manifest.json` 记入 `run_meta.stale_artifacts[]`；新一轮 Developer 应对照新版 `design` 重新申报 `changed_files`（`{code_root}` 源码不自动删除，见主线 §4.3）。
 

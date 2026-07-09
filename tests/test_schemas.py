@@ -156,6 +156,24 @@ def test_design_coerces_diagram_mermaid_kind_aliases() -> None:
     assert design.diagrams[1].kind == "flowchart"
 
 
+def test_design_coerces_top_level_field_aliases() -> None:
+    design = DesignArtifact.model_validate(
+        {
+            "spec_ref": "Todo",
+            "decisions": [{"option": "JSON", "decision": "accepted"}],
+            "code_delta": {"summary": "greenfield"},
+            "test_strategy": {"approach": "pytest", "paths": ["tests/"]},
+            "cross_cutting": {"configuration": "./data"},
+        }
+    )
+    assert design.architecture is not None
+    assert design.architecture["decisions"][0]["option"] == "JSON"
+    assert design.architecture["code_delta"]["summary"] == "greenfield"
+    assert design.cross_cutting is not None
+    assert design.cross_cutting["test_strategy"]["approach"] == "pytest"
+    assert design.cross_cutting["configuration"] == "./data"
+
+
 def test_architect_llm_output_accepts_coerced_design_traceability() -> None:
     output = ArchitectLLMOutput.model_validate(
         {

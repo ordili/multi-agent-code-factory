@@ -48,4 +48,4 @@
 }
 ```
 
-规则全集见 [quality-gates/](../quality-gates/README.md)（[spec-validate](../quality-gates/spec-validate.md) · [design-validate](../quality-gates/design-validate.md)）。
+`rule_id` 格式为 `SPEC-*` 或 `DES-*`；各规则语义与触发条件在校验规则文档中定义，**不在此重复**。

@@ -3,9 +3,9 @@
 > **状态：** 定稿 · [artifact-templates 索引](./README.md)  
 > **Run 路径：** `docs/runs/<task_id>/design.md`  
 > **范围：** 本文 **只描述 Run `design.md` 怎么写**（面向 Architect / Developer / HITL）。正文 **宜中文**（标识符、路径、错误码等可保留英文）。  
-> **上游需求：** [prd-spec.md](./prd-spec.md) → Run `spec.md`。机器契约见 `[artifact-schemas/design-spec.md](../artifact-schemas/design-spec.md)`（**待本规范定稿后再同步**）。  
+> **上游需求：** [prd-spec.md](./prd-spec.md) → Run `spec.md`。机器契约见 [artifact-schemas/design-spec.md](../artifact-schemas/design-spec.md)（`design.json` 字段与类型）。**JSON ↔ 人读 § 映射见本文。**  
 > **配套规范：** [flow-spec.md](./flow-spec.md) → Run `*.mmd`（与 §4.2 / §4.7 引用一致；`design.json` → `diagrams[]`）。  
-> **待同步：** quality-gates、artifact-schemas、渲染器、示例 run（本规范定稿后）。
+> **待同步（实现层）：** `design_md.py` 渲染器 · `design_md_rules.py` / `mermaid.py` 校验 · `docs/runs/` 示例 run。
 
 **不含** 上线/部署（Rollout、K8s 清单、发布回滚等）——由 Platform / CI 单独承载。
 
@@ -15,12 +15,12 @@
 
 | 步骤 | 章节 | 读者 |
 |------|------|------|
-| 1 | [章节一览](#章节一览) | 先看 Run `design.md` 结构与必填/选填、Profile 最小集 |
+| 1 | [章节一览](#章节一览) · [JSON ↔ 人读 § 映射](#json--人读-designmd-映射) | Run 结构与 JSON 字段对应 |
 | 2 | [写作前：与 spec 的分工](#写作前与-spec-的分工) | 内容与 spec 的落点表 |
 | 3 | [各节写法](#各节写法) | **主规范**：§1～§6、附录 A～D 逐节怎么写 |
 | 4 | [小任务 / 无持久化极简指引](#小任务--无持久化极简指引) | 计算器级 Profile |
 | 5 | [中等规模单体指引](#中等规模单体指引) | 单服务 + DB 的默认 Profile |
-| 6 | [标识符规范（错误码 & 测试用例）](#标识符规范错误码--测试用例) | `ERR-*` / `TC-*` / 域前缀（**不**单独占 Run design 一章） |
+| 6 | [标识符规范（错误码 & 测试用例）](#标识符规范错误码--测试用例) | 写作落点；格式细节见 [schemas 标识符](../artifact-schemas/design-spec.md#标识符约定) |
 | 7 | [多微服务场景](#多微服务场景单-spec--单-designmd) | 扩展 Profile + 拆分原则（读完「各节写法」再看） |
 | 8 | [完整示例](#完整示例) | 计算器全文 + 订单/微服务补充片段 |
 | — | [flow-spec.md](./flow-spec.md) | `.mmd` 命名、Mermaid 语法、`diagrams[]` 登记 |
@@ -96,6 +96,48 @@
 **中等规模单体（单服务 + DB，无分片）：** 见 [中等规模单体指引](#中等规模单体指引)。
 
 **多微服务级推荐集（单 spec · 单 design.md）：** §1～§3 · §4（**Profile 建议 4.1～4.7 均写**；仍为选填子节，缺省不判 incomplete）· §5（有 NFR 增量时）· §6（含跨服务集成用例）· 附录 A～D。见 [多微服务场景](#多微服务场景单-spec--单-designmd)。
+
+---
+
+## JSON ↔ 人读 `design.md` 映射
+
+渲染器 / HITL 按本表对齐 **Run `design.json`**（[artifact-schemas/design-spec.md](../artifact-schemas/design-spec.md)）与 **Run `design.md`**。字段键名 **不随 MD 改**。
+
+| Run `design.md` | 必填 | 主要 JSON 字段 |
+|-----------------|------|----------------|
+| 页眉 | 必填 | `version`、`spec_ref`、`revision`、`status`? |
+| **§1 背景与上下文** | 必填 | `summary`、`background`?、`context_view` |
+| **§2 设计目标** | 必填 | `design_goals` |
+| **§3 非目标** | 必填 | `non_goals` |
+| **§4 方案设计** | 必填（有实质内容） | 见下表 §4.x |
+| **§5 非功能性目标** | 选填 | `non_functional` |
+| **§6 测试用例列表** | 必填 | `test_cases` |
+| **附录 A 需求追溯** | 必填 | `traceability` |
+| **附录 B 文件变更计划** | 必填 | `file_plan` |
+| **附录 C 开发任务分解** | 必填 | `dev_tasks` |
+| **附录 D 与现有代码对照** | 必填 | `architecture.code_delta` |
+
+### §4 子节 ↔ JSON（`### 4.x` 按需；可跳号）
+
+| `design.md` 子节 | 选填 | 主要 JSON 字段 |
+|------------------|------|----------------|
+| **4.1 概述** | 选填 | `architecture.solution_strategy`、`architecture.style` |
+| **4.2 系统架构图** | 选填 | `diagrams[]`（`kind=context`）+ `architecture-*.mmd` |
+| **4.3 模块划分** | 选填 | `modules[]` |
+| **4.4 外部依赖** | 选填 | `external_dependencies[]` |
+| **4.5 接口定义** | 选填 | `interfaces[]`、`error_catalog[]`（操作级 ERR） |
+| **4.6 存储结构** | 选填 | `data_model[]`、`table_schemas[]`、`transaction_constraints[]` |
+| **4.7 流程与时序** | 选填 | `diagrams[]`（`sequence` / `flowchart`）+ `flow-*.mmd` |
+
+### JSON 有、Run `design.md` 不设专章
+
+| Canonical JSON | 人读 `design.md` 写在哪 |
+|----------------|-------------------------|
+| `architecture.decisions` | **不写** → HITL / 评审记录 |
+| `cross_cutting`（除 `test_strategy`） | 有内容时并入 **§4.4 / §4.5 / §5** |
+| `cross_cutting.test_strategy` | **不写**专章；人只看 **§6 `test_cases` 表** |
+| `notes` / 扩展 `open_items` / `risks` | **不写**「待澄清」专章；必要时一句并入相关 § |
+| `hitl_flags` | **不写** → 仅 HITL 路由 |
 
 ---
 
@@ -319,7 +361,9 @@
 
 **何时写整节：** 多模块协作、异步、跨服务、或 **主要 US** 主路径/异常 **非一眼可读** 时写；线性小 CLI（如计算器）**整节省略**。
 
-**主要 US（写了 §4.7 时须配图）：** spec 中关联 **P0 FEAT** 的 **`US-*`**（与 [prd-spec](./prd-spec.md) 一致）。**每个主要 US 至少 1 张图**（时序或流程均可，**通常即业务流**）；**不要求** 每个 US 再单独画数据流 / 资金流。
+**主要 US：** spec 中 **关联 P0 FEAT** 的 **`US-*`**（与 [prd-spec](./prd-spec.md) 一致；US 本身无 P0/P1 标签，以 FEAT 优先级为准）。
+
+**主要 US（写了 §4.7 时须配图）：** 上列每个主要 US **至少 1 张图**（时序或流程均可，**通常即业务流**）；**不要求** 每个 US 再单独画数据流 / 资金流。
 
 **推荐正文结构（写了 §4.7 时）：**
 
@@ -400,9 +444,9 @@
 
 **覆盖要求：**
 
-- 每个 P0 **AC** 至少 1 条用例
+- 每个 P0 **AC** 至少 1 条用例：**须在 §6 表中有 `覆盖` 含该 AC 的 TC**，**或** 附录 A 明确指向可执行验证（如 **AC-1「自动化测试套件通过」→ 测试文件路径**，见 [完整示例](#完整示例)）
 - 每个 **错误码**（§4.5 或 §4.3 接口约定处）至少 1 条 **NEG** 用例
-- **须含 BND**（边界）用例；spec 无边界场景时，仍宜至少 1 条与主路径相关的 BND（如空值、极值）
+- **须含 BND**（边界）用例；spec 无显式边界场景时，至少 1 条与主路径相关的 BND（如空值、极值）
 - **不要**写测试策略散文（层次、工具、框架由 Profile / CI 决定；用例表即交付物）
 
 ### 附录写法（A～D）
@@ -472,7 +516,8 @@
 
 ## 标识符规范（错误码 & 测试用例）
 
-> **说明：** 本节为 **规范文档** 作者参考；Run design.md **不设**独立「标识符规范」章，规则落在 §4.3 / §4.5 / §6。
+> **说明：** 本节为 **规范文档** 作者参考；Run design.md **不设**独立「标识符规范」章，规则落在 §4.3 / §4.5 / §6。  
+> **格式与正则：** [artifact-schemas/design-spec.md §标识符约定](../artifact-schemas/design-spec.md#标识符约定)（DES-023 / DES-024 校验基线）。
 
 **原则：** `ERR-`* 与 `TC-`* **共用域前缀注册表**（以 §4.3 模块域为主；§4.4 仅在无封装模块时补充）。
 
@@ -525,6 +570,8 @@ docs/runs/<task_id>/
 
 #### 优先按什么拆（推荐）
 
+拆分 **优先遵循 DDD 限界上下文与数据归属**；独立部署、变更频率等为工程层补充条件。
+
 | 原则 | 说明 | design 里怎么体现 |
 |------|------|-------------------|
 | **领域 / 业务能力（Bounded Context）** | 一个微服务 ≈ 一个 **可独立讲清的业务能力**（订单、库存、支付、用户…） | §4.3 **职责** 列；附录 A 中 FEAT/US 落点 |
@@ -569,7 +616,7 @@ docs/runs/<task_id>/
 1. 每个服务的 **职责** 能否用 **一句动词短语** 说清？
 2. 每张 **核心表 / 主数据** 是否 **唯一写服务** 明确？
 3. 服务间调用是 **必要** 的，还是可合并为一个服务内的模块调用？
-4. 每个 P0 US 的 **跨服务路径** 是否在 §4.7 有图、§6 有 **集成 TC**？
+4. 每个 **主要 US** 的 **跨服务路径**（若存在）是否在 §4.7 有图、§6 有 **集成 TC**？
 5. §3 **非目标** 是否列出 **本次不实现、也不预留** 的服务？
 
 **示例（电商）：** `order-api`（订单写 + 查）与 `inventory-api`（库存写）拆分——因 **主数据不同**、**扩缩独立**、下单路径需 **同步预占** 但支付回调可 **异步**；**不** 单独拆「order-query-service」除非 spec §9 读 QPS 与写路径资源差显著且 §5 有量化依据。

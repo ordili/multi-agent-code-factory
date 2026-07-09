@@ -1,10 +1,11 @@
 ﻿# Artifact Schemas — 机器可读 JSON 规格
 
 > **状态：** 定稿（本目录 `*-spec.md`）  
+> **索引：** [pipeline README](../README.md)（目录职责、文档单向依赖规则）  
 > **设计文档（非 run 落盘）。** 运行时实例见 `docs/runs/<task_id>/*.json`。  
-> **人读格式规范：** [`../artifact-templates/`](../artifact-templates/README.md)（同名 `*-spec.md`）  
-> **类型定义以：** [`multi_agent_code_factory/schemas/`](../../../../multi_agent_code_factory/schemas/)（Pydantic v2）**为准**  
-> **校验规则：** [quality-gates/](../quality-gates/README.md) · [spec-validate](../quality-gates/spec-validate.md) · [design-validate](../quality-gates/design-validate.md)
+> **类型定义以：** [`multi_agent_code_factory/schemas/`](../../../../multi_agent_code_factory/schemas/)（Pydantic v2）**为准**
+
+本目录 **只定义 Run `*.json` 的字段与类型**。人读格式（`spec.md`、`design.md` 等）、校验规则（`SPEC-*` / `DES-*`）、示例片段分别在 **`artifact-templates/`**、**`quality-gates/`**、**`examples/`** ——由下游引用本文，**本文不链接、不展开下游规格**（见 [pipeline README §文档规则](../README.md#文档规则)）。
 
 ---
 
@@ -14,46 +15,36 @@
 
 ```text
 artifact-schemas/{name}-spec.md  →  JSON 契约设计说明（本目录）
-artifact-templates/{name}-spec.md →  人读 Markdown 格式规范（姊妹目录）
-docs/runs/<task_id>/{file}.json   →  单次 run 落盘（由实现决定）
+docs/runs/<task_id>/{file}.json   →  单次 run 落盘
 ```
-
-| 层 | 路径示例 | 内容 | Run 落盘 |
-|----|----------|------|----------|
-| **JSON 契约** | `artifact-schemas/prd-spec.md` | `SpecArtifact` 字段 | `spec.json` |
-| **人读格式** | `artifact-templates/prd-spec.md` | Run `spec.md` 章节 | `spec.md` |
-
-**成对文档**（schemas ↔ templates，同名 `-spec`）：
-
-| Schema | JSON 契约（本目录） | 人读格式（templates） | Run JSON | Run 人读 |
-|--------|---------------------|----------------------|----------|----------|
-| `SpecArtifact` | [prd-spec.md](./prd-spec.md) | [prd-spec.md](../artifact-templates/prd-spec.md) | `spec.json` | `spec.md` |
-| `DesignArtifact` | [design-spec.md](./design-spec.md) | [design-spec.md](../artifact-templates/design-spec.md) + [flow-spec.md](../artifact-templates/flow-spec.md) | `design.json` | `design.md` + `*.mmd` |
-| `ReviewReport` | [review-spec.md](./review-spec.md) | [review-spec.md](../artifact-templates/review-spec.md) | `review.json` | `review.md` |
-
-**仅 JSON 契约**（无人读 run template；Developer 实现另遵 [dev-principles-spec.md](../artifact-templates/dev-principles-spec.md)）：
-
-| Schema | JSON 契约 | Run 文件 |
-|--------|-----------|----------|
-| `DevManifest` | [dev-manifest-spec.md](./dev-manifest-spec.md) | `dev_manifest.json` |
-| `TestReport` | [test-report-spec.md](./test-report-spec.md) | `test_report.json` |
-| `ValidationReport` | [validation-report-spec.md](./validation-report-spec.md) | `*_validation.json` |
-| `HitlDecision` | [hitl-spec.md](./hitl-spec.md) | `hitl.json` |
-| `RunMeta` | [run-meta-spec.md](./run-meta-spec.md) | `run_meta.json` |
 
 Pydantic 模块对齐：`schemas/<module>.py`（snake_case）；设计 Spec 文档为 kebab-case + `-spec` 后缀。
 
 ---
 
-## 索引
+## 契约索引
 
-| Schema | 人读格式规范 | JSON 契约 |
-|--------|--------------|-----------|
-| `SpecArtifact` | [artifact-templates/prd-spec.md](../artifact-templates/prd-spec.md) | [prd-spec.md](./prd-spec.md) |
-| `DesignArtifact` | [design-spec.md](../artifact-templates/design-spec.md) + [flow-spec.md](../artifact-templates/flow-spec.md) | [design-spec.md](./design-spec.md) |
-| `DevManifest` | [dev-principles-spec.md](../artifact-templates/dev-principles-spec.md)（工程原则，非 JSON） | [dev-manifest-spec.md](./dev-manifest-spec.md) |
-| `TestReport` | — | [test-report-spec.md](./test-report-spec.md) |
-| `ReviewReport` | [review-spec.md](../artifact-templates/review-spec.md) | [review-spec.md](./review-spec.md) |
-| `ValidationReport` | — | [validation-report-spec.md](./validation-report-spec.md) |
-| `HitlDecision` | — | [hitl-spec.md](./hitl-spec.md) |
-| `RunMeta` | — | [run-meta-spec.md](./run-meta-spec.md) |
+| Pydantic 模型 | 契约文档 | Run 落盘 | 流水线阶段（上游 → 本产物） |
+|---------------|----------|----------|----------------------------|
+| `SpecArtifact` | [prd-spec.md](./prd-spec.md) | `spec.json` | PM |
+| `DesignArtifact` | [design-spec.md](./design-spec.md) | `design.json` | Architect；上游 [prd-spec.md](./prd-spec.md) |
+| `DevManifest` | [dev-manifest-spec.md](./dev-manifest-spec.md) | `dev_manifest.json` | Developer；上游 `design.json` |
+| `TestReport` | [test-report-spec.md](./test-report-spec.md) | `test_report.json` | QA |
+| `ReviewReport` | [review-spec.md](./review-spec.md) | `review.json` | Reviewer |
+| `ValidationReport` | [validation-report-spec.md](./validation-report-spec.md) | `spec_validation.json` / `design_validation.json` | `*_validate` 节点产出 |
+| `HitlDecision` | [hitl-spec.md](./hitl-spec.md) | `hitl.json` | `*_hitl` / `escalation_hitl` |
+| `RunMeta` | [run-meta-spec.md](./run-meta-spec.md) | `run_meta.json` | 每次 run 元数据 |
+
+**`diagrams[]`：** 定义在 [design-spec.md](./design-spec.md)；Run 配套 `*.mmd` 文件与 `diagrams[].path` 一致。
+
+---
+
+## 文档规则（本目录）
+
+| 规则 | 说明 |
+|------|------|
+| **只写 JSON** | 字段、类型、枚举、标识符、嵌套结构、JSON 示例 |
+| **只引上游** | 如 [design-spec.md](./design-spec.md) 引用 [prd-spec.md](./prd-spec.md)；不引 `artifact-templates/`、`quality-gates/` |
+| **不写人读章节** | Run Markdown / Mermaid 章节映射、写作约束 → `artifact-templates/` |
+| **不写 rule_id 清单** | `SPEC-*` / `DES-*` 的触发条件与判定 → **`quality-gates/`**（规则正文所在层） |
+| **姊妹目录与全库地图** | 见 [pipeline README](../README.md) |
