@@ -27,7 +27,7 @@
 | `deploy` | deploy_hitl | `review.md`、diff、敏感变更 | 续跑 → Developer（再入 QA）；终止 → `run_meta.status=failed` |
 | `escalation` | escalation_hitl | run 摘要、`loop_limits` 计数 | 终止 run / 重置计数后继续（P1） |
 
-配置见 [quality-gates.md](../quality-gates.md) 与主线 [§4.1.2](../multi-agent-pipeline-design.md#412-产物校验与-hitlpm--architect)、[§4.4](../multi-agent-pipeline-design.md#44-回路上限与运行预算loop_limits--budget)。
+配置见 [quality-gates/hitl.md](../quality-gates/hitl.md) 与主线 [§4.1.2](../multi-agent-pipeline-design.md#412-产物校验与-hitlpm--architect)、[§4.4](../multi-agent-pipeline-design.md#44-回路上限与运行预算loop_limits--budget)。
 
 ## 示例（design 阶段）
 

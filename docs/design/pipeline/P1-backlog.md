@@ -12,7 +12,7 @@
 | [multi-agent-pipeline-design.md](./multi-agent-pipeline-design.md) §10 | 发布验收 checklist |
 | [metagpt.md](./references/metagpt.md) §B.3 | MetaGPT 机制 backlog |
 | [open-source-survey.md](./references/open-source-survey.md) §C.5 | 沙箱 / diff / MCP backlog |
-| [quality-gates.md](./quality-gates.md) | 校验 rule_id 全表 |
+| [quality-gates/](./quality-gates/README.md) | 校验 rule_id 全表 |
 
 **图例：** `[x]` 已完成 · `[ ]` 待做 · `[~]` 部分完成（占位或 MVP 简化版）
 
@@ -81,7 +81,7 @@
 | [ ] | `on_limit_exceeded=escalation_hitl` 完整流程 | `config.py`、`graph_routing.py` | |
 | [ ] | `max_hitl_rounds`  enforcement | `autonomy_policy.yaml`、`run_meta` | 默认 5 |
 | [ ] | `hitl_history[]` / `hitl_log.jsonl` | `run_meta`、`write_artifact.py` | 多轮 HITL 审计 |
-| [ ] | 生产 Profile 示例（`require_hitl: true`） | `profiles/*.yaml` | 见 [quality-gates.md §2](./quality-gates.md) |
+| [ ] | 生产 Profile 示例（`require_hitl: true`） | `profiles/*.yaml` | 见 [quality-gates/README.md §2](./quality-gates/README.md) |
 
 ---
 

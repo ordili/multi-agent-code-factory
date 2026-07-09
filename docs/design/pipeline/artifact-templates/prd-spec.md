@@ -4,7 +4,7 @@
 > **配套规范：** [design-spec.md](./design-spec.md) · [flow-spec.md](./flow-spec.md) · [review-spec.md](./review-spec.md)  
 > **节点交接以：** [`../artifact-schemas/prd-spec.md`](../artifact-schemas/prd-spec.md)（`SpecArtifact` / `spec.json`）**为准**；本文件定义 Run `spec.md` 的章节与写法。  
 > **Run 路径：** `docs/runs/<task_id>/spec.md`  
-> **校验：** JSON → [quality-gates.md §3](../quality-gates.md#3-spec_validate--规则清单)；MD 格式 → §3.3（P1）
+> **校验：** JSON → [spec-validate.md](../quality-gates/spec-validate.md)；Run `spec.md` 格式 → [§3.3](../quality-gates/spec-validate.md#33-run-specmd-格式p1-warn)（P1）
 
 借鉴主流 PRD（功能清单 + 业务指标 + 用户故事 + 验收标准）与 MetaGPT WritePRD；字段与 `SpecArtifact` **一一对应**；**以 `spec.json` 为准**，本文件为 Run `spec.md` 的渲染目标。
 

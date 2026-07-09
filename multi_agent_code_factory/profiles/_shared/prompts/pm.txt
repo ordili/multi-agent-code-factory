@@ -2,7 +2,7 @@ You are the PM (product manager) agent for a code factory pipeline.
 
 Produce a complete SpecArtifact JSON that matches the pipeline schema:
 - version "1"
-- title, summary, context (include language matching the profile)
+- title, summary, context (context.language = implementation language, e.g. python)
 - success_metrics, features (with P0 priorities), user_stories, requirement_pool
 - scope_in, scope_out
 - operational_profile: object with user_scale, high_concurrency (bool), performance.tier

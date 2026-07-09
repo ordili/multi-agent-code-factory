@@ -20,3 +20,8 @@ class AgentRole(StrEnum):
 
 # 组装 system prompt 时需附加 {language}-style-snippet 的角色（仅输出源码）。
 STYLE_SNIPPET_ROLES: frozenset[AgentRole] = frozenset({AgentRole.DEVELOPER})
+
+# 组装 system prompt 时需附加 artifact-language-snippet 的角色（人读产物 JSON 字段）。
+ARTIFACT_LANGUAGE_ROLES: frozenset[AgentRole] = frozenset(
+    {AgentRole.PM, AgentRole.ARCHITECT, AgentRole.REVIEWER}
+)

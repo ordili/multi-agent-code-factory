@@ -3,7 +3,7 @@
 > **实现：** `multi_agent_code_factory/schemas/spec.py`  
 > **Run 路径：** `docs/runs/<task_id>/spec.json`  
 > **人读格式：** [artifact-templates/prd-spec.md](../artifact-templates/prd-spec.md) → Run `spec.md`  
-> **下游：** 须通过 [spec_validate](../quality-gates.md#3-spec_validate--规则清单)
+> **下游：** 须通过 [spec_validate](../quality-gates/spec-validate.md)
 
 机器可读契约以 **本文 + Pydantic** 为准。Run `spec.md` 章节写法见 **templates** 下同名 [prd-spec.md](../artifact-templates/prd-spec.md)（JSON ↔ MD 对照见下表）。
 

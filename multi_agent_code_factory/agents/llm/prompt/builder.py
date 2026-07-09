@@ -5,9 +5,14 @@ from __future__ import annotations
 import json
 from typing import Any
 
-from multi_agent_code_factory.agent_roles import STYLE_SNIPPET_ROLES, AgentRole
+from multi_agent_code_factory.agent_roles import (
+    ARTIFACT_LANGUAGE_ROLES,
+    STYLE_SNIPPET_ROLES,
+    AgentRole,
+)
 from multi_agent_code_factory.agents.llm.prompt.loader import load_role_prompt
 from multi_agent_code_factory.agents.llm.prompt.style_snippet import (
+    load_artifact_language_snippet,
     load_dev_principles_snippet,
     load_style_snippet,
 )
@@ -23,6 +28,10 @@ def build_llm_messages(
 ) -> tuple[str, str]:
     """组装 system/user 消息：角色 prompt、通用 dev 原则、语言 snippet、JSON 上下文。"""
     system_parts = [load_role_prompt(profile, role_id)]
+    if role_id in ARTIFACT_LANGUAGE_ROLES:
+        artifact_language = load_artifact_language_snippet()
+        if artifact_language:
+            system_parts.append(artifact_language)
     if role_id in STYLE_SNIPPET_ROLES:
         dev_principles = load_dev_principles_snippet()
         if dev_principles:

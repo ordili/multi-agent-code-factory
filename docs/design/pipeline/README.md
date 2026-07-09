@@ -15,7 +15,7 @@
 | [artifact-templates/README.md](./artifact-templates/README.md) | **给人看** 的格式规范（`*-spec.md`，已定稿） | `multi_agent_code_factory/renderers/`（P0） |
 | [examples/](./examples/README.md) | JSON / Mermaid **示例片段**（Todo 等） | — |
 | [references/](./references/README.md) | 术语、MetaGPT、开源调研 | — |
-| [quality-gates.md](./quality-gates.md) | **程序校验** rule_id、`validation` 配置 | `validators/`、`nodes/` |
+| [quality-gates/](./quality-gates/README.md) | **程序校验** rule_id、`validation` 配置 | `validators/`、`nodes/` |
 | [implementation-plan.md](./implementation-plan.md) | **V1 编码计划**（阶段、PR 拆分、验收对照） | `multi_agent_code_factory/` |
 | [P1-backlog.md](./P1-backlog.md) | **P1 待办汇总**（可勾选；与 §10 验收对齐） | — |
 | [python-style.md](./python-style.md) | **Python** 代码规范（PEP 8 / Ruff / pytest） | [`pyproject.toml`](../../../pyproject.toml) |

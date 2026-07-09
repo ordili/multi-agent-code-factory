@@ -4,7 +4,7 @@
 > **配套规范：** [prd-spec.md](./prd-spec.md) · [design-spec.md](./design-spec.md) · [review-spec.md](./review-spec.md)  
 > **Run 路径：** `docs/runs/<task_id>/*.mmd`（常见 `flow.mmd`、`flow-*.mmd`、`architecture-*.mmd`）  
 > **登记：** `design.json` → `diagrams[]`（[`artifact-schemas/design-spec.md`](../artifact-schemas/design-spec.md) · `DiagramRef`）  
-> **校验：** `DES-203`、`DES-214`（[quality-gates.md §4.2](../quality-gates.md#42-designmd--flowmmd-格式p1)）  
+> **校验：** `DES-203`、`DES-214`（[design-validate.md §4.2](../quality-gates/design-validate.md#42-designmd--mmd-格式-p1)）  
 > **对应：** [design-spec.md](./design-spec.md) **§4.1 概述**（全局架构）· **§4.6 流程与时序**
 
 ---

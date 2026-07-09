@@ -10,6 +10,9 @@ from multi_agent_code_factory.profile_config import ProfileConfig
 _DEV_PRINCIPLES_SNIPPET = (
     profiles_dir() / "_shared" / "prompts" / "dev-principles-snippet.txt"
 )
+_ARTIFACT_LANGUAGE_SNIPPET = (
+    profiles_dir() / "_shared" / "prompts" / "artifact-language-snippet.txt"
+)
 
 
 def load_dev_principles_snippet() -> str | None:
@@ -17,6 +20,13 @@ def load_dev_principles_snippet() -> str | None:
     if not _DEV_PRINCIPLES_SNIPPET.is_file():
         return None
     return _DEV_PRINCIPLES_SNIPPET.read_text(encoding="utf-8")
+
+
+def load_artifact_language_snippet() -> str | None:
+    """读取 PM / Architect / Reviewer 人读产物语言 snippet（简体中文）。"""
+    if not _ARTIFACT_LANGUAGE_SNIPPET.is_file():
+        return None
+    return _ARTIFACT_LANGUAGE_SNIPPET.read_text(encoding="utf-8")
 
 
 def style_snippet_candidates(profile: ProfileConfig) -> tuple[Path, ...]:

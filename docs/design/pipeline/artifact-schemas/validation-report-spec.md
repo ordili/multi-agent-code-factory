@@ -48,4 +48,4 @@
 }
 ```
 
-规则全集见 [quality-gates.md](../quality-gates.md)。
+规则全集见 [quality-gates/](../quality-gates/README.md)（[spec-validate](../quality-gates/spec-validate.md) · [design-validate](../quality-gates/design-validate.md)）。

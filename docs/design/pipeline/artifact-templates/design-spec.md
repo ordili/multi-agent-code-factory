@@ -6,7 +6,7 @@
 > **节点交接以：** [`../artifact-schemas/design-spec.md`](../artifact-schemas/design-spec.md)（`DesignArtifact` / `design.json`）**为准**；本文件定义 Run `design.md` 的章节与写法。  
 > **Run 路径：** `docs/runs/<task_id>/design.md`  
 > **配套图：** [flow-spec.md](./flow-spec.md) → Run 的 `*.mmd`  
-> **校验：** JSON → [quality-gates.md §4](../quality-gates.md#4-design_validate--规则清单)；MD → §4.3（P1）
+> **校验：** JSON → [design-validate.md](../quality-gates/design-validate.md)；MD → [§4.2](../quality-gates/design-validate.md#42-designmd--mmd-格式-p1)（P1）
 
 ---
 

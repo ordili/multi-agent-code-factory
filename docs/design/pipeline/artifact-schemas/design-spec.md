@@ -3,7 +3,7 @@
 > **人读基线：** [Google Design Doc](https://google.github.io/eng-practices/) + 七项工程必备 → [artifact-templates/design-spec.md](../artifact-templates/design-spec.md)  
 > **实现：** `multi_agent_code_factory/schemas/design.py`  
 > **Run 路径：** `design.json`（+ `design.md`、`*.mmd`）  
-> **下游：** 须通过 [design_validate](../quality-gates.md#4-design_validate--规则清单)
+> **下游：** 须通过 [design_validate](../quality-gates/design-validate.md)
 
 ## 字段
 

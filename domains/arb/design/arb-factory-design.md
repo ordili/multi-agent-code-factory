@@ -75,7 +75,7 @@ hitl:
   flags: [touches_production, prod_deploy_trading, risk_limit_changes]
 ```
 
-详见 [profiles.md](../../../docs/design/pipeline/profiles.md)、[quality-gates.md](../../../docs/design/pipeline/quality-gates.md)。
+详见 [profiles.md](../../../docs/design/pipeline/profiles.md)、[quality-gates/](../../../docs/design/pipeline/quality-gates/README.md)。
 
 ---
 

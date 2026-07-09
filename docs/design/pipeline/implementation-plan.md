@@ -70,7 +70,7 @@ flowchart LR
 
 | 纳入 MVP | rule_id | 说明 |
 |----------|---------|------|
-| 是 | `SPEC-001`–`016` | [quality-gates §3.1](./quality-gates.md#31-结构与必填error) 结构与必填 |
+| 是 | `SPEC-001`–`016` | [spec-validate §3.1](./quality-gates/spec-validate.md#31-结构与必填error) 结构与必填 |
 | 否 | `SPEC-101`–`114`、`SPEC-201`–`202` | §3.2 可测性（多为 warn；P1） |
 | 否 | `SPEC-301`–`308` | §3.3 `spec.md` 格式（P1） |
 
@@ -392,6 +392,6 @@ LangSmith（`LANGSMITH_*`）可选，用于 Trace 关联 `task_id`（§10 非 MV
 |-----------|------|
 | [artifact-schemas/](./artifact-schemas/README.md) | `schemas/` |
 | [artifact-templates/](./artifact-templates/README.md) | `renderers/`（MVP：`spec_md`；`design_md` P1） |
-| [quality-gates.md](./quality-gates.md) | `validators/`（**§3.1 白名单**）、`nodes/*_validate.py` |
+| [quality-gates/](./quality-gates/README.md) | `validators/`（**§3.1 白名单**）、`nodes/*_validate.py` |
 | [profiles.md](./profiles.md) | `profiles.py` + `profiles/*.yaml` |
 | [examples/](./examples/README.md) | 测试 fixture |

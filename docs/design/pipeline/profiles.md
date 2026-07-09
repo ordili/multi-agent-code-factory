@@ -40,7 +40,7 @@
 | `tools` | 注册到 Developer / QA 的 Tool 列表 |
 | `toolchain` | 构建与测试命令集（§2） |
 | `test_command` | **简写**：等价于 `toolchain.test_command` |
-| `validation` | PM/Architect **规则校验**与可选 HITL（见 [quality-gates.md](./quality-gates.md#2-profile-配置validation)） |
+| `validation` | PM/Architect **规则校验**与可选 HITL（见 [quality-gates/README.md §2](./quality-gates/README.md#2-profile-配置validation)） |
 | `context_schema` | 可选 JSON Schema，校验 `SpecArtifact.context` |
 | `auto_generate_tests` | 缺测试时是否委托生成骨架（默认 false） |
 | `hitl` | `sensitive_globs`、`flags`（deploy 阶段） |
