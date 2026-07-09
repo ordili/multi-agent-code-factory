@@ -9,6 +9,10 @@ from multi_agent_code_factory.schemas.design import DesignArtifact, DiagramKind
 from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.schemas.validation_report import Violation
 from multi_agent_code_factory.validators._report import error, warn
+from multi_agent_code_factory.validators.task_tier import (
+    requires_table_schemas,
+    requires_transaction_constraints,
+)
 
 _ERR_CODE_RE = re.compile(r"^ERR-[A-Z][A-Z0-9_]{1,11}-\d{3}$")
 _TC_ID_RE = re.compile(r"^TC-(HAP|NEG|BND)-[A-Z][A-Z0-9_]{1,11}-\d{3}$")
@@ -25,6 +29,7 @@ _RELATIONAL_STORAGE = frozenset(
         "rdbms",
     }
 )
+
 _MIDDLEWARE_KINDS = frozenset({"db", "cache", "mq", "rpc", "api", "blockchain"})
 
 
@@ -74,21 +79,25 @@ def validate_design_extended_rules(
             )
         )
 
-    has_table_schemas = bool(design.table_schemas)
-    has_data_model_columns = bool(design.data_model) and any(
-        isinstance(table.get("columns"), list) and table.get("columns")
-        for table in design.table_schemas
-    )
-    if not has_table_schemas and not has_data_model_columns:
-        violations.append(
-            error(
-                "DES-013",
-                "table_schemas must not be empty, or data_model with column defs",
-                field="table_schemas",
-            )
+    if requires_table_schemas(design, spec):
+        has_table_schemas = bool(design.table_schemas)
+        has_data_model_columns = bool(design.data_model) and any(
+            isinstance(table.get("columns"), list) and table.get("columns")
+            for table in design.table_schemas
         )
+        if not has_table_schemas and not has_data_model_columns:
+            violations.append(
+                error(
+                    "DES-013",
+                    "table_schemas must not be empty, or data_model with column defs",
+                    field="table_schemas",
+                )
+            )
 
-    if not design.transaction_constraints:
+    if (
+        requires_transaction_constraints(design, spec)
+        and not design.transaction_constraints
+    ):
         violations.append(
             error(
                 "DES-014",

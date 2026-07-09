@@ -132,7 +132,7 @@ def render_spec_md(spec: SpecArtifact) -> str:
     cp = spec.consistency_profile
     lines.extend(
         [
-            "## 稳定性、性能与数据一致性",
+            "## 非功能性需求",
             "",
             f"- **用户体量：** `{op.user_scale.value}`",
             f"- **高并发：** `{op.high_concurrency}`",

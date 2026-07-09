@@ -17,15 +17,14 @@
 | 1 | 概述 | `summary`、`profile`、`revision`、`parent_task_id?` | ✓ |
 | 2 | 术语与领域概念 | `context.glossary[]`（约定，见下） | ✓ |
 | 3 | 背景与上下文 | `context`（领域键） | ✓ |
-| 4 | 业务指标 | `success_metrics[]` | **可选**（可 `[]`） |
+| 4 | 业务指标 | `success_metrics[]` | **可选**（MD 写「无」时 `[]`） |
 | 5 | 功能 | `features[]` | ✓ |
 | 6 | 用户故事 | `user_stories[]` | ✓ |
 | 7 | 需求池 | `requirement_pool[]` | ✓ |
 | 8 | 范围 | `scope_in[]`、`scope_out[]` | ✓ |
-| 9 | 稳定性、性能与数据一致性 | `operational_profile`、`consistency_profile` | ✓ |
+| 9 | 非功能性需求 | `operational_profile`、`consistency_profile` | ✓ |
 | 10 | 验收标准 | `acceptance_criteria[]` | ✓ |
-| 11 | 约束 | `constraints[]` | ✓（可 `[]`） |
-| 12 | 待澄清项 | — | 仅 MD |
+| 11 | 约束 | `constraints[]` | ✓（可 `[]`；MD 无则「无额外约束」） |
 
 ---
 
@@ -187,7 +186,7 @@ LLM 可输出 Connextra 整句；normalizer 可解析为 `{ as_a, want, so_that 
 | `availability` | string? | **design** 阶段量化；spec 留空 |
 | `notes` | string? | PM 主要性能文字说明；`tier=custom` 时须非空 |
 
-> **PM vs Design：** spec 阶段 PM 填 **枚举 + `notes`**；数值字段由 Architect 在 `design.json` 填写。见 [prd-spec §9](../artifact-templates/prd-spec.md#9-稳定性性能与数据一致性)。
+> **PM vs Design：** spec 阶段 PM 填 **枚举 + `notes`**；数值字段由 Architect 在 `design.json` 填写。见 [prd-spec §9](../artifact-templates/prd-spec.md#9-非功能性需求)。
 
 ---
 
@@ -218,7 +217,7 @@ LLM 可输出 Connextra 整句；normalizer 可解析为 `{ as_a, want, so_that 
 
 ## 示例（default — CLI 四则运算计算器）
 
-与 [prd-spec 完整示例](../artifact-templates/prd-spec.md#完整示例) 对齐。
+与 [prd-spec 完整示例](../artifact-templates/prd-spec.md#完整示例) 对齐。Run `spec.md` 中 §4 为「无」、§9「数据一致性」为「无」时，`spec.json` 仍须满足结构校验：`success_metrics: []`；`consistency_profile` 用 `local_only` 等 **最小档位**（表示无额外一致性论述，非 PM 在 MD 中展开表格）。
 
 ```json
 {
@@ -238,15 +237,7 @@ LLM 可输出 Connextra 整句；normalizer 可解析为 `{ as_a, want, so_that 
       { "term": "CLI 使用者", "definition": "在命令行输入表达式并查看结果的人" }
     ]
   },
-  "success_metrics": [
-    {
-      "id": "KPI-1",
-      "name": "典型算式正确",
-      "description": "四则、括号、小数组合表达式结果正确",
-      "target": "见 AC-2",
-      "verifiable_by": "manual"
-    }
-  ],
+  "success_metrics": [],
   "features": [
     {
       "id": "FEAT-1",
@@ -336,11 +327,11 @@ LLM 可输出 Connextra 整句；normalizer 可解析为 `{ as_a, want, so_that 
   "scope_out": ["Web / GUI", "科学函数（sin、sqrt 等）、取模、幂运算", "计算历史持久化"],
   "operational_profile": {
     "user_scale": "personal",
-    "user_scale_notes": "单用户本地 CLI",
+    "user_scale_notes": "个人使用 — 本地 CLI",
     "high_concurrency": false,
     "performance": {
       "tier": "best_effort",
-      "notes": "交互可感知即可，不设 SLA"
+      "notes": "尽力而为 — 交互可感知即可，不设 SLA"
     }
   },
   "consistency_profile": {
@@ -349,7 +340,7 @@ LLM 可输出 Connextra 整句；normalizer 可解析为 `{ as_a, want, so_that 
     "multi_writer": false,
     "idempotency_required": false,
     "conflict_strategy": "not_applicable",
-    "notes": "无持久化；单次求值无跨请求状态"
+    "notes": "人读 spec.md 数据一致性为「无」；无跨请求/持久化状态"
   },
   "acceptance_criteria": [
     {
@@ -363,7 +354,7 @@ LLM 可输出 Connextra 整句；normalizer 可解析为 `{ as_a, want, so_that 
       "verifiable_by": "manual"
     }
   ],
-  "constraints": ["no_secrets_in_repo"]
+  "constraints": []
 }
 ```
 

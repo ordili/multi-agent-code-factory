@@ -15,6 +15,8 @@
 
 **rule_id 合计：** **106** 条（`SPEC-*` **44** · `DES-*` **62**；HITL 节点无独立 rule_id）。
 
+**条件规则 / 任务 tier：** 部分 `DES-*`（如 013/014）按 spec + design 推断是否要求非空，见 [design-validate.md §4.1](./design-validate.md#41-json-结构error--warn) 与 `validators/task_tier.py`。spec 侧传导见 [spec-validate.md §spec→design](./spec-validate.md#spec--design-传导只读)。
+
 **Run 落盘 vs 格式规范：** Run 使用短 basename（`spec.json` / `spec.md`）；格式与 JSON 契约见 [`prd-spec.md`](../artifact-schemas/prd-spec.md)（schemas）与 [`prd-spec.md`](../artifact-templates/prd-spec.md)（templates）。规则清单不在此重复字段定义。
 
 ---

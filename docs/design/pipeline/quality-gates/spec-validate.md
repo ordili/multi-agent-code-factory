@@ -7,6 +7,23 @@
 
 **rule_id 合计：** **44** 条（§3.1 结构 **15** · §3.2 可测性 **16** · §3.3 `spec.md` 格式 **13**）。
 
+> **spec 通过 ≠ design 通过。** spec 环只校验 [prd-spec.md](../artifact-schemas/prd-spec.md)；Architect 还须通过 [design-validate.md](./design-validate.md)（**62** 条 `DES-*`）。  
+> **必检** = 校验器是否执行该 rule；**触发条件** = 何时执行或何时要求字段非空（与 [design-validate](./design-validate.md) 的 tier 推断一致，实现见 `validators/task_tier.py`）。
+
+### spec → design 传导（只读）
+
+Run `spec.md` 章节写法见 [artifact-templates/prd-spec.md](../artifact-templates/prd-spec.md)。实现见 `validators/task_tier.py`。
+
+| spec 信号 | 建议写法 | 触发的 design 义务 |
+|-----------|----------|-------------------|
+| `context.storage` 为持久化（`local_file` / `database` 等） | **须显式声明**介质 | `DES-013` / `DES-014` 非空 |
+| `context.storage` ∈ `none`/`memory`/`stateless`，且 `consistency_model=local_only`，且 `multi_writer=false` | 无持久化 CLI 定稿写法 | `table_schemas` / `transaction_constraints` 可为 `[]`；仍须 `external_dependencies`（`kind=none`）等 |
+| `consistency_profile.multi_writer=true` | 多写场景 | `DES-014` 非空 |
+| `operational_profile` 非 trivial | 见 `task_tier.is_spec_non_trivial` | `DES-011` |
+| `acceptance_criteria` + `SPEC-201` | 宜含 `automated_test` | `DES-016` 覆盖 AC |
+
+> **`storage` 省略：** 文档定稿要求 PM **不可省略**；当前校验器未单独门禁（待 SPEC）。省略时下游 **不得** 视为已定稿 spec。
+
 ---
 
 ## 3.1 结构与必填
@@ -53,7 +70,7 @@
 | `SPEC-112` | warn | 条件 | `multi_writer=true` | `consistency_profile.conflict_strategy` | 不应为 `not_applicable` |
 | `SPEC-113` | warn | 条件 | `idempotency_required=true` 且 `delivery=at_least_once` | `acceptance_criteria` / `success_metrics` | 宜覆盖重试/幂等 |
 | `SPEC-114` | warn | 是 | — | `operational_profile`、`consistency_profile` 数值子字段 | `latency` 等宜为空（数值归属 design） |
-| `SPEC-201` | warn | 是 | — | `acceptance_criteria[].verifiable_by` | 宜含 `automated_test` |
+| `SPEC-201` | warn | 是 | — | `acceptance_criteria[].verifiable_by` | 宜含 `automated_test`（→ `DES-016`） |
 | `SPEC-202` | warn | 是 | — | `revision` | ≥ 1 |
 
 ## 3.3 Run `spec.md` 格式（P1，warn）
@@ -73,7 +90,7 @@
 | `SPEC-305` | warn | 是 | — | `spec.md` 文末元数据 | 含 `task_profile`、`revision` |
 | `SPEC-306` | warn | 条件 | `success_metrics` 非空 | `spec.md` | 须含 `## 业务指标` |
 | `SPEC-307` | warn | 是 | — | `spec.md` | 须含 `## 功能` |
-| `SPEC-308` | warn | 是 | — | `spec.md` | 须含 `## 稳定性、性能与数据一致性` |
+| `SPEC-308` | warn | 是 | — | `spec.md` | 须含 `## 非功能性需求` |
 | `SPEC-309` | warn | 是 | — | `spec.md` | 须含 `## 术语与领域概念` |
 | `SPEC-310` | warn | 是 | — | `spec.md` | 须含 `## 背景与上下文` |
 | `SPEC-311` | warn | 是 | — | `spec.md` | 须含 `## 用户故事` |

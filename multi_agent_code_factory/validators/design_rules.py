@@ -12,6 +12,7 @@ from multi_agent_code_factory.validators._report import error
 from multi_agent_code_factory.validators.design_rules_extended import (
     validate_design_extended_rules,
 )
+from multi_agent_code_factory.validators.task_tier import is_spec_non_trivial
 
 
 def _path_escapes(path: str) -> bool:
@@ -38,17 +39,6 @@ def _dev_task_cycle(tasks: list[DevTask]) -> bool:
         return False
 
     return any(visit(task_id) for task_id in graph)
-
-
-def _is_spec_non_trivial(spec: SpecArtifact) -> bool:
-    op = spec.operational_profile
-    if op.user_scale.value != "personal":
-        return True
-    if op.high_concurrency:
-        return True
-    if op.performance.tier.value != "best_effort":
-        return True
-    return spec.consistency_profile.consistency_model.value != "local_only"
 
 
 def _hitl_required(design: DesignArtifact, profile: ProfileConfig) -> bool:
@@ -190,7 +180,7 @@ def validate_design_rules(
             error("DES-010", "cross_cutting must be present", field="cross_cutting")
         )
 
-    if spec is not None and _is_spec_non_trivial(spec) and not design.non_functional:
+    if spec is not None and is_spec_non_trivial(spec) and not design.non_functional:
         violations.append(
             error(
                 "DES-011",

@@ -1,0 +1,112 @@
+{
+  "version": "1",
+  "spec_ref": "CLI Calculator",
+  "revision": 1,
+  "summary": "无持久化 CLI 计算器",
+  "non_goals": ["GUI"],
+  "context_view": { "actors": ["User", "CalcCLI", "CalcCore"] },
+  "architecture": { "solution_strategy": "CLI + 纯函数求值" },
+  "modules": [
+    {
+      "name": "CalcCore",
+      "path": "src/calc_core.py",
+      "responsibility": "四则运算",
+      "code_domain": "CALC"
+    },
+    {
+      "name": "CalcCLI",
+      "path": "src/cli.py",
+      "responsibility": "命令行",
+      "code_domain": "CLI"
+    }
+  ],
+  "external_dependencies": [
+    { "name": "none", "kind": "none", "purpose": "无外部中间件" }
+  ],
+  "interfaces": [
+    {
+      "name": "CalcCore",
+      "module_ref": "CalcCore",
+      "operations": [
+        {
+          "name": "eval",
+          "summary": "求值",
+          "inputs": [{ "name": "expr", "type": "string", "required": true }],
+          "outputs": [{ "name": "value", "type": "number", "required": true }],
+          "errors": ["ERR-CALC-001"]
+        }
+      ]
+    },
+    {
+      "name": "CalcCLI",
+      "module_ref": "CalcCLI",
+      "operations": [
+        {
+          "name": "run",
+          "summary": "运行 REPL",
+          "inputs": [],
+          "outputs": [{ "name": "exit_code", "type": "integer", "required": true }],
+          "errors": []
+        }
+      ]
+    }
+  ],
+  "table_schemas": [],
+  "transaction_constraints": [],
+  "data_model": [],
+  "error_catalog": [
+    {
+      "code": "ERR-CALC-001",
+      "message": "除零",
+      "when": "除数为 0",
+      "retryable": false
+    }
+  ],
+  "test_cases": [
+    {
+      "id": "TC-HAP-CALC-001",
+      "kind": "happy",
+      "title": "1+1",
+      "covers": ["AC-1"],
+      "error_code": null
+    },
+    {
+      "id": "TC-NEG-CALC-001",
+      "kind": "negative",
+      "title": "除零",
+      "error_code": "ERR-CALC-001"
+    },
+    {
+      "id": "TC-BND-CALC-001",
+      "kind": "boundary",
+      "title": "大数",
+      "covers": ["AC-1"]
+    }
+  ],
+  "cross_cutting": {},
+  "traceability": [
+    { "spec_ref_id": "FEAT-1", "spec_ref_kind": "FEAT", "design_ref": "CalcCore" },
+    { "spec_ref_id": "AC-1", "spec_ref_kind": "AC", "design_ref": "CalcCore" }
+  ],
+  "dev_tasks": [
+    {
+      "id": "T1",
+      "path": "src/calc_core.py",
+      "description": "core",
+      "depends_on": [],
+      "covers": ["AC-1", "FEAT-1"]
+    },
+    {
+      "id": "T2",
+      "path": "src/cli.py",
+      "description": "cli",
+      "depends_on": ["T1"],
+      "covers": ["AC-1"]
+    }
+  ],
+  "diagrams": [
+    { "path": "flow.mmd", "kind": "sequence", "title": "eval" },
+    { "path": "flow.mmd", "kind": "flowchart", "title": "errors" }
+  ],
+  "hitl_flags": []
+}

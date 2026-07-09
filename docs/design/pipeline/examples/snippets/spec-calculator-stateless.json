@@ -1,0 +1,51 @@
+{
+  "version": "1",
+  "profile": "python",
+  "revision": 1,
+  "title": "CLI Calculator",
+  "summary": "命令行四则运算计算器",
+  "context": {
+    "language": "python",
+    "interface": "cli"
+  },
+  "success_metrics": [],
+  "features": [
+    {
+      "id": "FEAT-1",
+      "name": "四则运算",
+      "description": "加减乘除",
+      "priority": "P0",
+      "user_story_ids": ["US-1"]
+    }
+  ],
+  "user_stories": [
+    {
+      "id": "US-1",
+      "as_a": "CLI 用户",
+      "want": "计算四则运算",
+      "so_that": "快速得到结果"
+    }
+  ],
+  "requirement_pool": [],
+  "scope_in": ["本地 CLI 四则运算"],
+  "scope_out": ["GUI"],
+  "constraints": [],
+  "operational_profile": {
+    "user_scale": "personal",
+    "high_concurrency": false,
+    "performance": { "tier": "best_effort" }
+  },
+  "consistency_profile": {
+    "consistency_model": "local_only",
+    "delivery": "at_least_once",
+    "multi_writer": false,
+    "idempotency_required": false
+  },
+  "acceptance_criteria": [
+    {
+      "id": "AC-1",
+      "description": "加减乘除结果正确",
+      "verifiable_by": "automated_test"
+    }
+  ]
+}

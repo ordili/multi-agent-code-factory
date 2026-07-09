@@ -7,7 +7,9 @@
 
 **rule_id 合计：** **62** 条（§4.1 JSON **38** · §4.2 `design.md` / `*.mmd` **23** · §4.4 HITL **1**）。
 
-**小任务 / CLI / 无持久化：** 模板 [极简指引](../artifact-templates/design-spec.md#小任务--无持久化极简指引) 与部分 `DES-*` error 规则（如 `DES-012`–`014`）存在张力；Live trivial 项目可能触顶 `max_design_revisions` — 见 calculator 类 run 的 `design_validation.json`。
+**任务 tier（实现：`validators/task_tier.py`）：** 部分规则仅在「需要持久化 / 表结构 / 事务」时要求字段非空。无持久化 CLI（`kind=none`、`table_schemas: []`、`local_only`）可跳过 **DES-013 / DES-014** 的 empty 门禁；**DES-012**（显式 `external_dependencies`）、**DES-015～017**、**DES-021～033** 等仍适用。详见 [design-spec 极简指引](../artifact-templates/design-spec.md#小任务--无持久化极简指引)。
+
+> **必检** = 校验器是否执行该 rule_id；**触发条件** = 何时执行或何时要求字段非空（空表/无持久化时可不触发 non-empty 判定）。
 
 ---
 
@@ -27,14 +29,14 @@
 | `DES-010` | error | 是 | — | `cross_cutting` | 须存在（可为 `{}`） |
 | `DES-011` | error | 条件 | spec `operational_profile` 非 trivial | `non_functional` | 非空 |
 | `DES-012` | error | 是 | — | `external_dependencies` | 非空（无中间件时显式 `filesystem`/`none`） |
-| `DES-013` | error | 是 | — | `table_schemas`、`data_model` | 非空或字段级 `columns` 齐全 |
-| `DES-014` | error | 是 | — | `transaction_constraints` | 非空（落实 spec `consistency_profile`） |
+| `DES-013` | error | 条件 | 需要持久化/表结构（见 `requires_table_schemas`） | `table_schemas`、`data_model` | 非空或字段级 `columns` 齐全 |
+| `DES-014` | error | 条件 | 需要事务边界（见 `requires_transaction_constraints`） | `transaction_constraints` | 非空；无持久化 CLI 可为 `[]` |
 | `DES-015` | error | 是 | — | `error_catalog` | 非空；≥1 条可映射 Flow 异常分支 |
 | `DES-016` | error | 是 | — | `test_cases` | 非空；每个 P0 AC 有 `covers` 或用例 |
 | `DES-017` | error | 是 | — | `diagrams[]` | 同时含 `kind=sequence` 与 `kind=flowchart` |
-| `DES-018` | error | 是 | — | `table_schemas[].columns[]` | 显式 `nullable`；`description` 非空 |
+| `DES-018` | error | 条件 | `table_schemas[].columns[]` 非空 | `table_schemas[].columns[]` | 显式 `nullable`；`description` 非空 |
 | `DES-019` | error | 条件 | `storage` 为关系型 DB | `table_schemas[]` | 含 `created_at`、`updated_at`；索引或 `notes`；`version`（若 `require_version`） |
-| `DES-020` | warn | 是 | — | `indexes[]` | 每条含 `purpose` |
+| `DES-020` | warn | 条件 | `table_schemas[].indexes[]` 非空 | `indexes[]` | 每条含 `purpose` |
 | `DES-021` | error | 是 | — | `error_catalog[].code`、`test_cases[]` | 每 code ≥1 条 `kind=negative` 且 `error_code` 匹配 |
 | `DES-022` | warn | 是 | — | `test_cases[]` | 含 `happy`、`negative`、`boundary`；P0 FEAT/US 有 happy |
 | `DES-023` | error | 是 | — | `error_catalog[].code` | 匹配 `^ERR-[A-Z][A-Z0-9_]{1,11}-\d{3}$` |
