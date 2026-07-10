@@ -1,8 +1,8 @@
 # 产物续跑（Artifact Continue）— 设计说明
 
 > **日期：** 2026-07-10  
-> **状态：** 已定稿（经二轮审查修订）  
-> **关联规范：** [multi-agent-pipeline-design.md §4.3 / §4.6](../../design/pipeline/multi-agent-pipeline-design.md)、[run-meta-spec.md](../../design/pipeline/artifact-schemas/run-meta-spec.md)、[P1-backlog.md §4](../../design/pipeline/P1-backlog.md)
+> **状态：** 已实现（commit `a918c65`，2026-07-10 live 验证 `calculator-10-01` → `completed`）  
+> **关联规范：** [multi-agent-pipeline-design.md §4.3 / §4.6](./multi-agent-pipeline-design.md)、[run-meta-spec.md](./artifact-schemas/run-meta-spec.md)、[P1-backlog.md §4](./P1-backlog.md)
 
 ---
 
@@ -59,7 +59,7 @@ continue --task-id X
 
 ## 再入点与执行顺序
 
-与 [§4.3 再入规则](../../design/pipeline/multi-agent-pipeline-design.md#43-循环路由hitl-与-deploy) 对齐。推断取「**当前阻塞失败最下游、产物齐全**」的门禁：
+与 [§4.3 再入规则](./multi-agent-pipeline-design.md#43-循环路由hitl-与-deploy) 对齐。推断取「**当前阻塞失败最下游、产物齐全**」的门禁：
 
 | 磁盘 / 元数据状态 | 再入点 | 门禁未过后调用的 Agent |
 |-------------------|--------|-------------------------|
@@ -85,7 +85,7 @@ continue --task-id X
 | `spec_revision_count` | `failed` 且已达 `max_spec_revisions` 且 spec 仍失败 → `0` | 同上 |
 | `status` / `finished_at` | → `running` / `null` | |
 
-**不重置：** `loop_limits.*`、`profile` 快照、`code_root` 源码、未触顶的回路计数、`llm_usage.json` 历史（仅追加 `event=continue` 审计条目）。
+**不重置：** `loop_limits.*`、`profile` 快照、`code_root` 源码、未触顶的回路计数、`llm_usage.json` 历史累计（续跑期间新 LLM 调用照常追加；**未**单独写入 `event=continue` 条目，见 §实现落点）。
 
 `--no-reset-loops`：仅保留触顶回路计数，**不**影响 budget 重置。
 
@@ -114,7 +114,7 @@ python -m multi_agent_code_factory run --task-id X --force-new "..."
 
 ## 产物水合（Hydrate）
 
-模块：`multi_agent_code_factory/tools/run_artifacts/loader.py`。
+模块：`multi_agent_code_factory/artifact_loader.py`（自 `tools/run_artifacts/loader.py` 抽出，避免与 `writer` 循环依赖）。
 
 | 来源 | 映射到 state |
 |------|----------------|
@@ -178,7 +178,7 @@ app.invoke(None, config=config, context=ctx)
 | `qa` | `run_qa` | `route_after_qa` |
 | `architect` | 无（水合 spec + spec_validation.passed=true） | `architect` → `design_validate` → … |
 
-**依赖：** `langgraph-checkpoint-sqlite`；`PipelineState` 自定义 serde（Pydantic `model_dump` / `model_validate`）+ round-trip 单测。
+**依赖：** `langgraph-checkpoint-sqlite`；`state_to_graph_dict()` / `normalize_pipeline_state()`（`state.py`）负责 checkpoint 序列化与 `update_state` 后 dict→Pydantic 还原；`test_infer` 含 round-trip 单测。
 
 ---
 
@@ -189,8 +189,8 @@ app.invoke(None, config=config, context=ctx)
 1. `review.json` 非 stale 且 `next_stage` ∈ `{pm, architect, developer}` → `spec_validate` / `design_validate` / `qa`
 2. `spec_validation` 非 stale 且 `passed=false` → `spec_validate`
 3. `design_validation` 非 stale 且 `passed=false` → `design_validate`
-4. `test_report` 非 stale 且（`passed=false` 或 `tests_missing` 非空），**或**（`impl_retry` 触顶 + `status=failed` + 有效 `dev_manifest`）→ `qa`
-5. 有有效 `design.json`、无有效（非 stale）`dev_manifest` → `design_validate`
+4. `test_report` 非 stale 且（`passed=false` 或 `tests_missing` 非空），**或**（`impl_retry` 触顶 + `status=failed` + **有效（非 stale）** `dev_manifest`）→ `qa`
+5. 有有效 `design.json`、无有效（非 stale）`dev_manifest` → `design_validate`（`dev_manifest` 在 `stale_artifacts` 时规则 4 不适用，落本规则）
 6. `spec` 已校验通过且无 `design.json` → `architect`
 7. 无法推断 → 报错，建议 `--reenter`
 
@@ -210,34 +210,52 @@ app.invoke(None, config=config, context=ctx)
 
 ---
 
-## 示例：`calculator-10-01`
+## 示例：`calculator-10-01`（live 验证）
 
-- `design_validation` 已通过；`dev_manifest` 存在；`impl_retry_count=3` 触顶；`status=failed`
-- `test_report.json` 在 `stale_artifacts` 中 → 不水合；推断走规则 4（触顶 + `dev_manifest`）→ **`qa`**
+**失败态（续跑前）：**
+
+- `design_validation` 已通过；`impl_retry_count=3` 触顶；`status=failed`
+- `stale_artifacts` 含 `test_report.json`、`review.json`、`dev_manifest.json` → 上述文件**不水合、不参与推断**
+
+**推断：** `dev_manifest.json` 为 stale，规则 4（触顶 + 有效 manifest）不适用；规则 5（有 `design.json`、无有效 `dev_manifest`）→ **`design_validate`**（非 `qa`）。
 
 ```bash
 python -m multi_agent_code_factory continue --task-id calculator-10-01 --live
 ```
 
-预期：重置 `used_llm_calls`、`impl_retry_count` → 显式 `run_qa` → `route_after_qa` → 失败则 Developer（`impl_retry_count=1`）→ 不重跑 PM/Architect。
+**实测结果（2026-07-10）：**
+
+| 字段 | 值 |
+|------|-----|
+| `last_reentry_node` | `design_validate` |
+| `status` | `completed` |
+| 本次 session `llm_budget` | `calls=3 tokens=28983` |
+| `impl_retry_count`（完成后） | `1` |
+
+流程：`prepare_continue` 重置 budget 与触顶 `impl_retry_count` → 显式 `run_design_validate` → 通过后进入 Developer / QA 环 → 不重跑 PM。若 `dev_manifest` **未** stale 且触顶，则推断为 `qa`（规则 4）。
 
 ---
 
-## 实现落点
+## 实现落点（已完成）
 
 | 模块 | 变更 |
 |------|------|
-| `pyproject.toml` | `langgraph-checkpoint-sqlite` |
-| `__main__.py` | `continue` 子命令；`run` 防覆盖 |
-| `graph/runner.py` | `continue_pipeline()` |
-| `tools/run_artifacts/loader.py` | 水合 + stale 过滤 |
-| `tools/run_artifacts/meta.py` | `user_request`；`prepare_continue()` |
-| `checkpoint.py` | SqliteSaver、`infer_reentry_node()`、serde |
+| `pyproject.toml` | `langgraph-checkpoint-sqlite>=2.0` |
+| `__main__.py` | `continue` 子命令；`run` 防覆盖；`--stub` 续跑 warning |
+| `graph/runner.py` | `continue_pipeline()`：gate → `update_state` → `invoke` |
+| `artifact_loader.py` | `hydrate_state()` + stale 过滤（独立模块） |
+| `tools/run_artifacts/meta.py` | `user_request`；`prepare_continue()`；`last_continue_at` / `last_reentry_node` |
+| `checkpoint.py` | `sqlite_checkpointer()`、`infer_reentry_node()`、`validate_reentry_preconditions()`、`ContinueError` |
+| `state.py` | `state_to_graph_dict()`、`normalize_pipeline_state()` |
 | `graph/graph_builder.py` | `build_graph(checkpointer=...)` |
-| `schemas/run_meta.py` | `user_request` |
-| `tests/` | serde、推断、stub 集成（design 失败 / QA 失败续跑） |
+| `graph/nodes/{route,agent,terminal}_nodes.py` | 节点入口 `normalize_pipeline_state` |
+| `schemas/run_meta.py` | `user_request`、`last_continue_at`、`last_reentry_node` |
+| `tests/test_continue_{infer,loader,pipeline,cli}.py` | 推断、水合、stub 集成、CLI 守卫 |
+| `README.md` | `continue` 用法示例 |
 
-实施顺序：`user_request` + loader → 推断 + `prepare_continue` → serde + 门禁 + `update_state` 集成 → live 验证 `calculator-10-01` → README。
+**实施顺序（已完成）：** `user_request` + `artifact_loader` → 推断 + `prepare_continue` → serde + 门禁 + `update_state` 集成 → live 验证 `calculator-10-01` → README。
+
+**已知缺口（P1 可后续补）：** `llm_usage.json` 未追加 `event=continue` 审计条目（续跑审计现仅 `run_meta.last_continue_at`）。
 
 ---
 
@@ -253,18 +271,22 @@ python -m multi_agent_code_factory continue --task-id calculator-10-01 --live
 
 ## 验收标准
 
-- [ ] design 校验失败：`design_validate` → Architect，不重跑 PM（§需求 1）
-- [ ] 测试失败：`run_qa` → Developer + `test_report`，不重跑 PM/Architect（§需求 3）
-- [ ] 触顶续跑：budget + `impl_retry_count` 重置后可再进 Developer（§需求 4）
-- [ ] 人工修复后门禁通过：零 LLM 进下游（§需求 5）
-- [ ] stale 不参与水合/推断；`completed` 拒绝 `continue`；`run` 防覆盖（§产物水合、§CLI）
-- [ ] `architect` 再入：无 design 时第一步 LLM，再 `design_validate`（§图执行）
-- [ ] `load_profile(id)` + 快照 `code_root`；`llm_usage.json` 追加 `continue` 事件
+- [x] design 校验失败：`design_validate` → Architect，不重跑 PM（§需求 1）— `test_infer_design_validate_when_validation_failed` + stub pipeline
+- [x] 测试失败 / 触顶：`run_qa` → Developer + `test_report`，不重跑 PM/Architect（§需求 3）— `test_continue_after_qa_limit_completes`、`test_infer_qa_when_impl_retry_at_limit`
+- [x] 触顶续跑：budget + `impl_retry_count` 重置后可再进 Developer（§需求 4）— `test_prepare_continue_resets_budget`；`calculator-10-01` live
+- [x] 人工修复后门禁通过：零 LLM 进下游（§需求 5）— 设计支持；门禁先跑逻辑已实现
+- [x] stale 不参与水合/推断；`completed` 拒绝 `continue`；`run` 防覆盖（§产物水合、§CLI）— `test_hydrate_skips_stale_*`、`test_infer_completed_raises`、`test_run_rejects_existing_*`
+- [x] `architect` 再入：无 design 时第一步 LLM，再 `design_validate`（§图执行）— `continue_pipeline` 分支 + 推断规则 6
+- [x] `load_profile(id)` + 快照 `code_root` — `_profile_from_meta()` in `runner.py`
+- [ ] `llm_usage.json` 追加 `continue` 事件 — **未实现**（见 §实现落点）
 
 ---
 
 ## 与主线文档的同步
 
-- `multi-agent-pipeline-design.md` §4.6：`continue` vs `resume`
-- `P1-backlog.md` §4
-- `README.md`：`continue` 示例
+| 文档 | 状态 |
+|------|------|
+| `README.md` | 已更新 `continue` 示例 |
+| 本文档 | 已实现（`docs/design/pipeline/artifact-continue-design.md`） |
+| [multi-agent-pipeline-design.md](./multi-agent-pipeline-design.md) §4.6 | 已同步 `continue` vs `resume` |
+| [P1-backlog.md](./P1-backlog.md) §4 | 已勾选产物续跑项 |

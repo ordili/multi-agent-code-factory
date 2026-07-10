@@ -53,6 +53,8 @@ python -m multi_agent_code_factory continue \
 
 The pipeline re-runs the gate for the inferred stage first (e.g. QA re-tests code), then calls LLM agents only if needed. Re-running the same `task-id` with `run` is rejected unless you pass `--force-new`.
 
+Design spec: [docs/design/pipeline/artifact-continue-design.md](docs/design/pipeline/artifact-continue-design.md).
+
 ## Where outputs go
 
 | What | Path |
@@ -117,6 +119,7 @@ Python style guide: [docs/design/pipeline/python-style.md](docs/design/pipeline/
 |-----|---------|
 | [docs/README.md](docs/README.md) | Doc index and run artifact map |
 | [docs/design/pipeline/multi-agent-pipeline-design.md](docs/design/pipeline/multi-agent-pipeline-design.md) | Pipeline architecture, routing, artifacts |
+| [docs/design/pipeline/artifact-continue-design.md](docs/design/pipeline/artifact-continue-design.md) | Artifact-based `continue` resume |
 | [multi_agent_code_factory/profiles/README.md](multi_agent_code_factory/profiles/README.md) | Profile fields and built-in language stacks |
 | [docs/design/pipeline/P1-backlog.md](docs/design/pipeline/P1-backlog.md) | Maintainers: P1 backlog checklist |
 

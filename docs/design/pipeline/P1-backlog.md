@@ -102,11 +102,14 @@
 
 | 状态 | 项 | 落点 |
 |------|-----|------|
-| [~] | `checkpoint.py` | 占位 `NotImplementedError` |
-| [ ] | LangGraph checkpointer 集成 | `checkpoint.py`、`graph.py` |
+| [x] | 产物续跑 `continue --task-id` | [artifact-continue-design.md](./artifact-continue-design.md)、`__main__.py`、`graph/runner.py` |
+| [x] | `artifact_loader` + `infer_reentry_node` | `artifact_loader.py`、`checkpoint.py` |
+| [x] | `prepare_continue`（budget / 触顶 loop 重置） | `tools/run_artifacts/meta.py` |
+| [x] | LangGraph checkpointer 集成（`continue`） | `checkpoint.py`、`graph/graph_builder.py` |
+| [~] | `checkpoint.py` `resume` | 占位 `NotImplementedError` |
 | [ ] | CLI `resume --task-id` | `__main__.py` |
 | [ ] | `run_meta.checkpoint_id` 写入 | `write_artifact.py` |
-| [ ] | `stale_artifacts[]`（升环后作废路径） | `write_artifact.py`、`graph_routing.py` |
+| [x] | `stale_artifacts[]`（升环后作废路径） | `tools/run_artifacts/meta.py`、`artifact_loader.py` |
 
 ---
 

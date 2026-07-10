@@ -52,7 +52,7 @@
 | **回路上限** | **可配置**（`loop_limits`）；默认实现 3 / 设计 2 / 需求 1（见 §4.4） |
 | **领域** | **无关**；业务差异由 **Profile** 注入（§1.1） |
 | **节点上下文** | **订阅式**注入（§4.5）；Developer 重试 **三件套对照**（§4.5.1） |
-| **可恢复** | LangGraph **checkpoint** + `resume`（§4.6） |
+| **可恢复** | 产物续跑 **`continue`**（§4.6，已实现）；崩溃 **`resume`** + checkpoint（P1） |
 | **测试** | **语言无关**：Profile 配置命令 + Parser → `TestReport`（[profiles.md](./profiles.md)） |
 | **PM/Architect 质量** | **规则校验**（`spec_validate` / `design_validate`）+ 可选 **人工 HITL**（§4.1.2、[quality-gates/](./quality-gates/README.md)） |
 
@@ -531,13 +531,29 @@ python -m multi_agent_code_factory run --profile default --task-id todo-cli --ma
 | `reflection` | 若有（[dev-manifest-spec.md](./artifact-schemas/dev-manifest-spec.md)） |
 | `code_snippets` | 按 `failures[].file` 读取 |
 
-### 4.6 断点恢复（checkpoint，P1）
+### 4.6 断点恢复与产物续跑
+
+#### 产物续跑（`continue`，已实现）
+
+从 `docs/runs/<task_id>/` **磁盘产物**恢复流水线，不依赖历史 checkpoint 内容。详见 [artifact-continue-design.md](./artifact-continue-design.md)。
+
+```bash
+python -m multi_agent_code_factory continue --task-id calculator-10-01 --live
+```
+
+- 水合 JSON 产物 → 推断再入点 → **先跑门禁**（`spec_validate` / `design_validate` / `qa`）→ 按需 LLM
+- 触顶或耗尽 budget 后 `status=failed` 时，续跑重置 `used_llm_calls` / 触顶回路计数
+- 同一 `task_id` 再次 `run` **默认拒绝**，须 `continue` 或 `run --force-new`
+
+#### 崩溃恢复（`resume`，P1 待做）
+
+进程崩溃 / HITL interrupt 后从 checkpoint 恢复：
 
 ```bash
 python -m multi_agent_code_factory resume --task-id todo-cli
 ```
 
-- Checkpointer 默认：`docs/runs/<task_id>/checkpoint.db`
+- Checkpointer 默认：`docs/runs/<task_id>/checkpoint.db`（`continue` 与 `resume` 共用 SqliteSaver）
 - `deploy_hitl` interrupt 后可续跑；**MVP 可不实现**，Schema 与 `run_meta.checkpoint_id` 预留。
 
 ### 4.7 增量 run（Incremental，P2）
