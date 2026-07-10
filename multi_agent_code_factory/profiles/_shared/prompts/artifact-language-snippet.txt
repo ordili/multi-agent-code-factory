@@ -4,9 +4,12 @@ Human-readable artifact language (spec.json, design.json, review.json, and rende
   Examples: title, summary, feature/user_story/requirement/AC descriptions,
   non_goals, architecture.solution_strategy, module responsibility,
   error_catalog user-facing messages, test case descriptions, review finding messages,
-  Mermaid diagram node labels (sequence / flowchart).
+  Mermaid diagram edge labels (sequence / flowchart).
 - Keep machine identifiers in English: id fields (FEAT-*, US-*, AC-*, REQ-*, KPI-*,
   ERR-*, TC-*), error_catalog[].code (not id), code_domain, file paths, API/operation names,
   enum literal values.
+- modules[].name, interfaces[].module_ref, and Mermaid sequenceDiagram participants /
+  flowchart node ids MUST use the same English module name string (e.g. CalcCore, CliEntry).
+  Do not use a different alias in diagrams (DES-204).
 - spec.context.language is the implementation programming language (e.g. python),
   NOT the prose language of PRD/design documents.

@@ -21,21 +21,20 @@ class ArchitectLLMOutput(BaseModel):
 
     __llm_example__: ClassVar[dict[str, Any]] = {
         "design": DesignArtifact.__llm_example__,
-        "mmd_files": [
-            {
-                "path": "flow.mmd",
-                "content": (
-                    "sequenceDiagram\n"
-                    "  participant U as User\n"
-                    "  participant CLI as TodoCLI\n"
-                    "  U->>CLI: command\n"
-                    "flowchart LR\n"
-                    "  CLI --> Store\n"
-                    "  Store --> JSON[(todos.json)]"
-                ),
-            }
-        ],
+        "mmd_files": [],
     }
+
+    # 仅当 spec 有持久化或主动需要图时追加；无状态 CLI 保持 mmd_files=[]、diagrams=[]
+    __llm_example_supplement__: ClassVar[str] = (
+        "When spec implies persistence OR you add design.diagrams[], also set:\n"
+        '  design.diagrams: [{"path":"flow.mmd","kind":"sequence"},'
+        '{"path":"flow.mmd","kind":"flowchart"}]\n'
+        '  mmd_files: [{"path":"flow.mmd","content":"sequenceDiagram\\n'
+        "  participant User\\n  participant CliEntry\\n  participant CalcCore\\n"
+        "  User->>CliEntry: request\\n  CliEntry->>CalcCore: evaluate\\n"
+        'flowchart LR\\n  CliEntry --> CalcCore"}]\n'
+        "Use modules[].name as Mermaid participants. Omit entirely for stateless CLI."
+    )
 
     design: DesignArtifact
     flow_mmd: str | None = Field(

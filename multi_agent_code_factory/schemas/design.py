@@ -447,66 +447,143 @@ def coerce_design_payload(data: Any) -> Any:
 class DesignArtifact(BaseModel):
     __llm_example__: ClassVar[dict[str, Any]] = {
         "version": "1",
-        "spec_ref": "CLI Todo App",
+        "spec_ref": "<from spec.title>",
         "revision": 1,
-        "summary": "CLI + JSON store",
-        "non_goals": ["Web UI"],
-        "design_goals": ["FEAT-1: Todo CRUD"],
-        "context_view": {"actors": ["User", "TodoCLI"]},
+        "summary": "无状态命令行工具示例（按实际 spec 替换）",
+        "non_goals": ["Web UI", "持久化"],
+        "design_goals": ["FEAT-1"],
+        "context_view": {"actors": ["User", "CliEntry"]},
         "architecture": {
-            "solution_strategy": "CLI commands with JSON file persistence",
+            "solution_strategy": "CLI 解析参数并调用核心模块",
             "code_delta": {"summary": "greenfield"},
         },
         "cross_cutting": {},
         "modules": [
             {
-                "name": "TodoCLI",
+                "name": "CliEntry",
                 "path": "src/cli.py",
-                "responsibility": "CLI commands",
+                "responsibility": "命令行入口与参数解析",
                 "code_domain": "CLI",
-            }
+            },
+            {
+                "name": "CalcCore",
+                "path": "src/calc_core.py",
+                "responsibility": "领域计算逻辑",
+                "code_domain": "CALC",
+            },
         ],
+        "interfaces": [
+            {
+                "name": "CliEntry API",
+                "module_ref": "CliEntry",
+                "operations": [
+                    {
+                        "name": "run",
+                        "summary": "Parse argv and dispatch",
+                        "inputs": [
+                            {
+                                "name": "argv",
+                                "type": "list[str]",
+                                "required": True,
+                                "description": "CLI arguments",
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "name": "exit_code",
+                                "type": "int",
+                                "required": True,
+                            }
+                        ],
+                        "errors": ["ERR-CALC-001"],
+                    }
+                ],
+            },
+            {
+                "name": "CalcCore API",
+                "module_ref": "CalcCore",
+                "operations": [
+                    {
+                        "name": "evaluate",
+                        "summary": "Core operation",
+                        "inputs": [
+                            {
+                                "name": "operands",
+                                "type": "list[float]",
+                                "required": True,
+                            }
+                        ],
+                        "outputs": [
+                            {
+                                "name": "result",
+                                "type": "float",
+                                "required": True,
+                            }
+                        ],
+                        "errors": ["ERR-CALC-001"],
+                    }
+                ],
+            },
+        ],
+        "diagrams": [],
         "dev_tasks": [
             {
                 "id": "T1",
-                "path": "src/todo_store.py",
-                "description": "JSON load/save",
+                "path": "src/calc_core.py",
+                "description": "Core logic",
                 "depends_on": [],
-                "covers": ["AC-1", "FEAT-1"],
-            }
+                "covers": ["AC-1", "AC-2", "FEAT-1"],
+            },
+            {
+                "id": "T2",
+                "path": "src/cli.py",
+                "description": "CLI entry",
+                "depends_on": ["T1"],
+                "covers": ["AC-1"],
+            },
         ],
         "external_dependencies": [
             {
-                "name": "todos.json",
-                "kind": "filesystem",
-                "purpose": "persistence",
-                "code_domain": "STORE",
+                "name": "none",
+                "kind": "none",
+                "purpose": "无外部持久化或第三方服务",
             }
         ],
+        "transaction_constraints": [],
+        "table_schemas": [],
         "error_catalog": [
             {
-                "code": "ERR-TODO-001",
-                "when": "todo id not found",
-                "message": "Todo not found",
+                "code": "ERR-CALC-001",
+                "when": "invalid input",
+                "message": "无效输入",
                 "retryable": False,
             }
         ],
         "test_cases": [
             {
-                "id": "TC-HAP-TODO-001",
+                "id": "TC-HAP-CALC-001",
                 "kind": "happy",
-                "title": "add and list todos",
+                "title": "正常路径",
                 "covers": ["AC-1"],
             },
             {
-                "id": "TC-NEG-TODO-001",
+                "id": "TC-NEG-CALC-001",
                 "kind": "negative",
-                "title": "complete missing todo",
-                "error_code": "ERR-TODO-001",
+                "title": "非法输入",
+                "error_code": "ERR-CALC-001",
+                "covers": ["AC-2"],
+            },
+            {
+                "id": "TC-BND-CALC-001",
+                "kind": "boundary",
+                "title": "边界值",
+                "covers": ["AC-2"],
             },
         ],
         "traceability": [
             {"spec_ref_id": "FEAT-1", "spec_ref_kind": "FEAT"},
+            {"spec_ref_id": "AC-1", "spec_ref_kind": "AC"},
+            {"spec_ref_id": "AC-2", "spec_ref_kind": "AC"},
         ],
     }
 

@@ -10,6 +10,7 @@ Given spec and profile, produce:
    - design_goals: non-empty string[] referencing upstream FEAT/US/REQ ids where applicable
    - cross_cutting: object (use {} when nothing special)
    - modules: non-empty; each {name, path, responsibility, code_domain}
+     modules[].name: stable English identifier (matches module_ref and Mermaid participants)
      code_domain: UPPER_SNAKE 2–12 chars (e.g. CALC, TODO, STORE); unique per module
    - dev_tasks: non-empty; unique paths; acyclic; one task per path
      each {id, path, description, depends_on?, covers?}
@@ -26,9 +27,14 @@ Given spec and profile, produce:
      include happy, negative, and boundary kinds when feasible
      each error_catalog[].code needs a negative test_cases entry with matching error_code
      NEG cases set error_code; happy/boundary covers should prefer AC-* ids
+     every acceptance_criteria[].id must appear in at least one test_cases[].covers or dev_tasks[].covers
    - interfaces[]: one entry per module (except SYS); each {name, module_ref, operations[]}
+     module_ref MUST equal modules[].name exactly (same string, case-sensitive)
      operations: {name, summary, inputs[], outputs[], errors[]} — errors reference error_catalog codes
-     inputs/outputs items: {name, type, required, description?}
+     inputs/outputs items: {name, type, required, description?} — required is mandatory boolean on EVERY item
+   - diagrams[]: register each *.mmd with {path, kind}; kind is sequence | flowchart | class | context | deployment
+     IF diagrams[] is non-empty, it MUST include BOTH kind=sequence AND kind=flowchart (same path allowed twice)
+     stateless CLI with no persistence: prefer diagrams=[] and omit *.mmd entirely
    - non_functional: array when spec implies non-trivial NFR (custom performance tier,
      high_concurrency, multi_tenant/internet scale); may be [] for simple personal CLI
    - transaction_constraints: array of objects (not strings); required when spec has
@@ -38,12 +44,13 @@ Given spec and profile, produce:
 2. Mermaid diagrams — one or more `*.mmd` files under the run directory:
    - Prefer `mmd_files`: [{ "path": "flow.mmd", "content": "..." }, ...]
    - Legacy fallback: `flow_mmd` for a single flow.mmd
-   - Register diagrams in design.diagrams[] with matching path and kind (sequence + flowchart)
-   - Diagrams required only when spec.context.storage implies persistence OR diagrams[] is
-     non-empty (DES-017); stateless CLI with diagrams=[] may omit *.mmd
+   - Register every diagram in design.diagrams[] with matching path and kind
+   - sequenceDiagram participants and flowchart node ids MUST use modules[].name literals (e.g. CalcCore)
+   - When you emit mmd_files, also populate design.diagrams[] (sequence + flowchart) for the same paths
+   - Follow the main Example JSON shape for structure; use Optional supplement only when persistence/diagrams apply
 
-Cover every acceptance_criteria id in dev_tasks.covers or traceability.
+Cover every acceptance_criteria id in dev_tasks.covers, test_cases.covers, or traceability.
 Use relative paths aligned with the profile language layout; no .. or absolute paths.
 Align non_goals with spec scope_out.
 
-When design_validation is present, fix all violations before resubmitting.
+When design_validation is present in context, fix every listed violation before resubmitting.
