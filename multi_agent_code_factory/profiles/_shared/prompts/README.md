@@ -14,7 +14,15 @@
 | QA 等      | —                                                 | —                                                |
 
 
-调用时还会在 system 末尾追加 schema 的 JSON 示例（`json_output_instructions`，非本目录文件）。
+调用时还会在 system 末尾追加 schema 的 JSON 形状示范（`LLM_PROMPT_SHAPE` → `json_output_instructions`，见 `schemas/llm_prompt_shape.py`）。
+
+## `LLM_PROMPT_SHAPE`
+
+各 Pydantic 产物 / Agent 输出模型上的 **prompted_json few-shot** 载荷（非 Run 落盘、非 JSON Schema `examples`）：
+
+- 类型：`LlmPromptShape(json_shape=..., notes=...)`
+- 类属性名：`LLM_PROMPT_SHAPE`
+- 须满足：`Model.model_validate(shape.json_shape)`（见 `tests/agents/llm/test_schema_hints.py`）
 
 ## 本目录文件一览
 

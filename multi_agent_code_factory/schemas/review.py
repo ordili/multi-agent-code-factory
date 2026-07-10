@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from pydantic import BaseModel, Field
 
 from multi_agent_code_factory.schemas._base import ARTIFACT_VERSION
+from multi_agent_code_factory.schemas.llm_prompt_shape import LlmPromptShape
 
 
 class ReviewNextStage(StrEnum):
@@ -53,14 +54,16 @@ class AcceptanceCoverageItem(BaseModel):
 
 
 class ReviewReport(BaseModel):
-    __llm_example__: ClassVar[dict[str, Any]] = {
-        "version": "1",
-        "approved": True,
-        "next_stage": "deploy",
-        "summary": "Acceptance criteria met.",
-        "findings": [],
-        "acceptance_coverage": [{"id": "AC-1", "met": True}],
-    }
+    LLM_PROMPT_SHAPE: ClassVar[LlmPromptShape] = LlmPromptShape(
+        json_shape={
+            "version": "1",
+            "approved": True,
+            "next_stage": "deploy",
+            "summary": "Acceptance criteria met.",
+            "findings": [],
+            "acceptance_coverage": [{"id": "AC-1", "met": True}],
+        },
+    )
 
     version: ARTIFACT_VERSION
     approved: bool

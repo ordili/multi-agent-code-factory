@@ -8,6 +8,7 @@ from typing import Any, ClassVar
 from pydantic import BaseModel, Field, model_validator
 
 from multi_agent_code_factory.schemas._base import ARTIFACT_VERSION
+from multi_agent_code_factory.schemas.llm_prompt_shape import LlmPromptShape
 
 
 class DesignStatus(StrEnum):
@@ -445,147 +446,149 @@ def coerce_design_payload(data: Any) -> Any:
 
 
 class DesignArtifact(BaseModel):
-    __llm_example__: ClassVar[dict[str, Any]] = {
-        "version": "1",
-        "spec_ref": "<from spec.title>",
-        "revision": 1,
-        "summary": "无状态命令行工具示例（按实际 spec 替换）",
-        "non_goals": ["Web UI", "持久化"],
-        "design_goals": ["FEAT-1"],
-        "context_view": {"actors": ["User", "CliEntry"]},
-        "architecture": {
-            "solution_strategy": "CLI 解析参数并调用核心模块",
-            "code_delta": {"summary": "greenfield"},
+    LLM_PROMPT_SHAPE: ClassVar[LlmPromptShape] = LlmPromptShape(
+        json_shape={
+            "version": "1",
+            "spec_ref": "<from spec.title>",
+            "revision": 1,
+            "summary": "无状态命令行工具示例（按实际 spec 替换）",
+            "non_goals": ["Web UI", "持久化"],
+            "design_goals": ["FEAT-1"],
+            "context_view": {"actors": ["User", "CliEntry"]},
+            "architecture": {
+                "solution_strategy": "CLI 解析参数并调用核心模块",
+                "code_delta": {"summary": "greenfield"},
+            },
+            "cross_cutting": {},
+            "modules": [
+                {
+                    "name": "CliEntry",
+                    "path": "src/cli.py",
+                    "responsibility": "命令行入口与参数解析",
+                    "code_domain": "CLI",
+                },
+                {
+                    "name": "CalcCore",
+                    "path": "src/calc_core.py",
+                    "responsibility": "领域计算逻辑",
+                    "code_domain": "CALC",
+                },
+            ],
+            "interfaces": [
+                {
+                    "name": "CliEntry API",
+                    "module_ref": "CliEntry",
+                    "operations": [
+                        {
+                            "name": "run",
+                            "summary": "Parse argv and dispatch",
+                            "inputs": [
+                                {
+                                    "name": "argv",
+                                    "type": "list[str]",
+                                    "required": True,
+                                    "description": "CLI arguments",
+                                }
+                            ],
+                            "outputs": [
+                                {
+                                    "name": "exit_code",
+                                    "type": "int",
+                                    "required": True,
+                                }
+                            ],
+                            "errors": ["ERR-CALC-001"],
+                        }
+                    ],
+                },
+                {
+                    "name": "CalcCore API",
+                    "module_ref": "CalcCore",
+                    "operations": [
+                        {
+                            "name": "evaluate",
+                            "summary": "Core operation",
+                            "inputs": [
+                                {
+                                    "name": "operands",
+                                    "type": "list[float]",
+                                    "required": True,
+                                }
+                            ],
+                            "outputs": [
+                                {
+                                    "name": "result",
+                                    "type": "float",
+                                    "required": True,
+                                }
+                            ],
+                            "errors": ["ERR-CALC-001"],
+                        }
+                    ],
+                },
+            ],
+            "diagrams": [],
+            "dev_tasks": [
+                {
+                    "id": "T1",
+                    "path": "src/calc_core.py",
+                    "description": "Core logic",
+                    "depends_on": [],
+                    "covers": ["AC-1", "AC-2", "FEAT-1"],
+                },
+                {
+                    "id": "T2",
+                    "path": "src/cli.py",
+                    "description": "CLI entry",
+                    "depends_on": ["T1"],
+                    "covers": ["AC-1"],
+                },
+            ],
+            "external_dependencies": [
+                {
+                    "name": "none",
+                    "kind": "none",
+                    "purpose": "无外部持久化或第三方服务",
+                }
+            ],
+            "transaction_constraints": [],
+            "table_schemas": [],
+            "error_catalog": [
+                {
+                    "code": "ERR-CALC-001",
+                    "when": "invalid input",
+                    "message": "无效输入",
+                    "retryable": False,
+                }
+            ],
+            "test_cases": [
+                {
+                    "id": "TC-HAP-CALC-001",
+                    "kind": "happy",
+                    "title": "正常路径",
+                    "covers": ["AC-1"],
+                },
+                {
+                    "id": "TC-NEG-CALC-001",
+                    "kind": "negative",
+                    "title": "非法输入",
+                    "error_code": "ERR-CALC-001",
+                    "covers": ["AC-2"],
+                },
+                {
+                    "id": "TC-BND-CALC-001",
+                    "kind": "boundary",
+                    "title": "边界值",
+                    "covers": ["AC-2"],
+                },
+            ],
+            "traceability": [
+                {"spec_ref_id": "FEAT-1", "spec_ref_kind": "FEAT"},
+                {"spec_ref_id": "AC-1", "spec_ref_kind": "AC"},
+                {"spec_ref_id": "AC-2", "spec_ref_kind": "AC"},
+            ],
         },
-        "cross_cutting": {},
-        "modules": [
-            {
-                "name": "CliEntry",
-                "path": "src/cli.py",
-                "responsibility": "命令行入口与参数解析",
-                "code_domain": "CLI",
-            },
-            {
-                "name": "CalcCore",
-                "path": "src/calc_core.py",
-                "responsibility": "领域计算逻辑",
-                "code_domain": "CALC",
-            },
-        ],
-        "interfaces": [
-            {
-                "name": "CliEntry API",
-                "module_ref": "CliEntry",
-                "operations": [
-                    {
-                        "name": "run",
-                        "summary": "Parse argv and dispatch",
-                        "inputs": [
-                            {
-                                "name": "argv",
-                                "type": "list[str]",
-                                "required": True,
-                                "description": "CLI arguments",
-                            }
-                        ],
-                        "outputs": [
-                            {
-                                "name": "exit_code",
-                                "type": "int",
-                                "required": True,
-                            }
-                        ],
-                        "errors": ["ERR-CALC-001"],
-                    }
-                ],
-            },
-            {
-                "name": "CalcCore API",
-                "module_ref": "CalcCore",
-                "operations": [
-                    {
-                        "name": "evaluate",
-                        "summary": "Core operation",
-                        "inputs": [
-                            {
-                                "name": "operands",
-                                "type": "list[float]",
-                                "required": True,
-                            }
-                        ],
-                        "outputs": [
-                            {
-                                "name": "result",
-                                "type": "float",
-                                "required": True,
-                            }
-                        ],
-                        "errors": ["ERR-CALC-001"],
-                    }
-                ],
-            },
-        ],
-        "diagrams": [],
-        "dev_tasks": [
-            {
-                "id": "T1",
-                "path": "src/calc_core.py",
-                "description": "Core logic",
-                "depends_on": [],
-                "covers": ["AC-1", "AC-2", "FEAT-1"],
-            },
-            {
-                "id": "T2",
-                "path": "src/cli.py",
-                "description": "CLI entry",
-                "depends_on": ["T1"],
-                "covers": ["AC-1"],
-            },
-        ],
-        "external_dependencies": [
-            {
-                "name": "none",
-                "kind": "none",
-                "purpose": "无外部持久化或第三方服务",
-            }
-        ],
-        "transaction_constraints": [],
-        "table_schemas": [],
-        "error_catalog": [
-            {
-                "code": "ERR-CALC-001",
-                "when": "invalid input",
-                "message": "无效输入",
-                "retryable": False,
-            }
-        ],
-        "test_cases": [
-            {
-                "id": "TC-HAP-CALC-001",
-                "kind": "happy",
-                "title": "正常路径",
-                "covers": ["AC-1"],
-            },
-            {
-                "id": "TC-NEG-CALC-001",
-                "kind": "negative",
-                "title": "非法输入",
-                "error_code": "ERR-CALC-001",
-                "covers": ["AC-2"],
-            },
-            {
-                "id": "TC-BND-CALC-001",
-                "kind": "boundary",
-                "title": "边界值",
-                "covers": ["AC-2"],
-            },
-        ],
-        "traceability": [
-            {"spec_ref_id": "FEAT-1", "spec_ref_kind": "FEAT"},
-            {"spec_ref_id": "AC-1", "spec_ref_kind": "AC"},
-            {"spec_ref_id": "AC-2", "spec_ref_kind": "AC"},
-        ],
-    }
+    )
 
     version: ARTIFACT_VERSION
     spec_ref: str

@@ -2,11 +2,23 @@
 
 from __future__ import annotations
 
-from typing import Any, ClassVar
+from typing import ClassVar
 
 from pydantic import BaseModel, Field
 
 from multi_agent_code_factory.schemas.design import DesignArtifact
+from multi_agent_code_factory.schemas.llm_prompt_shape import LlmPromptShape
+
+_ARCHITECT_DIAGRAM_SHAPE_NOTES = (
+    "When spec implies persistence OR you add design.diagrams[], also set:\n"
+    '  design.diagrams: [{"path":"flow.mmd","kind":"sequence"},'
+    '{"path":"flow.mmd","kind":"flowchart"}]\n'
+    '  mmd_files: [{"path":"flow.mmd","content":"sequenceDiagram\\n'
+    "  participant User\\n  participant CliEntry\\n  participant CalcCore\\n"
+    "  User->>CliEntry: request\\n  CliEntry->>CalcCore: evaluate\\n"
+    'flowchart LR\\n  CliEntry --> CalcCore"}]\n'
+    "Use modules[].name as Mermaid participants. Omit entirely for stateless CLI."
+)
 
 
 class MermaidFileWrite(BaseModel):
@@ -19,21 +31,12 @@ class MermaidFileWrite(BaseModel):
 class ArchitectLLMOutput(BaseModel):
     """Architect LLM 返回：设计产物 + Mermaid 流程图。"""
 
-    __llm_example__: ClassVar[dict[str, Any]] = {
-        "design": DesignArtifact.__llm_example__,
-        "mmd_files": [],
-    }
-
-    # 仅当 spec 有持久化或主动需要图时追加；无状态 CLI 保持 mmd_files=[]、diagrams=[]
-    __llm_example_supplement__: ClassVar[str] = (
-        "When spec implies persistence OR you add design.diagrams[], also set:\n"
-        '  design.diagrams: [{"path":"flow.mmd","kind":"sequence"},'
-        '{"path":"flow.mmd","kind":"flowchart"}]\n'
-        '  mmd_files: [{"path":"flow.mmd","content":"sequenceDiagram\\n'
-        "  participant User\\n  participant CliEntry\\n  participant CalcCore\\n"
-        "  User->>CliEntry: request\\n  CliEntry->>CalcCore: evaluate\\n"
-        'flowchart LR\\n  CliEntry --> CalcCore"}]\n'
-        "Use modules[].name as Mermaid participants. Omit entirely for stateless CLI."
+    LLM_PROMPT_SHAPE: ClassVar[LlmPromptShape] = LlmPromptShape(
+        json_shape={
+            "design": DesignArtifact.LLM_PROMPT_SHAPE.json_shape,
+            "mmd_files": [],
+        },
+        notes=_ARCHITECT_DIAGRAM_SHAPE_NOTES,
     )
 
     design: DesignArtifact
@@ -57,16 +60,18 @@ class SourceFileWrite(BaseModel):
 class DeveloperLLMOutput(BaseModel):
     """Developer LLM 返回：已完成任务与待写入源文件。"""
 
-    __llm_example__: ClassVar[dict[str, Any]] = {
-        "tasks_completed": ["T1"],
-        "source_files": [
-            {
-                "path": "src/todo_store.py",
-                "content": "def load(): ...\n",
-            }
-        ],
-        "notes": "Initial store module",
-    }
+    LLM_PROMPT_SHAPE: ClassVar[LlmPromptShape] = LlmPromptShape(
+        json_shape={
+            "tasks_completed": ["T1"],
+            "source_files": [
+                {
+                    "path": "src/calc_core.py",
+                    "content": "def evaluate(): ...\n",
+                }
+            ],
+            "notes": "Initial core module",
+        },
+    )
 
     tasks_completed: list[str] = Field(
         default_factory=list,

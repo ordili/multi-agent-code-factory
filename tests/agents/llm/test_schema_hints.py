@@ -9,6 +9,10 @@ from multi_agent_code_factory.agents.llm.schemas import (
     ArchitectLLMOutput,
     DeveloperLLMOutput,
 )
+from multi_agent_code_factory.schemas.llm_prompt_shape import (
+    LlmPromptShape,
+    prompt_shape_for_schema,
+)
 from multi_agent_code_factory.schemas.review import ReviewReport
 from multi_agent_code_factory.schemas.spec import SpecArtifact
 
@@ -41,18 +45,19 @@ def test_architect_instructions_include_diagram_supplement() -> None:
     assert '"mmd_files": []' in instructions
 
 
-def test_llm_example_defined_on_domain_schemas() -> None:
+def test_llm_prompt_shape_defined_on_domain_schemas() -> None:
     from multi_agent_code_factory.schemas.design import DesignArtifact
 
-    assert isinstance(SpecArtifact.__llm_example__, dict)
-    assert isinstance(DesignArtifact.__llm_example__, dict)
-    assert isinstance(ReviewReport.__llm_example__, dict)
+    for schema in (SpecArtifact, DesignArtifact, ReviewReport):
+        shape = prompt_shape_for_schema(schema)
+        assert isinstance(shape, LlmPromptShape)
+        assert isinstance(shape.json_shape, dict)
 
 
-def test_llm_examples_validate_against_pydantic_models() -> None:
+def test_llm_prompt_shapes_validate_against_pydantic_models() -> None:
     from multi_agent_code_factory.schemas.design import DesignArtifact
 
-    SpecArtifact.model_validate(SpecArtifact.__llm_example__)
-    DesignArtifact.model_validate(DesignArtifact.__llm_example__)
-    ArchitectLLMOutput.model_validate(ArchitectLLMOutput.__llm_example__)
-    ReviewReport.model_validate(ReviewReport.__llm_example__)
+    SpecArtifact.model_validate(SpecArtifact.LLM_PROMPT_SHAPE.json_shape)
+    DesignArtifact.model_validate(DesignArtifact.LLM_PROMPT_SHAPE.json_shape)
+    ArchitectLLMOutput.model_validate(ArchitectLLMOutput.LLM_PROMPT_SHAPE.json_shape)
+    ReviewReport.model_validate(ReviewReport.LLM_PROMPT_SHAPE.json_shape)
