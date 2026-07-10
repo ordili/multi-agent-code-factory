@@ -63,6 +63,27 @@ def test_validate_mermaid_files_with_fixture(
     assert not [v for v in violations if v.severity.value == "error"]
 
 
+def test_des_224_warns_when_spec_nfr_signal_without_md_section(
+    snippets_dir: Path,
+) -> None:
+    raw = load_snippet_json(snippets_dir, "spec-default.json")
+    raw["operational_profile"]["performance"]["tier"] = "custom"
+    raw["operational_profile"]["performance"]["notes"] = "p99 < 100ms"
+    spec = SpecArtifact.model_validate(raw)
+    design = DesignArtifact.model_validate(
+        json.loads(
+            (Path(__file__).parent / "fixtures" / "design-todo-valid.json").read_text(
+                encoding="utf-8"
+            )
+        )
+    )
+    design = design.model_copy(update={"non_functional": []})
+    md = render_design_md(design)
+    assert "## 5. 非功能性目标" not in md
+    violations = validate_design_md_rules(design, md, spec=spec)
+    assert any(v.rule_id == "DES-224" for v in violations)
+
+
 def test_design_todo_valid_passes_extended_rules(
     snippets_dir: Path,
 ) -> None:

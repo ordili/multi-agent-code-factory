@@ -8,7 +8,12 @@ from multi_agent_code_factory.agents.llm.prompt.validation_feedback import (
 from multi_agent_code_factory.agents.normalizers.design_enrichment import (
     enrich_design_for_validation,
 )
-from multi_agent_code_factory.schemas.design import DesignArtifact, DevTask, ModuleSpec
+from multi_agent_code_factory.schemas.design import (
+    ContextView,
+    DesignArtifact,
+    DevTask,
+    ModuleSpec,
+)
 from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.schemas.validation_report import (
     ValidationReport,
@@ -60,10 +65,11 @@ def test_enrich_design_fills_required_mvp_fields(snippets_dir: Path) -> None:
     enriched = enrich_design_for_validation(design, spec=spec)
 
     assert enriched.non_goals == ["web ui"]
-    assert enriched.context_view == {"actors": ["Core"]}
-    assert "solution_strategy" in enriched.architecture
+    assert enriched.context_view == ContextView(actors=["Core"])
+    assert enriched.architecture is not None
+    assert enriched.architecture.solution_strategy.strip()
     assert enriched.cross_cutting == {}
-    assert enriched.traceability[0]["spec_ref_id"] == "feat-01"
+    assert enriched.traceability[0].spec_ref_id == "feat-01"
 
 
 def test_enrich_design_merges_duplicate_dev_task_paths() -> None:

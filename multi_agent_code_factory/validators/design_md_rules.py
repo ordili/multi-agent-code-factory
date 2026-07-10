@@ -5,11 +5,12 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
-from multi_agent_code_factory.schemas.design import DesignArtifact, DiagramKind
+from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.schemas.validation_report import Violation
 from multi_agent_code_factory.validators._report import warn
 from multi_agent_code_factory.validators.design_triggers import (
+    requires_flow_section,
     requires_table_schemas,
     requires_transaction_constraints,
     spec_requires_non_functional,
@@ -45,14 +46,6 @@ _ROLLOUT_RE = re.compile(r"##\s*9\.\s*Rollout|Rollout\s*&\s*Deployment", re.I)
 
 def _has_real_external_deps(design: DesignArtifact) -> bool:
     return any(dep.kind != "none" for dep in design.external_dependencies)
-
-
-def _has_flow_diagrams(design: DesignArtifact) -> bool:
-    flow_kinds = {DiagramKind.SEQUENCE.value, DiagramKind.FLOWCHART.value}
-    return any(
-        (d.kind.value if hasattr(d.kind, "value") else d.kind) in flow_kinds
-        for d in design.diagrams
-    )
 
 
 def validate_design_md_rules(
@@ -151,7 +144,7 @@ def validate_design_md_rules(
             )
         )
 
-    if _has_flow_diagrams(design):
+    if requires_flow_section(design, spec):
         if "### 4.7 流程与时序" not in md_text:
             violations.append(
                 warn(
@@ -206,7 +199,7 @@ def validate_design_md_rules(
     needs_nfr = bool(design.non_functional) or (
         spec is not None and spec_requires_non_functional(spec)
     )
-    if needs_nfr and design.non_functional and "## 5. 非功能性目标" not in md_text:
+    if needs_nfr and "## 5. 非功能性目标" not in md_text:
         violations.append(
             warn(
                 "DES-224",

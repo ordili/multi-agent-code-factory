@@ -10,9 +10,12 @@ from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.validators.design_rules import validate_design_rules
 from multi_agent_code_factory.validators.design_triggers import (
+    design_has_cross_module_collaboration,
     is_stateless_design,
+    requires_flow_section,
     requires_table_schemas,
     requires_transaction_constraints,
+    spec_has_nonlinear_us,
 )
 
 from tests.conftest import load_snippet_json
@@ -73,3 +76,28 @@ def test_filesystem_dep_does_not_require_transaction_constraints(
     ]
     design = DesignArtifact.model_validate(payload)
     assert requires_transaction_constraints(design, spec) is False
+
+
+def test_stateless_calculator_skips_flow_section(snippets_dir: Path) -> None:
+    spec = SpecArtifact.model_validate(
+        load_snippet_json(snippets_dir, "spec-calculator-stateless.json")
+    )
+    design = _load_design("design-calculator-stateless-min.json")
+    assert design_has_cross_module_collaboration(design, spec) is False
+    assert requires_flow_section(design, spec) is False
+
+
+def test_todo_requires_flow_section(snippets_dir: Path) -> None:
+    spec = SpecArtifact.model_validate(
+        load_snippet_json(snippets_dir, "spec-default.json")
+    )
+    design = _load_design("design-todo-valid.json")
+    assert design_has_cross_module_collaboration(design, spec) is True
+    assert requires_flow_section(design, spec) is True
+
+
+def test_spec_multi_writer_triggers_nonlinear_us(snippets_dir: Path) -> None:
+    raw = load_snippet_json(snippets_dir, "spec-default.json")
+    raw["consistency_profile"]["multi_writer"] = True
+    spec = SpecArtifact.model_validate(raw)
+    assert spec_has_nonlinear_us(spec) is True

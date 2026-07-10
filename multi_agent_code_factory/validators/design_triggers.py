@@ -2,8 +2,15 @@
 
 from __future__ import annotations
 
+import re
+
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.spec import SpecArtifact
+
+_NONLINEAR_US_RE = re.compile(
+    r"如果|否则|当.+时|异常|失败|重试|补偿|并发|异步|回调|超时|回滚|"
+    r"分支|随后|然后|并且|之后|先.+再|下单|支付|结算|对账|库存|秒杀"
+)
 
 _MIDDLEWARE_KINDS = frozenset({"db", "cache", "mq", "rpc", "api", "blockchain"})
 _NON_PERSISTENT_STORAGE = frozenset(
@@ -105,3 +112,43 @@ def is_stateless_design(
     if design_has_middleware_deps(design) or design_has_filesystem_deps(design):
         return False
     return not spec_implies_persistence(spec)
+
+
+def spec_has_nonlinear_us(spec: SpecArtifact) -> bool:
+    """spec 是否含非线性 / 多步业务 US 信号（DES-206 传导）。"""
+    cp = spec.consistency_profile
+    if cp.multi_writer:
+        return True
+    if cp.idempotency_required and cp.delivery.value == "at_least_once":
+        return True
+    for story in spec.user_stories:
+        blob = f"{story.want} {story.so_that}"
+        if _NONLINEAR_US_RE.search(blob):
+            return True
+    for criterion in spec.acceptance_criteria:
+        if _NONLINEAR_US_RE.search(criterion.description):
+            return True
+    return False
+
+
+def design_has_cross_module_collaboration(
+    design: DesignArtifact,
+    spec: SpecArtifact | None = None,
+) -> bool:
+    """多模块协作（非线性分层 CLI 如计算器不计入）。"""
+    if len(design.modules) < 2:
+        return False
+    if spec is not None and is_stateless_design(design, spec):
+        return False
+    module_refs = {iface.module_ref for iface in design.interfaces if iface.module_ref}
+    return len(module_refs) >= 2
+
+
+def requires_flow_section(
+    design: DesignArtifact,
+    spec: SpecArtifact | None = None,
+) -> bool:
+    """是否宜写 design.md §4.7 流程与时序（DES-206 / DES-217）。"""
+    if spec is not None and spec_has_nonlinear_us(spec):
+        return True
+    return design_has_cross_module_collaboration(design, spec)

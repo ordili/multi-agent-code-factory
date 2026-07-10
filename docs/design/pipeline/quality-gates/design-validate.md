@@ -158,12 +158,15 @@ Run `design.md` 须 **中文固定章节**（**§1–§6 + 附录 A–D**）；*
 | rule_id   | 严重度  | 必检  | 检查对象        | 判定                                                                        |
 | --------- | ---- | --- | ----------- | ------------------------------------------------------------------------- |
 | `DES-201` | warn | 是   | `design.md` | 须含 §1–§6 固定章节（见下「DES-201 章节」；JSON `test_cases` 非空时 **DES-016** 约束，不豁免 §6） |
-| `DES-202` | warn | 是   | `design.md` | 须含附录 A–D（见下「DES-202 附录」；附录 D = 与现有代码对照）                                  |
+| `DES-202` | warn | 是   | `design.md` | 须含附录 A–C（见下「DES-202 附录」）                                                |
+| `DES-207` | warn | 是   | `design.md` | 须含附录 D（与现有代码对照，见下「DES-207 附录」）                                          |
 
 
 **DES-201 章节（Markdown 二级标题，字面须含 `##` 前缀）：** 1. 背景与上下文 · 2. 设计目标 · 3. 非目标 · 4. 方案设计 · 6. 测试用例列表
 
-**DES-202 附录（Markdown 二级标题，字面须含 `## 附录 X.` 前缀）：** A 需求追溯 · B 文件变更 · C 任务分解 · D 与现有代码对照
+**DES-202 附录（Markdown 二级标题，字面须含 `## 附录 X.` 前缀）：** A 需求追溯 · B 文件变更 · C 任务分解
+
+**DES-207 附录 D（Markdown 二级标题，字面须含 `## 附录 D.` 前缀）：** 与现有代码对照
 
 ### 2.2 §4 子节（条件 warn）
 
@@ -194,6 +197,7 @@ Run `design.md` 须 **中文固定章节**（**§1–§6 + 附录 A–D**）；*
 | --------- | ---- | --- | ------------------------------------------- | ---------------------------------------------- |
 | `DES-224` | warn | 条件  | `non_functional` 非空；或传导表 DES-011 同类 spec 信号 | 宜含 5. 非功能性目标（二级标题，见上「DES-201 章节」格式）            |
 | `DES-219` | warn | 条件  | `test_cases` 非空                             | 6. 测试用例列表表宜含「类型」列（happy / negative / boundary） |
+| `DES-208` | warn | 是   | `design.md`                                 | 不得含已移除专章（§5 方案对比、旧 §6–§10、附录 E 等）或 Rollout & Deployment |
 
 
 ### 2.4 *.mmd 图与 diagrams[]
@@ -206,7 +210,6 @@ Run `design.md` 须 **中文固定章节**（**§1–§6 + 附录 A–D**）；*
 | `DES-214` | error* | 条件  | 同 DES-017  | `diagrams[]` 登记 **须**与 Run 内 `*.mmd` 一致；同文件多段可登记多条 |
 
 
-> **DES-208**（非 rule_id）：Run **不得**含 Rollout & Deployment 章节。  
 > **DES-203** / **DES-214** 在 Profile `validation.design.validate_mermaid: false` 时降为 warn 或跳过（见 [README §2](./README.md#2-profile-配置validation)）。
 
 **JSON error 未通过：** 默认阻断并回 Architect（见上文 **严重度** · [主线 §4.1.2](../multi-agent-pipeline-design.md#412-产物校验与-hitlpm--architect)）。§2 **warn** 默认不令 `passed=false`。
