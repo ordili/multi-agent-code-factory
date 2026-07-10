@@ -7,7 +7,7 @@
 
 **rule_id 合计：** **44** 条（§3.1 结构 **15** · §3.2 可测性 **16** · §3.3 `spec.md` 格式 **13**）。
 
-> **spec 通过 ≠ design 通过。** spec 环只校验 [prd-spec.md](../artifact-schemas/prd-spec.md)；Architect 还须通过 [design-validate.md](./design-validate.md)（**57** 条活跃 `DES-*`）。  
+> **spec 通过 ≠ design 通过。** spec 环只校验 [prd-spec.md](../artifact-schemas/prd-spec.md)；Architect 还须通过 [design-validate.md](./design-validate.md)（**56** 条 `DES-*`）。  
 > **必检** = 是否执行该 rule；**触发条件** = 何时执行或何时要求字段非空（与 [design-validate](./design-validate.md) 各 rule 的「触发条件」列一致）。
 
 ### spec → design 传导（只读）

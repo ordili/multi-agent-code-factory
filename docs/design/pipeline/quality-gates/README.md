@@ -24,9 +24,9 @@
 | [design-validate.md](./design-validate.md) | `design_validate` · `DES-*` · Run `design.json` / `design.md` / `*.mmd` |
 | [hitl.md](./hitl.md) | `spec_hitl` / `design_hitl` / `deploy_hitl` / `escalation_hitl` · 与 Reviewer 分工 |
 
-**rule_id 合计（定稿）：** **106** 条已定义（`SPEC-*` **44** · `DES-*` **62** = **57** 活跃 + **5** 废弃/合并；HITL 无独立 rule_id）。
+**rule_id 合计（定稿）：** **100** 条已定义（`SPEC-*` **44** · `DES-*` **56**；HITL 无独立 rule_id）。
 
-**条件规则：** 部分 `DES-*` 按 spec / design 字段信号决定是否要求非空，见 [design-validate.md §4.1](./design-validate.md#41-json-结构error--warn) 各条「触发条件」；spec 侧见 [spec-validate.md §spec→design](./spec-validate.md#spec--design-传导只读)。
+**条件规则：** 部分 `DES-*` 按 spec / design 字段信号决定是否要求非空，见 [design-validate.md §1](./design-validate.md#1-designjsonerror--warn) 各条「触发条件」；spec 侧见 [spec-validate.md §spec→design](./spec-validate.md#spec--design-传导只读)。
 
 **规范 vs 实现：** [design-validate.md §规范与实现对照](./design-validate.md#规范与实现对照) 列出定稿规则与当前 `validators/` 已知偏差（改代码时消项，不在此目录改规范迁就实现）。
 
