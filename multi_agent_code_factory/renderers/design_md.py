@@ -1,10 +1,24 @@
-"""design.json → design.md 渲染器（中文固定章节 §1–§10 + 附录 A–E）。"""
+"""design.json → design.md 渲染器（定稿 §1–§6 + 附录 A–D）。"""
 
 from __future__ import annotations
 
 from typing import Any
 
-from multi_agent_code_factory.schemas.design import DesignArtifact, ModuleSpec
+from pydantic import BaseModel
+
+from multi_agent_code_factory.schemas.design import (
+    DesignArtifact,
+    DiagramKind,
+    ModuleSpec,
+)
+
+
+def _as_mapping(value: Any) -> dict[str, Any]:
+    if isinstance(value, BaseModel):
+        return value.model_dump()
+    if isinstance(value, dict):
+        return value
+    return {}
 
 
 def _yes_no(value: bool | None) -> str:
@@ -17,7 +31,8 @@ def _join_list(items: list[str]) -> str:
     return "、".join(items) if items else "—"
 
 
-def _format_param(param: dict[str, Any]) -> str:
+def _format_param(param: Any) -> str:
+    param = _as_mapping(param)
     name = param.get("name", "?")
     ptype = param.get("type", "?")
     required = param.get("required")
@@ -31,7 +46,7 @@ def _format_param(param: dict[str, Any]) -> str:
     return "，".join(parts)
 
 
-def _format_operations_table(operations: list[dict[str, Any]]) -> list[str]:
+def _format_operations_table(operations: list[Any]) -> list[str]:
     lines = [
         "| 操作 | 功能说明 | 入参 | 出参 | 错误码 |",
         "|------|----------|------|------|--------|",
@@ -40,6 +55,7 @@ def _format_operations_table(operations: list[dict[str, Any]]) -> list[str]:
         lines.append("| — | — | — | — | — |")
         return lines
     for op in operations:
+        op = _as_mapping(op)
         name = op.get("name", "—")
         summary = op.get("summary") or op.get("description") or "—"
         inputs = op.get("inputs") or []
@@ -60,19 +76,59 @@ def _render_module_row(module: ModuleSpec) -> str:
     )
 
 
+def _has_real_external_deps(design: DesignArtifact) -> bool:
+    return any(dep.kind != "none" for dep in design.external_dependencies)
+
+
+def _context_diagrams(design: DesignArtifact) -> list:
+    return [
+        d
+        for d in design.diagrams
+        if (d.kind.value if hasattr(d.kind, "value") else d.kind)
+        == DiagramKind.CONTEXT.value
+    ]
+
+
+def _flow_diagrams(design: DesignArtifact) -> list:
+    flow_kinds = {DiagramKind.SEQUENCE.value, DiagramKind.FLOWCHART.value}
+    return [
+        d
+        for d in design.diagrams
+        if (d.kind.value if hasattr(d.kind, "value") else d.kind) in flow_kinds
+    ]
+
+
+def _should_render_section_42(design: DesignArtifact) -> bool:
+    return (
+        len(design.modules) >= 2
+        or _has_real_external_deps(design)
+        or bool(_context_diagrams(design))
+    )
+
+
+def _should_render_section_44(design: DesignArtifact) -> bool:
+    return _has_real_external_deps(design)
+
+
+def _should_render_section_46(design: DesignArtifact) -> bool:
+    return bool(
+        design.data_model or design.table_schemas or design.transaction_constraints
+    )
+
+
 def render_design_md(design: DesignArtifact) -> str:
     """将 DesignArtifact 渲染为人类可读的 Markdown 设计文档。"""
     title = design.spec_ref
     lines: list[str] = [
-        f"# Design Doc — {title}",
+        f"# 设计文档 — {title}",
         "",
-        f"- **Revision：** {design.revision}",
-        f"- **Spec：** {design.spec_ref}",
+        f"- **版本：** r{design.revision}",
+        f"- **对应需求：** {design.spec_ref}",
     ]
     if design.status is not None:
-        lines.append(f"- **Status：** {design.status.value}")
+        lines.append(f"- **状态：** {design.status.value}")
     if design.supersedes_revision is not None:
-        lines.append(f"- **Supersedes：** r{design.supersedes_revision}")
+        lines.append(f"- **取代版本：** r{design.supersedes_revision}")
 
     lines.extend(["", "## 1. 背景与上下文", ""])
     if design.summary:
@@ -82,8 +138,8 @@ def render_design_md(design: DesignArtifact) -> str:
         lines.append(design.background)
         lines.append("")
     if design.context_view:
-        actors = design.context_view.get("actors") or []
-        external = design.context_view.get("external_systems") or []
+        actors = design.context_view.actors
+        external = design.context_view.external_systems
         if actors:
             lines.append("**参与者：**")
             for actor in actors:
@@ -92,12 +148,13 @@ def render_design_md(design: DesignArtifact) -> str:
         if external:
             lines.append("**外部系统：**")
             for item in external:
-                if isinstance(item, dict):
-                    lines.append(
-                        f"- {item.get('name', '?')}: {item.get('description', '')}"
-                    )
-                else:
+                if isinstance(item, str):
                     lines.append(f"- {item}")
+                else:
+                    item_map = _as_mapping(item)
+                    name = item_map.get("name", "?")
+                    desc = item_map.get("description", "")
+                    lines.append(f"- {name}: {desc}")
             lines.append("")
 
     lines.extend(["## 2. 设计目标", ""])
@@ -106,6 +163,7 @@ def render_design_md(design: DesignArtifact) -> str:
             lines.append(f"- {goal}")
     else:
         lines.append("—")
+
     lines.extend(["", "## 3. 非目标", ""])
     if design.non_goals:
         for item in design.non_goals:
@@ -113,22 +171,37 @@ def render_design_md(design: DesignArtifact) -> str:
     else:
         lines.append("—")
 
-    lines.extend(["", "## 4. 方案设计", "", "### 4.1 概述", ""])
+    lines.extend(["", "## 4. 方案设计", ""])
+
     if design.architecture:
-        strategy = design.architecture.get("solution_strategy")
-        style = design.architecture.get("style")
+        lines.extend(["### 4.1 概述", ""])
+        strategy = design.architecture.solution_strategy
+        style = design.architecture.style
         if strategy:
             lines.append(str(strategy))
             lines.append("")
         if style:
             lines.append(f"**架构风格：** `{style}`")
             lines.append("")
-    if not design.architecture:
-        lines.append("—")
+
+    if _should_render_section_42(design):
+        lines.extend(["### 4.2 系统架构图", ""])
+        context_diagrams = _context_diagrams(design)
+        if context_diagrams:
+            for diagram in context_diagrams:
+                kind = (
+                    diagram.kind.value
+                    if hasattr(diagram.kind, "value")
+                    else diagram.kind
+                )
+                title_d = diagram.title or kind
+                lines.append(f"- **{title_d}** (`{kind}`): `{diagram.path}`")
+        else:
+            lines.append("- 见 Run 目录 `architecture-*.mmd`")
         lines.append("")
 
-    lines.extend(["### 4.2 模块划分", ""])
     if design.modules:
+        lines.extend(["### 4.3 模块划分", ""])
         lines.extend(
             [
                 "| 模块 | 路径 | 职责 | code_domain | 依赖模块 |",
@@ -137,12 +210,10 @@ def render_design_md(design: DesignArtifact) -> str:
         )
         for module in design.modules:
             lines.append(_render_module_row(module))
-    else:
-        lines.append("—")
-    lines.append("")
+        lines.append("")
 
-    lines.extend(["### 4.3 外部依赖", ""])
-    if design.external_dependencies:
+    if _should_render_section_44(design):
+        lines.extend(["### 4.4 外部依赖", ""])
         lines.extend(
             [
                 "| 名称 | 类型 | 技术 | 用途 | code_domain | 关键性 |",
@@ -150,6 +221,8 @@ def render_design_md(design: DesignArtifact) -> str:
             ]
         )
         for dep in design.external_dependencies:
+            if dep.kind == "none":
+                continue
             domain = f"`{dep.code_domain}`" if dep.code_domain else "—"
             tech = dep.technology or "—"
             crit = dep.criticality or "—"
@@ -159,171 +232,142 @@ def render_design_md(design: DesignArtifact) -> str:
             )
             if dep.failure_behavior:
                 lines.append(f"  - 故障行为：{dep.failure_behavior}")
-    else:
-        lines.append("无外部中间件。")
-    lines.append("")
-
-    lines.extend(["### 4.4 接口定义", ""])
-    if design.interfaces:
-        for iface in design.interfaces:
-            name = iface.get("name", "Interface")
-            file_path = iface.get("file", "—")
-            protocol = iface.get("protocol", "—")
-            domain = iface.get("code_domain") or "—"
-            desc = iface.get("description")
-            lines.append(f"#### {name}（`{file_path}` · `{protocol}` · `{domain}`）")
-            if desc:
-                lines.append("")
-                lines.append(desc)
-                lines.append("")
-            lines.extend(_format_operations_table(iface.get("operations") or []))
-            lines.append("")
-    else:
-        lines.append("—")
         lines.append("")
 
-    lines.extend(["### 4.5 数据模型与表结构", ""])
-    if design.data_model:
-        lines.append("**逻辑模型：**")
-        lines.append("")
-        for entity in design.data_model:
-            ename = entity.get("name", "?")
-            lines.append(f"- **{ename}**")
-            fields = entity.get("fields") or entity.get("attributes") or []
-            if fields:
-                lines.extend(
-                    [
-                        "",
-                        "| 字段 | 类型 | 可空 | 键 | 注释 |",
-                        "|------|------|------|-----|------|",
-                    ]
+    if design.interfaces or design.error_catalog:
+        lines.extend(["### 4.5 接口定义", ""])
+        if design.interfaces:
+            for iface in design.interfaces:
+                name = iface.name
+                file_path = iface.file
+                protocol = iface.protocol
+                domain = iface.code_domain or "—"
+                desc = iface.description
+                lines.append(
+                    f"#### {name}（`{file_path}` · `{protocol}` · `{domain}`）"
                 )
-                for field in fields:
-                    if not isinstance(field, dict):
-                        continue
-                    nullable = _yes_no(field.get("nullable"))
-                    pk = (
-                        "PK"
-                        if field.get("pk")
-                        else ("UK" if field.get("unique") else "—")
-                    )
-                    lines.append(
-                        f"| {field.get('name', '?')} | {field.get('type', '?')} | "
-                        f"{nullable} | {pk} | {field.get('description', '—')} |"
-                    )
-            lines.append("")
-    if design.table_schemas:
-        for table in design.table_schemas:
-            tname = table.get("name", "?")
-            storage = table.get("storage", "—")
-            lines.append(f"**表 `{tname}`**（`{storage}`）")
-            lines.append("")
-            columns = table.get("columns") or []
-            if columns:
-                lines.extend(
-                    [
-                        "| 字段 | 类型 | 可空 | 键 | 注释 |",
-                        "|------|------|------|-----|------|",
-                    ]
+                if desc:
+                    lines.append("")
+                    lines.append(desc)
+                    lines.append("")
+                lines.extend(_format_operations_table(iface.operations))
+                lines.append("")
+        if design.error_catalog:
+            lines.extend(
+                [
+                    "#### 错误码目录",
+                    "",
+                    "| 码 | 场景 | 可重试 | 说明 |",
+                    "|----|------|--------|------|",
+                ]
+            )
+            for err in design.error_catalog:
+                when = err.when or "—"
+                message = err.message or "—"
+                lines.append(
+                    f"| `{err.code}` | {when} | {_yes_no(err.retryable)} | {message} |"
                 )
-                for col in columns:
-                    nullable = _yes_no(col.get("nullable"))
-                    pk = "PK" if col.get("pk") else ("UK" if col.get("unique") else "—")
-                    lines.append(
-                        f"| {col.get('name', '?')} | {col.get('type', '?')} | "
-                        f"{nullable} | {pk} | {col.get('description', '—')} |"
-                    )
-                lines.append("")
-            indexes = table.get("indexes") or []
-            if indexes:
-                lines.append("**索引：**")
-                for idx in indexes:
-                    cols = ", ".join(idx.get("columns") or [])
-                    purpose = idx.get("purpose") or ""
-                    lines.append(f"- `{idx.get('name', '?')}` ({cols}) — {purpose}")
-                lines.append("")
-    if not design.data_model and not design.table_schemas:
-        lines.append("—")
-        lines.append("")
+            lines.append("")
 
-    lines.extend(["### 4.6 流程与时序", ""])
-    if design.diagrams:
-        for diagram in design.diagrams:
-            path = diagram.path
+    if _should_render_section_46(design):
+        lines.extend(["### 4.6 存储结构", ""])
+        if design.data_model:
+            lines.append("#### 逻辑模型")
+            lines.append("")
+            for entity in design.data_model:
+                ename = entity.name
+                lines.append(f"- **{ename}**")
+                fields = entity.fields
+                if fields:
+                    lines.extend(
+                        [
+                            "",
+                            "| 字段 | 类型 | 可空 | 键 | 注释 |",
+                            "|------|------|------|-----|------|",
+                        ]
+                    )
+                    for field in fields:
+                        field_map = _as_mapping(field)
+                        nullable = _yes_no(field_map.get("nullable"))
+                        pk = (
+                            "PK"
+                            if field_map.get("pk")
+                            else ("UK" if field_map.get("unique") else "—")
+                        )
+                        fname = field_map.get("name", "?")
+                        ftype = field_map.get("type", "?")
+                        fdesc = field_map.get("description", "—")
+                        lines.append(
+                            f"| {fname} | {ftype} | {nullable} | {pk} | {fdesc} |"
+                        )
+                lines.append("")
+        if design.table_schemas:
+            for table in design.table_schemas:
+                tname = table.name
+                storage = table.storage
+                lines.append(f"#### 表 `{tname}`（`{storage}`）")
+                lines.append("")
+                columns = table.columns
+                if columns:
+                    lines.extend(
+                        [
+                            "| 字段 | 类型 | 可空 | 键 | 注释 |",
+                            "|------|------|------|-----|------|",
+                        ]
+                    )
+                    for col in columns:
+                        col_map = _as_mapping(col)
+                        nullable = _yes_no(col_map.get("nullable"))
+                        pk = (
+                            "PK"
+                            if col_map.get("pk")
+                            else ("UK" if col_map.get("unique") else "—")
+                        )
+                        cname = col_map.get("name", "?")
+                        ctype = col_map.get("type", "?")
+                        cdesc = col_map.get("description", "—")
+                        lines.append(
+                            f"| {cname} | {ctype} | {nullable} | {pk} | {cdesc} |"
+                        )
+                    lines.append("")
+                indexes = table.indexes
+                if indexes:
+                    lines.append("**索引：**")
+                    for idx in indexes:
+                        idx_map = _as_mapping(idx)
+                        cols = ", ".join(idx_map.get("columns") or [])
+                        purpose = idx_map.get("purpose") or ""
+                        lines.append(
+                            f"- `{idx_map.get('name', '?')}` ({cols}) — {purpose}"
+                        )
+                    lines.append("")
+        if design.transaction_constraints:
+            lines.extend(["#### 一致性与事务", ""])
+            lines.extend(
+                [
+                    "| ID | 范围 | 边界 | 说明 |",
+                    "|----|------|------|------|",
+                ]
+            )
+            for tx in design.transaction_constraints:
+                lines.append(
+                    f"| {tx.id} | {tx.scope} | {tx.boundary} | {tx.notes or '—'} |"
+                )
+            lines.append("")
+
+    flow_diagrams = _flow_diagrams(design)
+    if flow_diagrams:
+        lines.extend(["### 4.7 流程与时序", ""])
+        for diagram in flow_diagrams:
             kind = (
                 diagram.kind.value if hasattr(diagram.kind, "value") else diagram.kind
             )
-            title = diagram.title or kind
-            lines.append(f"- **{title}** (`{kind}`): `{path}`")
-    else:
-        lines.append("- 见 Run 目录 `*.mmd`")
-    lines.append("")
+            title_d = diagram.title or kind
+            lines.append(f"- **{title_d}** (`{kind}`): `{diagram.path}`")
+        lines.append("")
 
-    lines.extend(["## 5. 方案对比", ""])
-    decisions = (
-        (design.architecture or {}).get("decisions") if design.architecture else None
-    )
-    if decisions:
-        lines.extend(
-            [
-                "| 方案 | 决策 | 理由 |",
-                "|------|------|------|",
-            ]
-        )
-        for decision in decisions:
-            if isinstance(decision, dict):
-                lines.append(
-                    f"| {decision.get('option', '—')} | "
-                    f"{decision.get('decision', '—')} | "
-                    f"{decision.get('rationale', '—')} |"
-                )
-    else:
-        lines.append("—")
-    lines.extend(["", "## 6. 横切关注点", ""])
-
-    lines.extend(["### 6.1 数据一致性与事务", ""])
-    if design.transaction_constraints:
-        lines.extend(
-            [
-                "| ID | 范围 | 边界 | 说明 |",
-                "|----|------|------|------|",
-            ]
-        )
-        for tx in design.transaction_constraints:
-            lines.append(
-                f"| {tx.get('id', '—')} | {tx.get('scope', '—')} | "
-                f"{tx.get('boundary', '—')} | {tx.get('notes', '—')} |"
-            )
-    else:
-        lines.append("—")
-    lines.append("")
-
-    lines.extend(["### 6.2 异常与错误码", ""])
-    if design.error_catalog:
-        lines.extend(
-            [
-                "| 码 | 场景 | 可重试 | 说明 |",
-                "|----|------|--------|------|",
-            ]
-        )
-        for err in design.error_catalog:
-            when = err.when or "—"
-            message = err.message or "—"
-            lines.append(
-                f"| `{err.code}` | {when} | {_yes_no(err.retryable)} | {message} |"
-            )
-    else:
-        lines.append("—")
-    lines.append("")
-
-    if design.cross_cutting:
-        for key, value in design.cross_cutting.items():
-            if value and key not in {"test_strategy", "monitoring"}:
-                lines.append(f"**{key}：** {value}")
-                lines.append("")
-
-    lines.extend(["## 7. 性能与可靠性", ""])
     if design.non_functional:
+        lines.extend(["", "## 5. 非功能性目标", ""])
         lines.extend(
             [
                 "| ID | 指标 | 目标 | 验证 |",
@@ -332,37 +376,33 @@ def render_design_md(design: DesignArtifact) -> str:
         )
         for nfr in design.non_functional:
             lines.append(
-                f"| {nfr.get('id', '—')} | {nfr.get('metric', '—')} | "
-                f"{nfr.get('target', '—')} | {nfr.get('verification', '—')} |"
+                f"| {nfr.id or '—'} | {nfr.metric} | "
+                f"{nfr.target} | {nfr.verification or '—'} |"
+            )
+        lines.append("")
+
+    lines.extend(["", "## 6. 测试用例列表", ""])
+    if design.test_cases:
+        lines.extend(
+            [
+                "| ID | 类型 | 标题 | 期望 | 覆盖 | 错误码 |",
+                "|----|------|------|------|------|--------|",
+            ]
+        )
+        for tc in design.test_cases:
+            kind = tc.kind
+            if hasattr(kind, "value"):
+                kind = kind.value
+            title_tc = tc.title or tc.description or "—"
+            expected = tc.expected or "—"
+            cover_text = _join_list(tc.covers) if tc.covers else "—"
+            error_code = tc.error_code or "—"
+            lines.append(
+                f"| {tc.id} | {kind or '—'} | {title_tc} | {expected} | "
+                f"{cover_text} | {error_code} |"
             )
     else:
-        lines.append("N/A")
-    lines.extend(["", "## 8. 测试计划", ""])
-    test_strategy = (design.cross_cutting or {}).get("test_strategy")
-    if test_strategy:
-        if isinstance(test_strategy, dict):
-            approach = test_strategy.get("approach", "—")
-            paths = test_strategy.get("paths") or []
-            lines.append(f"- **方式：** {approach}")
-            if paths:
-                lines.append(f"- **路径：** {', '.join(f'`{p}`' for p in paths)}")
-        else:
-            lines.append(str(test_strategy))
-    elif design.test_cases:
-        lines.append(f"见附录 D（{len(design.test_cases)} 条用例）。")
-    else:
         lines.append("—")
-    lines.extend(["", "## 9. 监控与告警", ""])
-    monitoring = (design.cross_cutting or {}).get("monitoring")
-    if monitoring:
-        lines.append(str(monitoring))
-    else:
-        lines.append("N/A")
-    lines.extend(["", "## 10. 待澄清项", ""])
-    if design.notes:
-        lines.append(design.notes)
-    else:
-        lines.append("None")
     lines.append("")
 
     lines.extend(["## 附录 A. 需求追溯", ""])
@@ -374,16 +414,12 @@ def render_design_md(design: DesignArtifact) -> str:
             ]
         )
         for row in design.traceability:
-            spec_id = row.get("spec_ref_id") or row.get("id") or "—"
-            ref = (
-                row.get("design_ref")
-                or row.get("design_element")
-                or row.get("design_ref_id")
-                or "—"
-            )
+            spec_id = row.spec_ref_id or "—"
+            ref = row.design_ref or "—"
             lines.append(f"| {spec_id} | {ref} |")
     else:
         lines.append("—")
+
     lines.extend(["", "## 附录 B. 文件变更计划", ""])
     if design.file_plan:
         lines.extend(
@@ -393,17 +429,15 @@ def render_design_md(design: DesignArtifact) -> str:
             ]
         )
         for item in design.file_plan:
-            path = item.get("path", "—")
-            purpose = (
-                item.get("purpose")
-                or item.get("operation")
-                or item.get("action")
-                or item.get("reason")
-                or "—"
-            )
+            action = item.action
+            if hasattr(action, "value"):
+                action = action.value
+            path = item.path
+            purpose = item.reason or str(action)
             lines.append(f"| `{path}` | {purpose} |")
     else:
         lines.append("—")
+
     lines.extend(["", "## 附录 C. 开发任务分解", ""])
     if design.dev_tasks:
         lines.extend(
@@ -421,38 +455,17 @@ def render_design_md(design: DesignArtifact) -> str:
             )
     else:
         lines.append("—")
-    lines.extend(["", "## 附录 D. 测试用例设计", ""])
-    if design.test_cases:
-        lines.extend(
-            [
-                "| ID | 类型 | 标题 | 期望 | 覆盖 | 错误码 |",
-                "|----|------|------|------|------|--------|",
-            ]
-        )
-        for tc in design.test_cases:
-            kind = tc.get("kind") or "—"
-            title = tc.get("title") or tc.get("description") or "—"
-            expected = tc.get("expected") or "—"
-            covers = tc.get("covers")
-            if isinstance(covers, list):
-                cover_text = _join_list(covers)
-            else:
-                cover_text = str(covers) if covers else "—"
-            error_code = tc.get("error_code") or "—"
-            lines.append(
-                f"| {tc.get('id', '—')} | {kind} | {title} | {expected} | "
-                f"{cover_text} | {error_code} |"
-            )
-    else:
-        lines.append("—")
-    lines.extend(["", "## 附录 E. 与现有代码对照", ""])
-    code_delta = (
-        (design.architecture or {}).get("code_delta") if design.architecture else None
-    )
+
+    lines.extend(["", "## 附录 D. 与现有代码对照", ""])
+    code_delta = design.architecture.code_delta if design.architecture else None
     if code_delta:
-        lines.append(str(code_delta))
+        lines.append(code_delta.summary)
+        if code_delta.notes:
+            lines.append("")
+            lines.append(code_delta.notes)
     else:
-        lines.append("`code_root` 空仓库或增量任务；详见 `file_plan`。")
+        lines.append("`code_root` 空仓库或增量任务；详见附录 B 文件变更计划。")
+
     lines.extend(
         [
             "",

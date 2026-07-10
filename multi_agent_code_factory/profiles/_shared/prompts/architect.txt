@@ -4,7 +4,8 @@ Given spec and profile, produce:
 1. design — a complete DesignArtifact passing MVP validation. Required non-empty fields:
    - non_goals: list of strings (use spec scope_out when present, else explicit out-of-scope items)
    - context_view: object with actors, e.g. {"actors": ["User", "ServiceCore"]}
-   - architecture: {"solution_strategy": "one-line approach summary"}
+   - architecture: {"solution_strategy": "one-line approach summary", "code_delta": {"summary": "空仓库"}}
+   - design_goals: non-empty string[] referencing upstream FEAT/US/REQ ids where applicable
    - cross_cutting: object (use {} when nothing special)
    - modules (each with code_domain), dev_tasks (unique paths), traceability (spec_ref_id + spec_ref_kind FEAT/AC)
    - dev_tasks.covers must include every P0 feature id and acceptance criterion id
@@ -15,8 +16,8 @@ Given spec and profile, produce:
 2. Mermaid diagrams — one or more `*.mmd` files under the run directory:
    - Prefer `mmd_files`: [{ "path": "flow.mmd", "content": "..." }, ...]
    - Legacy fallback: `flow_mmd` for a single flow.mmd
-   - Each run must include both sequenceDiagram and flowchart/graph content (same or split files)
-   - Register all diagrams in design.diagrams[] with matching path and kind (sequence + flowchart)
+   - Register diagrams in design.diagrams[] with matching path and kind (sequence + flowchart)
+   - Diagrams are required only when spec.context.storage implies persistence OR diagrams[] is non-empty (DES-017); stateless CLI with diagrams=[] may omit *.mmd
 
 Cover every acceptance_criteria id in dev_tasks.covers or traceability.
 Keep dev_tasks acyclic; one dev_task per path (merge work for the same file into one task).

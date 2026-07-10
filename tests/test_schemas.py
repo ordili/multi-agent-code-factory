@@ -123,7 +123,7 @@ def test_design_coerces_traceability_dict_to_list() -> None:
         }
     )
     assert len(design.traceability) == 1
-    assert design.traceability[0]["spec_ref_id"] == "FEAT-1"
+    assert design.traceability[0].spec_ref_id == "FEAT-1"
 
 
 def test_design_coerces_error_catalog_error_code_alias() -> None:
@@ -167,8 +167,9 @@ def test_design_coerces_top_level_field_aliases() -> None:
         }
     )
     assert design.architecture is not None
-    assert design.architecture["decisions"][0]["option"] == "JSON"
-    assert design.architecture["code_delta"]["summary"] == "greenfield"
+    assert design.architecture.decisions[0].option == "JSON"
+    assert design.architecture.code_delta is not None
+    assert design.architecture.code_delta.summary == "greenfield"
     assert design.cross_cutting is not None
     assert design.cross_cutting["test_strategy"]["approach"] == "pytest"
     assert design.cross_cutting["configuration"] == "./data"
@@ -186,7 +187,7 @@ def test_architect_llm_output_accepts_coerced_design_traceability() -> None:
             }
         }
     )
-    assert output.design.traceability[0]["spec_ref_kind"] == "FEAT"
+    assert output.design.traceability[0].spec_ref_kind == "FEAT"
 
 
 def test_test_report_example() -> None:

@@ -1,4 +1,4 @@
-"""Tests for task tier helpers and tier-gated DES rules."""
+"""Tests for design rule trigger helpers."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.validators.design_rules import validate_design_rules
-from multi_agent_code_factory.validators.task_tier import (
+from multi_agent_code_factory.validators.design_triggers import (
     is_stateless_design,
     requires_table_schemas,
     requires_transaction_constraints,
@@ -47,10 +47,14 @@ def test_todo_fixture_still_requires_table_schemas(snippets_dir: Path) -> None:
     )
     design = _load_design("design-todo-valid.json")
     assert requires_table_schemas(design, spec) is True
-    assert requires_transaction_constraints(design, spec) is True
+    assert requires_transaction_constraints(design, spec) is (
+        spec.consistency_profile.multi_writer
+    )
 
 
-def test_filesystem_dep_requires_transaction_constraints(snippets_dir: Path) -> None:
+def test_filesystem_dep_does_not_require_transaction_constraints(
+    snippets_dir: Path,
+) -> None:
     spec = SpecArtifact.model_validate(
         load_snippet_json(snippets_dir, "spec-calculator-stateless.json")
     )
@@ -68,4 +72,4 @@ def test_filesystem_dep_requires_transaction_constraints(snippets_dir: Path) -> 
         }
     ]
     design = DesignArtifact.model_validate(payload)
-    assert requires_transaction_constraints(design, spec) is True
+    assert requires_transaction_constraints(design, spec) is False

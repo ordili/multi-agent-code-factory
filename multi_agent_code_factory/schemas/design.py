@@ -65,6 +65,197 @@ class DiagramRef(BaseModel):
     title: str | None = None
 
 
+class ExternalSystemRef(BaseModel):
+    name: str
+    description: str | None = None
+    kind: str | None = None
+
+
+class ContextView(BaseModel):
+    actors: list[str] = Field(default_factory=list)
+    external_systems: list[ExternalSystemRef | str] = Field(default_factory=list)
+    boundaries: list[str] = Field(default_factory=list)
+    notes: str | None = None
+
+
+class FieldDef(BaseModel):
+    name: str
+    type: str
+    required: bool | None = None
+    description: str | None = None
+    notes: str | None = None
+    nullable: bool | None = None
+    pk: bool | None = None
+    unique: bool | None = None
+
+
+class DataEntity(BaseModel):
+    name: str
+    description: str | None = None
+    storage: str | None = None
+    fields: list[FieldDef] = Field(default_factory=list)
+    notes: str | None = None
+
+
+class ParamSpec(BaseModel):
+    name: str
+    type: str
+    required: bool
+    description: str = ""
+    default: Any | None = None
+    schema_ref: str | None = None
+
+
+class OperationSpec(BaseModel):
+    name: str
+    summary: str
+    description: str | None = None
+    inputs: list[ParamSpec] = Field(default_factory=list)
+    outputs: list[ParamSpec] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
+    http: Any | None = None
+    idempotent: bool | None = None
+    notes: str | None = None
+
+
+class InterfaceSpec(BaseModel):
+    name: str
+    module_ref: str
+    file: str = ""
+    protocol: str = "internal"
+    description: str | None = None
+    operations: list[OperationSpec] = Field(default_factory=list)
+    code_domain: str | None = None
+
+
+class ColumnDef(BaseModel):
+    name: str
+    type: str
+    nullable: bool
+    description: str
+    pk: bool | None = None
+    unique: bool | None = None
+
+
+class IndexDef(BaseModel):
+    name: str
+    columns: list[str] = Field(default_factory=list)
+    unique: bool | None = None
+    type: str | None = None
+    purpose: str
+
+
+class AuditPolicy(BaseModel):
+    require_created_at: bool | None = None
+    require_updated_at: bool | None = None
+    require_version: bool | None = None
+    notes: str | None = None
+
+
+class TableSchema(BaseModel):
+    name: str
+    storage: str
+    columns: list[ColumnDef] = Field(default_factory=list)
+    indexes: list[IndexDef] = Field(default_factory=list)
+    audit_policy: AuditPolicy | None = None
+    notes: str | None = None
+
+
+class TransactionConstraint(BaseModel):
+    id: str
+    scope: str
+    boundary: str
+    isolation: str | None = None
+    idempotency: str | None = None
+    consistency_ref: str | None = None
+    notes: str | None = None
+
+
+class AdrDecision(StrEnum):
+    ACCEPTED = "accepted"
+    REJECTED = "rejected"
+    DEFERRED = "deferred"
+
+
+class AdrItem(BaseModel):
+    option: str
+    decision: AdrDecision | str
+    id: str | None = None
+    rationale: str | None = None
+
+
+class CodeDelta(BaseModel):
+    summary: str
+    baseline_ref: str | None = None
+    notes: str | None = None
+
+
+class ArchitectureOverview(BaseModel):
+    solution_strategy: str
+    style: str | None = None
+    decisions: list[AdrItem] = Field(default_factory=list)
+    code_delta: CodeDelta | None = None
+
+
+class FilePlanAction(StrEnum):
+    CREATE = "create"
+    MODIFY = "modify"
+    DELETE = "delete"
+
+
+class FilePlanItem(BaseModel):
+    path: str
+    action: FilePlanAction | str
+    reason: str | None = None
+
+
+class TestCaseKind(StrEnum):
+    HAPPY = "happy"
+    NEGATIVE = "negative"
+    BOUNDARY = "boundary"
+
+
+class TestCase(BaseModel):
+    id: str
+    kind: TestCaseKind | str
+    title: str | None = None
+    steps: str | None = None
+    expected: str | None = None
+    covers: list[str] = Field(default_factory=list)
+    error_code: str | None = None
+    description: str | None = None
+
+
+class TraceRow(BaseModel):
+    spec_ref_id: str | None = None
+    spec_ref_kind: str | None = None
+    design_ref: str | None = None
+    feature_id: str | None = None
+
+
+class NfrSpec(BaseModel):
+    metric: str
+    target: str
+    id: str | None = None
+    verification: str | None = None
+    notes: str | None = None
+
+
+class TestStrategy(BaseModel):
+    approach: str
+    paths: list[str] = Field(default_factory=list)
+    notes: str | None = None
+
+
+def model_field(obj: Any, key: str, default: Any = None) -> Any:
+    """Read a field from a Pydantic model or legacy dict payload."""
+    if obj is None:
+        return default
+    if isinstance(obj, dict):
+        return obj.get(key, default)
+    return getattr(obj, key, default)
+
+
 def _normalize_diagram_kind(kind: Any) -> Any:
     if not isinstance(kind, str):
         return kind
@@ -102,6 +293,40 @@ def _coerce_error_catalog(value: Any) -> list[Any]:
             patched = dict(item)
             if "code" not in patched and isinstance(patched.get("error_code"), str):
                 patched["code"] = patched["error_code"]
+            normalized.append(patched)
+        else:
+            normalized.append(item)
+    return normalized
+
+
+def _coerce_data_model(value: Any) -> list[Any]:
+    normalized: list[Any] = []
+    for item in _coerce_list(value):
+        if isinstance(item, dict):
+            patched = dict(item)
+            if not patched.get("fields"):
+                if patched.get("attributes"):
+                    patched["fields"] = patched["attributes"]
+                elif patched.get("columns"):
+                    patched["fields"] = patched["columns"]
+            normalized.append(patched)
+        else:
+            normalized.append(item)
+    return normalized
+
+
+def _coerce_traceability(value: Any) -> list[Any]:
+    normalized: list[Any] = []
+    for item in _coerce_list(value):
+        if isinstance(item, dict):
+            patched = dict(item)
+            if not patched.get("spec_ref_id") and patched.get("feature_id"):
+                patched["spec_ref_id"] = patched["feature_id"]
+            if not patched.get("design_ref"):
+                for legacy in ("design_element", "design_ref_id"):
+                    if patched.get(legacy):
+                        patched["design_ref"] = patched[legacy]
+                        break
             normalized.append(patched)
         else:
             normalized.append(item)
@@ -177,6 +402,12 @@ def _merge_top_level_aliases(payload: dict[str, Any]) -> None:
     if architecture_updated or payload.get("architecture") is not None:
         payload["architecture"] = architecture
 
+    if isinstance(payload.get("architecture"), dict):
+        arch = dict(payload["architecture"])
+        if not str(arch.get("solution_strategy", "")).strip():
+            arch.setdefault("solution_strategy", "Layered implementation per modules[]")
+            payload["architecture"] = arch
+
     if "test_strategy" in payload:
         test_strategy = payload.pop("test_strategy")
         if test_strategy:
@@ -202,6 +433,10 @@ def coerce_design_payload(data: Any) -> Any:
                 payload[key] = _coerce_diagrams(payload[key])
             elif key == "error_catalog":
                 payload[key] = _coerce_error_catalog(payload[key])
+            elif key == "data_model":
+                payload[key] = _coerce_data_model(payload[key])
+            elif key == "traceability":
+                payload[key] = _coerce_traceability(payload[key])
             else:
                 payload[key] = _coerce_list(payload[key])
     if "non_functional" in payload and isinstance(payload["non_functional"], dict):
@@ -257,17 +492,17 @@ class DesignArtifact(BaseModel):
     dev_tasks: list[DevTask] = Field(default_factory=list)
     diagrams: list[DiagramRef] = Field(default_factory=list)
     hitl_flags: list[str] = Field(default_factory=list)
-    context_view: dict[str, Any] | None = None
-    architecture: dict[str, Any] | None = None
-    interfaces: list[dict[str, Any]] = Field(default_factory=list)
-    data_model: list[dict[str, Any]] = Field(default_factory=list)
-    table_schemas: list[dict[str, Any]] = Field(default_factory=list)
-    traceability: list[dict[str, Any]] = Field(default_factory=list)
-    file_plan: list[dict[str, Any]] = Field(default_factory=list)
-    test_cases: list[dict[str, Any]] = Field(default_factory=list)
+    context_view: ContextView | None = None
+    architecture: ArchitectureOverview | None = None
+    interfaces: list[InterfaceSpec] = Field(default_factory=list)
+    data_model: list[DataEntity] = Field(default_factory=list)
+    table_schemas: list[TableSchema] = Field(default_factory=list)
+    traceability: list[TraceRow] = Field(default_factory=list)
+    file_plan: list[FilePlanItem] = Field(default_factory=list)
+    test_cases: list[TestCase] = Field(default_factory=list)
     cross_cutting: dict[str, Any] | None = None
-    non_functional: list[dict[str, Any]] | None = None
-    transaction_constraints: list[dict[str, Any]] = Field(default_factory=list)
+    non_functional: list[NfrSpec] | None = None
+    transaction_constraints: list[TransactionConstraint] = Field(default_factory=list)
     notes: str | None = None
 
     @model_validator(mode="before")

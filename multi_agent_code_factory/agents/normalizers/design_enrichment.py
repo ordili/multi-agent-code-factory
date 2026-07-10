@@ -2,8 +2,15 @@
 
 from __future__ import annotations
 
-from multi_agent_code_factory.schemas.design import DesignArtifact, DevTask
-from multi_agent_code_factory.schemas.spec import SpecArtifact
+from multi_agent_code_factory.schemas.design import (
+    ArchitectureOverview,
+    CodeDelta,
+    ContextView,
+    DesignArtifact,
+    DevTask,
+    TraceRow,
+)
+from multi_agent_code_factory.schemas.spec import FeaturePriority, SpecArtifact
 
 
 def _dedupe_dev_tasks_by_path(tasks: list[DevTask]) -> list[DevTask]:
@@ -30,18 +37,20 @@ def _dedupe_dev_tasks_by_path(tasks: list[DevTask]) -> list[DevTask]:
     return list(by_path.values())
 
 
-def _normalize_traceability_rows(
-    rows: list[dict[str, object]],
-) -> list[dict[str, object]]:
-    normalized: list[dict[str, object]] = []
+def _normalize_traceability_rows(rows: list[TraceRow]) -> list[TraceRow]:
+    normalized: list[TraceRow] = []
     for row in rows:
-        patched = dict(row)
-        spec_ref_id = patched.get("spec_ref_id")
-        feature_id = patched.get("feature_id")
-        if not spec_ref_id and isinstance(feature_id, str):
-            patched["spec_ref_id"] = feature_id
-            patched.setdefault("spec_ref_kind", "FEAT")
-        normalized.append(patched)
+        if row.spec_ref_id or not row.feature_id:
+            normalized.append(row)
+            continue
+        normalized.append(
+            row.model_copy(
+                update={
+                    "spec_ref_id": row.feature_id,
+                    "spec_ref_kind": row.spec_ref_kind or "FEAT",
+                }
+            )
+        )
     return normalized
 
 
@@ -55,23 +64,47 @@ def _default_non_goals(spec: SpecArtifact | None) -> list[str]:
     ]
 
 
-def _default_context_view(design: DesignArtifact) -> dict[str, object]:
+def _default_context_view(design: DesignArtifact) -> ContextView:
     actors = [module.name for module in design.modules if module.name.strip()]
     if not actors:
         actors = ["User", "Application"]
-    return {"actors": actors}
+    return ContextView(actors=actors)
+
+
+def _default_design_goals(spec: SpecArtifact | None) -> list[str]:
+    if spec is None:
+        return ["Deliver scoped features with automated test coverage"]
+    goals: list[str] = []
+    for feature in spec.features:
+        if feature.priority == FeaturePriority.P0:
+            goals.append(f"{feature.id}: {feature.description}")
+    if goals:
+        return goals
+    return [spec.summary] if spec.summary.strip() else [spec.title]
 
 
 def _default_architecture(
     design: DesignArtifact,
     spec: SpecArtifact | None,
-) -> dict[str, object]:
+) -> ArchitectureOverview:
     strategy = design.summary
     if not strategy and spec is not None:
         strategy = spec.summary or spec.title
     if not strategy:
         strategy = "Layered modules with dev_tasks mapped to file paths"
-    return {"solution_strategy": strategy}
+    return ArchitectureOverview(
+        solution_strategy=strategy,
+        code_delta=CodeDelta(summary="空仓库"),
+    )
+
+
+def _ensure_code_delta(design: DesignArtifact) -> ArchitectureOverview | None:
+    architecture = design.architecture
+    if architecture is None:
+        return None
+    if architecture.code_delta and architecture.code_delta.summary.strip():
+        return None
+    return architecture.model_copy(update={"code_delta": CodeDelta(summary="空仓库")})
 
 
 def enrich_design_for_validation(
@@ -94,13 +127,20 @@ def enrich_design_for_validation(
     if not design.non_goals:
         updates["non_goals"] = _default_non_goals(spec)
 
+    if not any(str(goal).strip() for goal in design.design_goals):
+        updates["design_goals"] = _default_design_goals(spec)
+
     if not design.context_view:
         updates["context_view"] = _default_context_view(design)
 
-    architecture = design.architecture or {}
-    solution_strategy = architecture.get("solution_strategy")
+    architecture = design.architecture
+    solution_strategy = architecture.solution_strategy if architecture else None
     if not isinstance(solution_strategy, str) or not solution_strategy.strip():
         updates["architecture"] = _default_architecture(design, spec)
+    else:
+        patched = _ensure_code_delta(design)
+        if patched is not None:
+            updates["architecture"] = patched
 
     if design.cross_cutting is None:
         updates["cross_cutting"] = {}

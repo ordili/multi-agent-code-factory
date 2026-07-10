@@ -13,15 +13,16 @@ def test_render_design_md_contains_sections() -> None:
         json.loads(fixture.read_text(encoding="utf-8"))
     )
     md = render_design_md(design)
-    assert "# Design Doc — CLI Todo App" in md
+    assert "# 设计文档 — CLI Todo App" in md
     assert "## 1. 背景与上下文" in md
-    assert "### 4.2 模块划分" in md
+    assert "### 4.3 模块划分" in md
     assert "`STORE`" in md
-    assert "## 5. 方案对比" in md
-    assert "## 9. 监控与告警" in md
-    assert "## 10. 待澄清项" in md
+    assert "## 6. 测试用例列表" in md
+    assert "| 类型 |" in md
+    assert "## 附录 D. 与现有代码对照" in md
     assert "Rollout" not in md
-    assert "## 附录 D. 测试用例设计" in md
+    assert "## 5. 方案对比" not in md
+    assert "## 10. 待澄清项" not in md
     assert "spec_ref: `CLI Todo App`" in md
 
 
@@ -39,6 +40,6 @@ def test_render_design_md_from_calculator_run() -> None:
     except ValidationError:
         return
     md = render_design_md(design)
-    assert "# Design Doc — CLI Calculator" in md
-    assert "### 4.4 接口定义" in md
+    assert "# 设计文档 — CLI Calculator" in md
+    assert "### 4.5 接口定义" in md
     assert "ERR" in md or "E00" in md

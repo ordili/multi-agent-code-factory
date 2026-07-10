@@ -1,4 +1,4 @@
-"""DES-001 至 DES-104、DES-011、DES-301 校验规则（MVP 白名单）。"""
+"""DES-001 至 DES-104、DES-011、DES-035–036 校验规则（MVP 白名单）。"""
 
 from __future__ import annotations
 
@@ -12,7 +12,9 @@ from multi_agent_code_factory.validators._report import error
 from multi_agent_code_factory.validators.design_rules_extended import (
     validate_design_extended_rules,
 )
-from multi_agent_code_factory.validators.task_tier import is_spec_non_trivial
+from multi_agent_code_factory.validators.design_triggers import (
+    spec_requires_non_functional,
+)
 
 
 def _path_escapes(path: str) -> bool:
@@ -130,14 +132,35 @@ def validate_design_rules(
         violations.append(
             error("DES-008", "context_view must not be empty", field="context_view")
         )
-    architecture = design.architecture or {}
-    solution_strategy = architecture.get("solution_strategy")
+    architecture = design.architecture
+    solution_strategy = architecture.solution_strategy if architecture else None
     if not isinstance(solution_strategy, str) or not solution_strategy.strip():
         violations.append(
             error(
                 "DES-008",
                 "architecture.solution_strategy must not be empty",
                 field="architecture.solution_strategy",
+            )
+        )
+
+    non_empty_goals = [goal for goal in design.design_goals if str(goal).strip()]
+    if not non_empty_goals:
+        violations.append(
+            error(
+                "DES-035",
+                "design_goals must not be empty",
+                field="design_goals",
+            )
+        )
+
+    code_delta = design.architecture.code_delta if design.architecture else None
+    summary = code_delta.summary if code_delta else None
+    if not isinstance(summary, str) or not summary.strip():
+        violations.append(
+            error(
+                "DES-036",
+                "architecture.code_delta.summary must not be empty",
+                field="architecture.code_delta",
             )
         )
 
@@ -154,9 +177,9 @@ def validate_design_rules(
         ]
         traced: set[str] = set()
         for row in design.traceability:
-            ref_id = row.get("spec_ref_id")
+            ref_id = row.spec_ref_id
             if not isinstance(ref_id, str):
-                feature_id = row.get("feature_id")
+                feature_id = row.feature_id
                 if isinstance(feature_id, str):
                     ref_id = feature_id
             if isinstance(ref_id, str):
@@ -180,7 +203,11 @@ def validate_design_rules(
             error("DES-010", "cross_cutting must be present", field="cross_cutting")
         )
 
-    if spec is not None and is_spec_non_trivial(spec) and not design.non_functional:
+    if (
+        spec is not None
+        and spec_requires_non_functional(spec)
+        and not design.non_functional
+    ):
         violations.append(
             error(
                 "DES-011",
@@ -195,8 +222,8 @@ def validate_design_rules(
         for task in design.dev_tasks:
             covered_ac.update(task.covers)
         for row in design.traceability:
-            ref_id = row.get("spec_ref_id")
-            ref_kind = row.get("spec_ref_kind")
+            ref_id = row.spec_ref_id
+            ref_kind = row.spec_ref_kind
             if ref_kind == "AC" and isinstance(ref_id, str):
                 covered_ac.add(ref_id)
         for ac in spec.acceptance_criteria:
@@ -258,7 +285,7 @@ def validate_design_rules(
     if design.file_plan:
         dev_task_paths = {task.path for task in design.dev_tasks}
         for plan_item in design.file_plan:
-            plan_path = plan_item.get("path")
+            plan_path = plan_item.path
             if isinstance(plan_path, str) and plan_path not in dev_task_paths:
                 violations.append(
                     error(

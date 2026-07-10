@@ -17,7 +17,7 @@
 | **运行配置**    | [README.md](./README.md) · [profiles.md](../profiles.md)                                       | `validation.design.*` 开关语义（详见 README §2）；YAML 载体见 profiles。 |
 
 
-**rule_id 合计：** **55** 条（§1 JSON **38** · §2 `design.md` / `*.mmd` **16** · §3 HITL **1**）
+**rule_id 合计：** **57** 条（§1 JSON **40** · §2 `design.md` / `*.mmd` **16** · §3 HITL **1**）
 
 **表列图例：** `必检` · `触发条件` · `严重度` · `字段` / `判定`（§2 为 `检查对象`）
 
@@ -44,9 +44,9 @@
 | 字段                                     | schema 是否必填 | 定稿 JSON 规则              | 说明                                                                             |
 | -------------------------------------- | ----------- | ----------------------- | ------------------------------------------------------------------------------ |
 | `summary`                              | 是           | **无** non-empty 规则      | **DES-102** 仅在 [prd-spec `scope_out`](../artifact-schemas/prd-spec.md) 非空时交叉检查 |
-| `design_goals`                         | 是           | **无**                   | 人读 §2 由 **DES-201**（`design.md`）覆盖                                             |
+| `design_goals`                         | 是           | **DES-035**              | 非空；宜引用上游 `FEAT-*` / `US-*` / `REQ-*`                                      |
 | `file_plan`                            | 是           | **DES-104**（仅当非空）       | 空 `[]` 不触发 path 一致性                                                            |
-| `architecture.code_delta`              | 是           | **无** JSON 规则           | 人读附录 D 由 **DES-202** 覆盖                                                        |
+| `architecture.code_delta`              | 是           | **DES-036**              | `summary` 非空；greenfield 可 `{ "summary": "空仓库" }`                              |
 | `interfaces`                           | 是           | **DES-032**、**DES-033** | 顶层 `interfaces[]`；每模块（`code_domain=SYS` 豁免，见 §1.6 脚注）至少一条                      |
 | `modules`、`dev_tasks`、`traceability` 等 | 是           | **DES-001～009** 等       | 见 [§1](#1-designjsonerror--warn)                                               |
 
@@ -77,6 +77,8 @@
 | rule_id   | 严重度   | 必检  | 触发条件                                                           | 字段                                                          | 判定                                                         |
 | --------- | ----- | --- | -------------------------------------------------------------- | ----------------------------------------------------------- | ---------------------------------------------------------- |
 | `DES-008` | error | 是   | —                                                              | `non_goals`、`context_view`、`architecture.solution_strategy` | 非空                                                         |
+| `DES-035` | error | 是   | —                                                              | `design_goals`                                              | 非空                                                         |
+| `DES-036` | error | 是   | —                                                              | `architecture.code_delta.summary`                           | 非空（greenfield 可「空仓库」）                                      |
 | `DES-009` | error | 是   | —                                                              | `traceability`                                              | 非空；P0 `FEAT` 须在 `traceability` 或 `dev_tasks[].covers` 中可追溯 |
 | `DES-010` | error | 是   | —                                                              | `cross_cutting`                                             | 须存在（可为 `{}`）                                               |
 | `DES-101` | error | 条件  | Run 含 `spec.json`（[prd-spec](../artifact-schemas/prd-spec.md)） | `traceability`、`dev_tasks[].covers`                         | 覆盖全部 `acceptance_criteria[].id`                            |

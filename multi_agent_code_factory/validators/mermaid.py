@@ -6,8 +6,10 @@ import re
 from pathlib import Path
 
 from multi_agent_code_factory.schemas.design import DesignArtifact, DiagramKind
+from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.schemas.validation_report import Violation
 from multi_agent_code_factory.validators._report import error, warn
+from multi_agent_code_factory.validators.design_triggers import requires_diagram_pair
 
 _SEQUENCE_RE = re.compile(r"^\s*sequenceDiagram\b", re.MULTILINE | re.IGNORECASE)
 _FLOWCHART_RE = re.compile(
@@ -43,9 +45,13 @@ def validate_mermaid_files(
     run_dir: Path | None,
     *,
     strict: bool = True,
+    spec: SpecArtifact | None = None,
 ) -> list[Violation]:
     """校验 Run 目录 *.mmd 可解析且含 sequence + flowchart。"""
     violations: list[Violation] = []
+    if not requires_diagram_pair(design, spec):
+        return violations
+
     severity = error if strict else warn
 
     if run_dir is None:

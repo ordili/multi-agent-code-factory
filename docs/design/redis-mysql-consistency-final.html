@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Redis 与 MySQL 一致性方案 — 10W TPS 同步双写</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --primary: #2563eb;
+      --primary-light: #eff6ff;
+      --success: #059669;
+      --success-bg: #ecfdf5;
+      --danger: #dc2626;
+      --danger-bg: #fef2f2;
+      --warn: #d97706;
+      --warn-bg: #fffbeb;
+      --code-bg: #f1f5f9;
+      --shadow: 0 1px 3px rgba(0,0,0,.08), 0 4px 12px rgba(0,0,0,.04);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    .page {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1e40af 0%, #2563eb 60%, #3b82f6 100%);
+      color: #fff;
+      border-radius: 16px;
+      padding: 40px 44px;
+      margin-bottom: 32px;
+      box-shadow: var(--shadow);
+    }
+
+    header h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: -.02em;
+    }
+
+    header .meta {
+      font-size: .9rem;
+      opacity: .85;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    header .meta span::before { content: "· "; opacity: .6; }
+    header .meta span:first-child::before { content: ""; }
+
+    .summary-box {
+      background: var(--primary-light);
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 32px;
+    }
+
+    .summary-box p {
+      font-size: 1.05rem;
+      color: #1e40af;
+      font-weight: 500;
+    }
+
+    section {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 28px 32px;
+      margin-bottom: 24px;
+      box-shadow: var(--shadow);
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    h2 .num {
+      background: var(--primary);
+      color: #fff;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .8rem;
+      flex-shrink: 0;
+    }
+
+    h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 20px 0 10px;
+      color: #334155;
+    }
+
+    p { margin-bottom: 12px; }
+
+    ul, ol { margin: 0 0 12px 20px; }
+    li { margin-bottom: 6px; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 16px;
+      font-size: .9rem;
+    }
+
+    th, td {
+      border: 1px solid var(--border);
+      padding: 10px 14px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f1f5f9;
+      font-weight: 600;
+      color: #475569;
+    }
+
+    tr:nth-child(even) td { background: #fafbfc; }
+
+    .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: .78rem;
+      font-weight: 600;
+    }
+
+    .tag-ok   { background: var(--success-bg); color: var(--success); }
+    .tag-no   { background: var(--danger-bg);  color: var(--danger); }
+    .tag-warn { background: var(--warn-bg);     color: var(--warn); }
+
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px 18px;
+      overflow-x: auto;
+      font-size: .85rem;
+      line-height: 1.6;
+      margin: 12px 0 16px;
+      font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+    }
+
+    code {
+      background: var(--code-bg);
+      padding: 1px 6px;
+      border-radius: 4px;
+      font-size: .88em;
+      font-family: "Cascadia Code", "Fira Code", Consolas, monospace;
+    }
+
+    pre code { background: none; padding: 0; }
+
+    .principles {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .principle-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+      background: #fafbfc;
+    }
+
+    .principle-card .idx {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-bottom: 6px;
+    }
+
+    .principle-card p { margin: 0; font-weight: 500; }
+
+    .mermaid {
+      margin: 16px 0;
+      text-align: center;
+    }
+
+    .decision-grid td:first-child { font-weight: 600; white-space: nowrap; }
+
+    .warn-box {
+      background: var(--warn-bg);
+      border: 1px solid #fde68a;
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin: 12px 0 16px;
+    }
+    .warn-box p { margin: 0; color: #92400e; font-size: .92rem; }
+
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      font-size: .85rem;
+      margin-top: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+
+    <header>
+      <h1>Redis 与 MySQL 一致性 — 最终架构方案</h1>
+      <div class="meta">
+        <span>场景：高并发写入 / 秒杀</span>
+        <span>目标 TPS：10 万（同步写，不走异步落库）</span>
+        <span>存储：MySQL 分库分表 + Redis 缓存</span>
+        <span>版本：定稿 v1.5</span>
+      </div>
+    </header>
+
+    <div class="summary-box">
+      <p>
+        <strong>一句话方案：</strong>
+        先写 MySQL（事务 + 版本号），再 CAS 更新 Redis（new_version &gt; current 才写入）；
+        读路径命中零 DB；写路径与读回填均做 version 比较；Redis 更新失败重试后 DEL 或返回 503。
+      </p>
+    </div>
+
+    <nav class="summary-box" style="margin-bottom:32px" aria-label="文档目录">
+      <p style="font-size:.95rem;color:#1e40af;font-weight:600;margin-bottom:10px">文档目录</p>
+      <ol style="margin:0 0 0 20px;font-size:.9rem;color:#334155;line-height:1.9">
+        <li>核心原则</li>
+        <li>写路径（同步）</li>
+        <li>读路径</li>
+        <li>架构时序图</li>
+        <li>一致性保障体系</li>
+        <li>秒杀 / 热点 SKU 专项</li>
+        <li>分库分表与 Redis 路由</li>
+        <li>Redis 缓存结构</li>
+        <li>方案对比与取舍</li>
+        <li>定时对账（离线）</li>
+        <li>缓存可能滞后的场景</li>
+        <li>design-spec 落地摘要</li>
+        <li>版本修订说明</li>
+      </ol>
+    </nav>
+
+    <!-- §1 核心原则 -->
+    <section>
+      <h2><span class="num">1</span>核心原则（三条铁律）</h2>
+      <div class="principles">
+        <div class="principle-card">
+          <div class="idx">01</div>
+          <p>MySQL 是唯一真相源（Source of Truth）— 对账、恢复、审计均以 MySQL 为准</p>
+        </div>
+        <div class="principle-card">
+          <div class="idx">02</div>
+          <p>写路径：先写 MySQL（事务提交成功）→ 再处理 Redis，不采用「先写 Redis」</p>
+        </div>
+        <div class="principle-card">
+          <div class="idx">03</div>
+          <p>缓存策略：version CAS（写路径 + 写回路径）；常规不 DEL；仅 Redis 更新失败时允许 DEL</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- §2 写路径 -->
+    <section>
+      <h2><span class="num">2</span>写路径（同步）</h2>
+      <pre><code>① 幂等校验（request_id + DB 唯一索引）
+   → 重复请求直接返回，不重复 version++，不重复写 Redis
+② 按业务键路由到同一 MySQL 分片（与 Redis hash tag 对齐）
+③ 可选：热点 key 加短锁（Redis 分布式锁 / DB 行锁）
+④ MySQL 本地事务写入（UPDATE ... WHERE + version++）
+   → version 仅在「实际发生状态变更」时递增
+⑤ 事务 commit 成功
+⑥ Lua CAS 更新 Redis（new_version &gt; current_version 才 SET）
+⑥b CAS 返回拒绝（0）时：再读 DB 最新 (remain, version) → 用 DB 值再 CAS；仍失败 → DEL / 告警
+⑦ Redis 更新失败处理：
+   → 重试 2–3 次
+   → 仍失败：DEL key（仅失败时允许删）或返回 503
+   → 禁止静默降级（否则命中零 DB 会导致长期脏读）
+⑧ 失效本节点 Caffeine 本地缓存（及可选 Pub/Sub 广播）
+⑨ 返回成功</code></pre>
+
+      <h3>写路径 Redis 更新：Lua CAS（必须）</h3>
+      <div class="warn-box">
+        <p><strong>v1.2 修复：</strong>无条件 SET 会被慢写覆盖新值。写路径与读回填路径均须 version 比较。</p>
+      </div>
+      <pre><code>-- 写路径 / 读回填 共用同一 Lua 逻辑
+local cur = tonumber(redis.call('HGET', KEYS[1], 'version') or '0')
+local new_ver = tonumber(ARGV[1])
+if new_ver &gt; cur then
+    redis.call('HSET', KEYS[1], 'remain', ARGV[2], 'version', ARGV[1], 'expireAt', ARGV[3])
+    return 1   -- 写入成功
+end
+return 0       -- 旧版本，拒绝覆盖</code></pre>
+
+      <h3>写路径并发覆盖示例（为何必须 CAS）</h3>
+      <pre><code>T1  写请求A：commit DB version=6，尚未更新 Redis
+T2  写请求B：commit DB version=7，CAS Redis version=7 ✅
+T3  写请求A：无条件 SET version=6 ❌ → 把新值覆盖成旧值
+    CAS 方案：T3 时 new_ver(6) &lt; cur(7) → 拒绝写入 ✅</code></pre>
+
+      <h3>Redis 更新失败处理（禁止静默降级）</h3>
+      <table>
+        <thead>
+          <tr><th>步骤</th><th>动作</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>1</td><td>立即重试 Lua CAS，最多 2–3 次（指数退避）</td></tr>
+          <tr><td>2</td><td>仍失败 → <strong>DEL key</strong>（仅失败时例外允许删，迫使后续读回源）</td></tr>
+          <tr><td>3</td><td>或返回 <strong>503</strong>，由客户端重试（DB 幂等兜底）</td></tr>
+          <tr><td>❌ 禁止</td><td>DB 已提交 + Redis 失败却返回成功且不做任何处理</td></tr>
+        </tbody>
+      </table>
+
+      <h3>明确不采用的方案</h3>
+      <table>
+        <thead>
+          <tr><th>方案</th><th>态度</th><th>原因</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>先写 Redis，后写 MySQL</td>
+            <td><span class="tag tag-no">不采用</span></td>
+            <td>MySQL 失败需回滚 Redis，10W TPS 下回滚风暴与竞态难处理</td>
+          </tr>
+          <tr>
+            <td>写 MySQL 前删 Redis（写前删）</td>
+            <td><span class="tag tag-no">不采用</span></td>
+            <td>写未完成即掏空缓存，引发缓存击穿，DB 压力骤增</td>
+          </tr>
+          <tr>
+            <td>延时双删（DEL → 写 DB → DEL → sleep → DEL）</td>
+            <td><span class="tag tag-no">不采用</span></td>
+            <td>多次击穿窗口 + 写路径 sleep，10W TPS 不可接受</td>
+          </tr>
+          <tr>
+            <td>2PC / XA 跨 Redis + MySQL</td>
+            <td><span class="tag tag-no">不采用</span></td>
+            <td>延迟与锁持有时间过长，无法满足 10ms 级响应预算</td>
+          </tr>
+          <tr>
+            <td>异步 MQ 落库</td>
+            <td><span class="tag tag-no">不采用</span></td>
+            <td>本次约束要求同步写路径</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- §3 读路径 -->
+    <section>
+      <h2><span class="num">3</span>读路径</h2>
+
+      <div class="summary-box" style="margin-bottom:16px">
+        <p style="color:#1e40af;margin:0">
+          <strong>关键澄清：</strong>version CAS <strong>写路径与读回填路径均须执行</strong>，不仅读回填。
+          命中且未逻辑过期 → 直接返回 Redis，零 DB 调用。
+          禁止「Redis 更新失败静默降级」— 与命中零 DB 矛盾。
+        </p>
+      </div>
+
+      <h3>version 校验发生在何时？</h3>
+      <table>
+        <thead>
+          <tr><th>时机</th><th>是否查 DB</th><th>做什么</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>缓存命中（正常读）</strong></td>
+            <td><span class="tag tag-ok">不查 DB</span></td>
+            <td>直接返回 Redis 中的 value，Redis 价值在此体现</td>
+          </tr>
+          <tr>
+            <td><strong>缓存 miss / 逻辑过期刷新</strong></td>
+            <td><span class="tag tag-warn">查 DB 一次</span></td>
+            <td>回源后 Lua CAS 写回；拒绝则再 GET Redis 返回新值</td>
+          </tr>
+          <tr>
+            <td><strong>写路径推送缓存</strong></td>
+            <td>先写 DB</td>
+            <td>commit 后 <strong>Lua CAS</strong> 更新 Redis（new_version &gt; current 才写入）</td>
+          </tr>
+          <tr>
+            <td><strong>读回填写缓存</strong></td>
+            <td>查 DB 一次</td>
+            <td>写回前 Lua CAS：new_version &gt; current 才 SET；否则丢弃并再读 Redis</td>
+          </tr>
+          <tr>
+            <td><strong>写后立刻读（强一致）</strong></td>
+            <td><span class="tag tag-warn">直读主库</span></td>
+            <td><strong>绕过 Redis</strong>，不经过缓存层</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>路径 A：缓存命中 — 零 DB 调用（主路径，占 99% 流量）</h3>
+      <pre><code>GET Redis → { value, version, expireAt }
+
+若 version = -1（失效标记）：
+  → 强制走路径 B 回源
+
+若 未逻辑过期（expireAt &gt; now）：
+  → 直接返回 value（零 DB 调用）✅
+
+若 已逻辑过期：
+  → 商品详情类：返回旧 value + 异步刷新
+  → 库存数量类：走路径 B 同步刷新（避免展示有货实际售罄）</code></pre>
+
+      <h3>路径 B：miss / 过期刷新 — 仅一次 DB + CAS 写回</h3>
+      <pre><code>缓存 miss 或库存类逻辑过期
+  → 互斥锁（Singleflight，同一 key 仅一个线程回源）
+  → 读 MySQL 主库 → { value, version: 6 }
+  → Lua CAS 写回 Redis（new_version &gt; current_version）
+  → 若 CAS 拒绝（已有更新版本）：
+       丢弃回填 → 再 GET Redis 一次 → 返回 Redis 中的新值
+  → 释放锁，其余等待线程读 Redis 返回</code></pre>
+
+      <h3>路径 C：写后强一致读 — 绕过 Redis</h3>
+      <pre><code>写后立刻读（下单结果、支付状态等）
+  → 直接读 MySQL 主库
+  → 不读 Redis（此类场景本就不需要缓存）</code></pre>
+
+      <h3>version 防旧值写回（无需额外查 DB）</h3>
+      <pre><code>时间线：
+T1  线程A：写 DB version=6 → Lua CAS Redis version=6
+T2  线程B：缓存 miss → 读 DB（从库延迟）→ 拿到 version=5
+T3  线程B：准备 Lua CAS Redis version=5
+    → 比较：db.version(5) &lt; cache.version(6) → 拒绝写回 ✅
+    （只读 Redis 中已有 version，不需再查 DB）</code></pre>
+
+      <h3>按数据类型区分读策略</h3>
+      <table>
+        <thead>
+          <tr><th>数据类型</th><th>逻辑过期策略</th><th>原因</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>商品详情、图片、描述</td>
+            <td>返回旧值 + 异步刷新</td>
+            <td>短暂 stale 可接受，避免击穿</td>
+          </tr>
+          <tr>
+            <td><strong>库存数量</strong></td>
+            <td><strong>同步刷新或直读 DB</strong></td>
+            <td>避免页面显示有货、实际已售罄</td>
+          </tr>
+          <tr>
+            <td>写后立刻读（订单/支付）</td>
+            <td>绕过 Redis，直读主库</td>
+            <td>强一致要求</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>何时不需要 Redis？</h3>
+      <table>
+        <thead>
+          <tr><th>场景</th><th>建议</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>写后立刻读</td><td>直读 MySQL 主库，绕过 Redis</td></tr>
+          <tr><td>QPS 低、强一致要求高</td><td>直读 DB，可不用缓存</td></tr>
+          <tr><td>管理后台 / 对账</td><td>直读 DB</td></tr>
+          <tr><td>10W TPS 热点读</td><td><strong>必须用 Redis</strong>，但命中时零 DB 调用</td></tr>
+        </tbody>
+      </table>
+
+      <h3>缓存击穿防护</h3>
+      <table>
+        <thead>
+          <tr><th>手段</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>互斥回填（Singleflight）</td>
+            <td>热点 key 失效时，仅一个线程回源 DB，其余等待回填结果</td>
+          </tr>
+          <tr>
+            <td>逻辑过期（不物理 DEL）</td>
+            <td>非库存类：含 expireAt + version，过期后异步刷新；<strong>库存类不走此策略</strong>（见 §3 数据类型表）</td>
+          </tr>
+          <tr>
+            <td>版本号 CAS（写 + 写回）</td>
+            <td>写路径与读回填均 Lua CAS，防止新旧写并发覆盖</td>
+          </tr>
+          <tr>
+            <td>热点本地缓存（Caffeine）</td>
+            <td>极热 key 挡在 Redis 前；<strong>写成功后须失效本地缓存</strong>（本节点 + Pub/Sub 广播）</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- §4 时序图 -->
+    <section>
+      <h2><span class="num">4</span>架构时序图</h2>
+      <div class="mermaid">
+sequenceDiagram
+    participant C as Client
+    participant S as Service
+    participant DB as MySQL分片
+    participant R as Redis
+
+    Note over C,R: 写路径
+    C->>S: 写请求（幂等键）
+    alt 幂等命中
+        S-->>C: 直接返回（不重复version++）
+    else 新请求
+        S->>DB: 事务写入 + version++
+        DB-->>S: commit OK
+        S->>R: Lua CAS（new&gt;current才写入）
+        alt CAS成功
+            R-->>S: OK
+        else CAS/Redis失败
+            S->>R: 重试2-3次
+            alt 仍失败
+                S->>R: DEL key
+                Note over S: 或返回503，不返回成功
+            end
+        else CAS返回拒绝
+            S->>DB: 再读DB最新version
+            S->>R: 用DB值再CAS
+        end
+        S->>S: 失效Caffeine本地缓存
+        S-->>C: 成功
+    end
+
+    Note over C,R: 读路径 — 强一致（绕过缓存）
+    C->>S: 写后立刻读
+    S->>DB: 直读主库
+    DB-->>S: 返回
+    S-->>C: 返回
+
+    Note over C,R: 读路径 — 普通读
+    C->>S: 读请求
+    S->>R: GET
+    alt 命中且未逻辑过期
+        R-->>S: value+version
+        Note over S: 零DB调用，直接返回
+        S-->>C: 返回
+    else miss或逻辑过期
+        S->>S: Singleflight互斥
+        S->>DB: 读主库（仅一次）
+        S->>R: Lua CAS写回
+        alt CAS成功
+            S-->>C: 返回
+        else CAS拒绝或丢弃回填
+            S->>R: 再GET Redis
+            S-->>C: 返回Redis新值
+        end
+    end
+      </div>
+    </section>
+
+    <!-- §5 一致性保障 -->
+    <section>
+      <h2><span class="num">5</span>一致性保障体系</h2>
+      <table>
+        <thead>
+          <tr><th>手段</th><th>作用</th><th>层级</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>MySQL 事务 + 乐观锁</td>
+            <td><code>UPDATE ... WHERE remain &gt; 0</code> + <code>version++</code>，防超卖</td>
+            <td>单分片强一致</td>
+          </tr>
+          <tr>
+            <td>幂等键 + 唯一索引</td>
+            <td>重复请求直接返回，不重复 version++，不产生副作用</td>
+            <td>接口层</td>
+          </tr>
+          <tr>
+            <td>版本号 CAS（Lua）</td>
+            <td>写路径推送 + 读回填均须 new_version &gt; current；命中时不查 DB</td>
+            <td>缓存层</td>
+          </tr>
+          <tr>
+            <td>Redis 失败处理</td>
+            <td>重试 → DEL key 或 503；禁止静默降级</td>
+            <td>写路径</td>
+          </tr>
+          <tr>
+            <td>Caffeine 失效</td>
+            <td>写成功后失效本节点缓存；可选 Redis Pub/Sub 广播各节点</td>
+            <td>应用层</td>
+          </tr>
+          <tr>
+            <td>互斥回填</td>
+            <td>解决删缓存 / 失效带来的缓存击穿</td>
+            <td>读路径</td>
+          </tr>
+          <tr>
+            <td>写后读走主库</td>
+            <td>避免主从延迟导致脏读</td>
+            <td>读路径</td>
+          </tr>
+          <tr>
+            <td>定时对账（离线）</td>
+            <td>增量圈定 SKU → 读 summary 比对 Redis → CAS 修 Redis → 日志 + 告警</td>
+            <td>运维层</td>
+          </tr>
+          <tr>
+            <td>stock_summary 同事务更新</td>
+            <td>写路径与 segment 扣减同事务维护，对账免 SUM 大表</td>
+            <td>写路径</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>一致性级别定义</h3>
+      <table>
+        <thead>
+          <tr><th>范围</th><th>级别</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>单 MySQL 分片内</td>
+            <td><span class="tag tag-ok">强一致</span></td>
+            <td>本地事务保证</td>
+          </tr>
+          <tr>
+            <td>Redis 缓存</td>
+            <td><span class="tag tag-warn">最终一致</span></td>
+            <td>写路径 CAS 推送；毫秒~秒级 stale 可接受（库存读除外）</td>
+          </tr>
+          <tr>
+            <td>Redis + MySQL 跨存储</td>
+            <td><span class="tag tag-warn">可收敛一致</span></td>
+            <td>非原子双写，靠 version + 对账收敛</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- §6 秒杀热点 -->
+    <section>
+      <h2><span class="num">6</span>秒杀 / 热点 SKU 专项</h2>
+      <p>即使 MySQL 总分片可扛 10W TPS，<strong>单个 SKU 仍可能是热点</strong>（单行库存锁竞争），需额外手段：</p>
+      <table>
+        <thead>
+          <tr><th>手段</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>库存分段（MySQL + Redis 对齐）</td>
+            <td>DB 分段表 <code>stock_segment(sku, seg_no, remain)</code>；Redis 对应 <code>{sku:1001}:stock:0~N</code>；读时聚合 SUM，写时扣减对应分段并 CAS 更新该分段 key + 汇总 key</td>
+          </tr>
+          <tr>
+            <td>入口削峰</td>
+            <td>令牌桶 / 排队页，将流量削至可承受 QPS</td>
+          </tr>
+          <tr>
+            <td>热点本地缓存（Caffeine）</td>
+            <td>挡在 Redis 前；写成功后 <strong>必须失效</strong>（本节点 + Pub/Sub），或设极短 TTL（如 100ms）</td>
+          </tr>
+          <tr>
+            <td>库存读策略</td>
+            <td>库存数量 <strong>不用</strong>「逻辑过期返回旧值」，须同步刷新或直读 DB</td>
+          </tr>
+        </tbody>
+      </table>
+      <p>库存扣减在 <strong>MySQL 分片内同步完成</strong>；Redis 承担 <strong>读加速 + 写后推送</strong>，真相源仍在 MySQL。</p>
+    </section>
+
+    <!-- §7 分片对齐 -->
+    <section>
+      <h2><span class="num">7</span>分库分表与 Redis 路由对齐</h2>
+      <pre><code>shard_id = hash(business_key) % N
+
+MySQL：写请求只打一个分片，禁止跨分片事务
+Redis：同一 business_key 使用 hash tag，如 {sku:1001}:stock
+路由键：user_id / sku_id / order_id（读写一致）</code></pre>
+
+      <h3>10W TPS 延迟预算（粗算）</h3>
+      <table>
+        <thead>
+          <tr><th>步骤</th><th>预算</th><th>备注</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>MySQL 事务</td><td>3 – 5 ms</td><td>非热点 key</td></tr>
+          <tr><td>Redis Lua CAS</td><td>1 – 2 ms</td><td>—</td></tr>
+          <tr><td>网络 + 序列化</td><td>2 – 3 ms</td><td>—</td></tr>
+          <tr><td><strong>合计</strong></td><td><strong>≤ 10 ms</strong></td><td>仅适用于非热点 key</td></tr>
+          <tr><td>热点 SKU 单行</td><td colspan="2"><span class="tag tag-warn">单行锁瓶颈仍在</span> — 须库存分段 + 削峰，不能仅靠分片总数扛 10W</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- §8 Redis 数据结构 -->
+    <section>
+      <h2><span class="num">8</span>Redis 缓存结构（推荐）</h2>
+
+      <h3>方案 A：单 key（非热点 / 低 QPS SKU）</h3>
+      <pre><code>Key:   {sku:1001}:stock          # hash tag 与分片对齐
+Type:  Hash（便于 Lua CAS 单字段更新）
+Fields: remain | version | expireAt
+TTL:   物理 TTL 宜长于逻辑过期（如 24h）</code></pre>
+
+      <h3>方案 B：分段对齐（热点 SKU，与 §6 一致）</h3>
+      <pre><code>分段 key：{sku:1001}:stock:0  …  {sku:1001}:stock:N
+汇总 key：{sku:1001}:stock:total   # remain = SUM(各分段)，读列表页用
+
+写路径：
+  ① 扣减某分段 DB 行 → commit
+  ② CAS 更新对应分段 Redis key
+  ③ CAS 更新汇总 key（remain -= 1, version++）
+
+读路径：
+  详情页库存 → 读 total key
+  秒杀扣减   → 随机或轮询选分段</code></pre>
+    </section>
+
+    <!-- §9 方案对比 -->
+    <section>
+      <h2><span class="num">9</span>讨论过程方案对比（最终取舍）</h2>
+      <table class="decision-grid">
+        <thead>
+          <tr><th>方案</th><th>最终态度</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>先 Redis 后 MySQL</td>
+            <td><span class="tag tag-no">不采用</span></td>
+            <td>回滚难，10W TPS 风险大</td>
+          </tr>
+          <tr>
+            <td>异步 MQ 落库</td>
+            <td><span class="tag tag-no">不采用</span></td>
+            <td>本次约束：同步写</td>
+          </tr>
+          <tr>
+            <td>写后单删 Redis</td>
+            <td><span class="tag tag-warn">仅低 QPS</span></td>
+            <td>热点场景引发缓存击穿</td>
+          </tr>
+          <tr>
+            <td>延时双删</td>
+            <td><span class="tag tag-no">不采用</span></td>
+            <td>多次击穿 + 写路径延迟</td>
+          </tr>
+          <tr>
+            <td>写 DB + Lua CAS 更新 Redis</td>
+            <td><span class="tag tag-ok">最终写路径</span></td>
+            <td>写/写回均 CAS；失败重试后 DEL 或 503</td>
+          </tr>
+          <tr>
+            <td>互斥回填 + 逻辑过期</td>
+            <td><span class="tag tag-ok">最终读路径</span></td>
+            <td>防击穿，热点友好</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- §10 定时对账（离线） -->
+    <section>
+      <h2><span class="num">10</span>定时对账（离线）</h2>
+
+      <div class="summary-box" style="margin-bottom:16px">
+        <p style="color:#1e40af;margin:0">
+          <strong>定位：</strong>在线一致性（幂等 + DB 事务 + Redis CAS）是第一道防线；
+          离线对账是兜底 — <strong>以 MySQL 为准修复 Redis</strong>，发现偏差、自动收敛、超阈值告警。
+          默认 <strong>不反向修 DB</strong>（DB 异常须人工介入）。
+        </p>
+      </div>
+
+      <h3>10.1 对账解决什么？</h3>
+      <table>
+        <thead>
+          <tr><th>在线机制盖不住的场景</th><th>举例</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Redis CAS / 更新失败后仅 DEL</td><td>后续回填错误，remain 偏差</td></tr>
+          <tr><td>分段库存汇总 key 未同步</td><td><code>total</code> 与分段之和不一致</td></tr>
+          <tr><td>运维 / 脚本直接改 DB</td><td>Redis 完全不知情</td></tr>
+          <tr><td>长期未访问的脏缓存</td><td>无 miss，不回源，一直脏读</td></tr>
+        </tbody>
+      </table>
+
+      <h3>10.2 对账维度</h3>
+      <table>
+        <thead>
+          <tr><th>层级</th><th>MySQL 真相</th><th>Redis 现状</th><th>优先级</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>库存汇总</strong></td>
+            <td><code>stock_summary.total_remain</code></td>
+            <td><code>{sku}:stock</code>（方案 A）或 <code>{sku}:stock:total</code>（方案 B）</td>
+            <td><span class="tag tag-ok">必做</span></td>
+          </tr>
+          <tr>
+            <td><strong>分段一致性</strong></td>
+            <td><code>stock_segment.remain</code></td>
+            <td><code>{sku}:stock:0~N</code></td>
+            <td>做了分段则做</td>
+          </tr>
+          <tr>
+            <td><strong>交叉对账</strong></td>
+            <td>初始库存 − 已支付订单数</td>
+            <td>当前 remain</td>
+            <td>活动结束时做一次</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>10.3 对账流程图</h3>
+      <div class="mermaid">
+flowchart TD
+    A["定时调度<br/>XXL-Job / Cron"] --> B["拉取待对账 SKU 列表"]
+    B --> C["按 sku 分片并行"]
+    C --> D["读 MySQL stock_summary"]
+    C --> E["读 Redis total + 分段"]
+    D --> F{比对 remain / version}
+    E --> F
+    F -->|一致| G["记录 OK"]
+    F -->|不一致| H{偏差类型}
+    H -->|Redis 错误| I{"DB 近期有写入?<br/>updated_at &lt; 5s"}
+    I -->|是| J["跳过，下轮再对"]
+    I -->|否| K["Lua CAS 修复 Redis"]
+    H -->|Redis miss| L["CAS 回填 Redis"]
+    H -->|DB remain &lt; 0| M["告警，人工介入"]
+    K --> N{修复成功?}
+    L --> N
+    N -->|是| O["写 reconciliation_log"]
+    N -->|否| P["写 diff 表 + 告警"]
+    O --> Q{偏差 &gt; 阈值?}
+    Q -->|是| R["钉钉 / PagerDuty"]
+    Q -->|否| S["结束"]
+    P --> R
+      </div>
+
+      <h3>10.4 圈定范围（避免全库扫）</h3>
+      <table>
+        <thead>
+          <tr><th>策略</th><th>频率</th><th>范围</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>增量对账</strong></td>
+            <td>每 5 分钟</td>
+            <td><code>stock_change_log</code> 近 5 min 有变动的 SKU</td>
+          </tr>
+          <tr>
+            <td><strong>活动对账</strong></td>
+            <td>秒杀进行中每 30s</td>
+            <td>活动 SKU 列表</td>
+          </tr>
+          <tr>
+            <td><strong>全量对账</strong></td>
+            <td>每天凌晨 3:00</td>
+            <td>全量 SKU（低峰期）</td>
+          </tr>
+          <tr>
+            <td><strong>活动结束对账</strong></td>
+            <td>活动结束后立即</td>
+            <td>活动全部 SKU + 库存 vs 订单流水交叉对账</td>
+          </tr>
+        </tbody>
+      </table>
+      <pre><code>-- 增量圈定示例
+SELECT DISTINCT sku_id
+FROM stock_change_log
+WHERE created_at &gt;= NOW() - INTERVAL 5 MINUTE;
+
+-- 并行分片：sku_id % 64 = :shard_no</code></pre>
+
+      <h3>10.5 依赖表结构（写路径须同事务维护）</h3>
+      <table>
+        <thead>
+          <tr><th>表</th><th>用途</th><th>维护时机</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>stock_segment</code></td>
+            <td>分段库存明细</td>
+            <td>写路径扣减时更新</td>
+          </tr>
+          <tr>
+            <td><code>stock_summary</code></td>
+            <td>汇总 remain + version + updated_at</td>
+            <td><strong>与 segment 扣减同一事务</strong>（对账主读表）</td>
+          </tr>
+          <tr>
+            <td><code>stock_change_log</code></td>
+            <td>变更流水</td>
+            <td>写路径插入，用于增量圈定</td>
+          </tr>
+          <tr>
+            <td><code>reconciliation_log</code></td>
+            <td>对账结果审计</td>
+            <td>对账任务写入</td>
+          </tr>
+          <tr>
+            <td><code>reconciliation_diff</code></td>
+            <td>未自动修复的差异</td>
+            <td>修复失败或超阈值时写入</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>10.6 单 SKU 对账步骤</h3>
+      <pre><code>① 读 MySQL stock_summary（total_remain, version, updated_at）
+② 读 Redis 汇总 key（方案 A：{sku}:stock；方案 B：{sku}:stock:total）
+③ 比对：
+   - redis miss          → CAS 回填，记 FIXED_MISS
+   - remain 一致且 version 合理 → PASS
+   - updated_at 在 5s 内  → SKIP_RECENT_WRITE（避免覆盖在线写入）
+   - remain 不一致       → 进入修复
+   - db_remain &lt; 0       → 告警，人工介入，不自动修
+④ Lua CAS 修复 Redis（与写路径同一套 CAS 逻辑）
+⑤ 写 reconciliation_log；偏差 &gt; 阈值则告警
+⑥ 可选：抽样比对各分段 stock:0~N</code></pre>
+
+      <h3>10.7 对账修复 Lua</h3>
+      <div class="warn-box">
+        <p><strong>注意：</strong><code>FORCE_FIXED</code> 仅用于 remain 不一致且 Redis version 虚高（脏数据）的修复；<code>version</code> 取 <code>max(db_ver, cur_ver)</code>，禁止回退 version。</p>
+      </div>
+      <pre><code>-- 以 DB 为准，但不用旧 version 覆盖新写入
+local cur_ver = tonumber(redis.call('HGET', KEYS[1], 'version') or '0')
+local db_ver  = tonumber(ARGV[1])
+local db_remain = ARGV[2]
+
+if db_ver &gt;= cur_ver then
+    redis.call('HSET', KEYS[1], 'remain', db_remain, 'version', db_ver)
+    return 'FIXED'
+end
+-- version 落后但 remain 不一致 → 强制修 remain，version 取较大值
+if redis.call('HGET', KEYS[1], 'remain') ~= db_remain then
+    local fix_ver = math.max(db_ver, cur_ver)
+    redis.call('HSET', KEYS[1], 'remain', db_remain, 'version', fix_ver)
+    return 'FORCE_FIXED'
+end
+return 'SKIP'</code></pre>
+
+      <h3>10.8 告警规则</h3>
+      <table>
+        <thead>
+          <tr><th>条件</th><th>动作</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>单 SKU 偏差 ≤ 阈值，自动修复成功</td><td>仅记 <code>reconciliation_log</code></td></tr>
+          <tr><td>偏差 &gt; 阈值（如库存差 &gt; 10）</td><td>即时告警</td></tr>
+          <tr><td>1 小时内同 SKU 自动修复 &gt; 3 次</td><td>告警（可能有在线逻辑 bug）</td></tr>
+          <tr><td><code>db_remain &lt; 0</code></td><td>紧急告警，不自动修 DB</td></tr>
+          <tr><td>修复 CAS 失败</td><td>写 <code>reconciliation_diff</code> + 告警</td></tr>
+        </tbody>
+      </table>
+
+      <h3>10.9 与在线写路径的配合（避免打架）</h3>
+      <table>
+        <thead>
+          <tr><th>措施</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>修复也用 Lua CAS</td><td>与写路径相同逻辑，不用无条件 SET</td></tr>
+          <tr><td>近期写入跳过</td><td><code>updated_at</code> 在 5s 内 → 跳过本次，下轮再对</td></tr>
+          <tr><td>只修 Redis 不修 DB</td><td>默认规则；DB 异常须人工审批</td></tr>
+          <tr><td>修复不写 DB</td><td>对账任务只有读 DB + 写 Redis 权限</td></tr>
+        </tbody>
+      </table>
+
+      <h3>10.10 三层一致性闭环</h3>
+      <pre><code>在线层：幂等 + DB 事务 + Redis CAS + 失败 DEL/503
+    ↓（小概率偏差）
+离线层：增量对账 → 自动修 Redis → 差异告警
+    ↓（活动结束）
+审计层：库存 vs 订单流水交叉对账（人工兜底）</code></pre>
+    </section>
+
+    <!-- §11 缓存滞后场景 -->
+    <section>
+      <h2><span class="num">11</span>缓存可能滞后的场景</h2>
+
+      <div class="summary-box" style="margin-bottom:16px">
+        <p style="color:#1e40af;margin:0">
+          <strong>前提：</strong>即使采用当前全套机制，Redis 仍可能在一定时间内落后于 MySQL。
+          这是「跨存储非原子写 + 命中零 DB」的固有代价。
+          <strong>防超卖不依赖缓存准确</strong>（靠 DB <code>WHERE remain &gt; 0</code>）；
+          <strong>展示准确性</strong>才受下列滞后影响。
+        </p>
+      </div>
+
+      <h3>11.1 滞后场景汇总</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>场景</th>
+            <th>原因</th>
+            <th>滞后窗口</th>
+            <th>是否超卖</th>
+            <th>主要靠谁修复</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>1</td>
+            <td><strong>DB commit → Redis CAS 前</strong></td>
+            <td>DB 与 Redis 非原子，中间有空隙</td>
+            <td>通常 <strong>1–5ms</strong></td>
+            <td><span class="tag tag-ok">否</span></td>
+            <td>写路径 CAS 完成</td>
+          </tr>
+          <tr>
+            <td>2</td>
+            <td><strong>CAS 被拒绝（慢写 / 过期 version）</strong></td>
+            <td>慢写携带旧 version，CAS 正确拒绝以防覆盖新值；Redis 暂未跟上 DB</td>
+            <td><strong>秒级~分钟级</strong>（无后续写、不 miss 时）</td>
+            <td><span class="tag tag-ok">否</span></td>
+            <td>再读 DB 重 CAS / DEL / 对账</td>
+          </tr>
+          <tr>
+            <td>3</td>
+            <td><strong>Redis 更新失败，DEL key → 回填前</strong></td>
+            <td>失败处理 DEL 后，缓存为空直至 Singleflight 回填</td>
+            <td><strong>5–50ms</strong></td>
+            <td><span class="tag tag-ok">否</span></td>
+            <td>Singleflight 回填</td>
+          </tr>
+          <tr>
+            <td>4</td>
+            <td><strong>命中零 DB，长期脏读</strong></td>
+            <td>key 存在、未过期、无 miss → 永远不回源</td>
+            <td><strong>分钟~小时</strong>（至对账或逻辑过期）</td>
+            <td><span class="tag tag-ok">否</span></td>
+            <td>增量对账（5min）/ 活动对账（30s）</td>
+          </tr>
+          <tr>
+            <td>5</td>
+            <td><strong>Caffeine 本地缓存滞后</strong></td>
+            <td>多节点各自缓存；Pub/Sub 延迟或丢失</td>
+            <td><strong>10ms~1s</strong>（= 本地 TTL）</td>
+            <td><span class="tag tag-ok">否</span></td>
+            <td>写后失效 + Pub/Sub；库存类禁用 Caffeine</td>
+          </tr>
+          <tr>
+            <td>6</td>
+            <td><strong>逻辑过期返回旧值</strong></td>
+            <td>非库存类故意返回 stale 换性能（设计取舍）</td>
+            <td><strong>秒级</strong></td>
+            <td><span class="tag tag-ok">否</span></td>
+            <td>异步刷新；<strong>库存类已排除</strong></td>
+          </tr>
+          <tr>
+            <td>7</td>
+            <td><strong>分段 total 与 segment 不同步</strong></td>
+            <td>一次写涉及多 Redis key，非事务</td>
+            <td><strong>分钟级</strong></td>
+            <td><span class="tag tag-ok">否</span></td>
+            <td>total 失败重试；对账校验 SUM</td>
+          </tr>
+          <tr>
+            <td>8</td>
+            <td><strong>对账 SKIP（高写入期）</strong></td>
+            <td><code>updated_at</code> 5s 内跳过，避免覆盖在线写</td>
+            <td>秒杀高峰<strong>持续数分钟</strong></td>
+            <td><span class="tag tag-ok">否</span></td>
+            <td>在线 CAS + CAS 失败告警</td>
+          </tr>
+          <tr>
+            <td>9</td>
+            <td><strong>读回填误走从库</strong>（配置错误）</td>
+            <td>miss 回填读到主从延迟前的旧值</td>
+            <td>= <strong>主从延迟</strong>（10ms~1s+）</td>
+            <td><span class="tag tag-warn">展示可能错</span></td>
+            <td>回填强制主库</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>11.2 典型场景详解</h3>
+
+      <h4 style="margin:14px 0 8px;font-size:.95rem;color:#475569">场景 1：写路径时间窗</h4>
+      <pre><code>T1  MySQL commit 成功（remain=30, version=10）
+T2  读请求命中 Redis（仍是 remain=35, version=9）  ← 短暂脏读
+T3  Lua CAS 更新 Redis 成功</code></pre>
+
+      <h4 style="margin:14px 0 8px;font-size:.95rem;color:#475569">场景 2：CAS 被拒绝（过期写 / stale write）</h4>
+      <pre><code>T1  写请求A：commit DB version=10，CAS 延迟
+T2  写请求B：commit DB version=11，CAS Redis 成功
+T3  写请求A：CAS 被拒（10 &lt; 11）→ Redis 可能仍为旧值
+
+说明：这是 version CAS 的正确防护（防止旧写覆盖新写），
+      不是方案失效；拒绝后须补偿（再 CAS / DEL / 对账）。</code></pre>
+
+      <h4 style="margin:14px 0 8px;font-size:.95rem;color:#475569">场景 4：命中零 DB（影响最大）</h4>
+      <pre><code>Redis 中 remain 错误，但 key 存在、未逻辑过期
+→ 所有读直接返回错误值，永远不回源
+→ 最长滞后 = 逻辑过期 TTL 或下次对账周期
+
+规避：库存类不走「过期返回旧值」；活动 SKU 30s 对账。</code></pre>
+
+      <h4 style="margin:14px 0 8px;font-size:.95rem;color:#475569">场景 5：多节点 Caffeine 不一致</h4>
+      <pre><code>节点1：写成功 → Redis 更新 → 本节点 Caffeine 失效
+节点2：Caffeine 仍返回旧值（Pub/Sub 丢失）
+→ 不同用户看到不同库存（节点间不一致）
+
+规避：库存类禁用 Caffeine；或极短 TTL（100ms）+ Pub/Sub。</code></pre>
+
+      <h3>11.3 滞后窗口分级</h3>
+      <table>
+        <thead>
+          <tr><th>层级</th><th>典型滞后</th><th>业务影响</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>写路径空隙</td><td>毫秒级</td><td>极短暂展示偏差，几乎无感</td></tr>
+          <tr><td>Caffeine 跨节点</td><td>10ms ~ 1s</td><td>不同用户看到不同数字</td></tr>
+          <tr><td>CAS 拒绝未补偿</td><td>秒级 ~ 分钟级</td><td>页面库存偏差</td></tr>
+          <tr><td>命中零 DB 脏读</td><td>分钟级 ~ 小时级</td><td>长期展示错误（靠对账收敛）</td></tr>
+          <tr><td>对账收敛</td><td>5min（增量）/ 30s（活动）</td><td>离线兜底上限</td></tr>
+        </tbody>
+      </table>
+
+      <h3>11.4 CAS 拒绝后补偿（与 §2 步骤 ⑥b 一致）</h3>
+      <pre><code>CAS 返回拒绝（0）时：
+  ① 再读 DB 当前 (remain, version)
+  ② 若 db.version &gt; redis.version → 用 DB 最新值再 CAS 一次
+  ③ 仍失败 → DEL key 或记告警，交给对账</code></pre>
+
+      <h3>11.5 方案其它局限</h3>
+      <table>
+        <thead>
+          <tr><th>局限</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>架构复杂度高</td><td>Lua CAS、version、分段、Caffeine、对账 — 小团队维护成本偏高</td></tr>
+          <tr><td>无法 Redis+MySQL 强一致</td><td>不用 2PC/XA 前提下只能最终一致</td></tr>
+          <tr><td>写路径延迟</td><td>同步 DB + Redis ≥ 5–10ms，高于纯异步 MQ 方案</td></tr>
+          <tr><td>热点 SKU 瓶颈</td><td>分库分表不解决单行锁，仍须分段 + 削峰</td></tr>
+          <tr><td>Redis 弱依赖</td><td>故障时写路径 503 / 读击穿 DB，非「可选缓存」</td></tr>
+          <tr><td>运维与监控要求高</td><td>须监控 CAS 拒绝率、对账修复次数等</td></tr>
+          <tr><td>低 QPS 场景偏重</td><td>数千 QPS 非秒杀场景可能过度设计</td></tr>
+        </tbody>
+      </table>
+
+      <h3>11.6 业务容忍度对照</h3>
+      <table>
+        <thead>
+          <tr><th>业务要求</th><th>本方案匹配度</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>10W TPS + 同步写 + 不超卖</td><td><span class="tag tag-ok">匹配</span></td></tr>
+          <tr><td>库存展示允许秒级误差</td><td><span class="tag tag-ok">匹配</span></td></tr>
+          <tr><td>写后列表立刻准确</td><td><span class="tag tag-warn">须绕缓存或接受延迟</span></td></tr>
+          <tr><td>跨节点展示强一致</td><td><span class="tag tag-warn">Caffeine 是短板</span></td></tr>
+          <tr><td>小团队、低 QPS</td><td><span class="tag tag-no">偏重</span></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- §12 design-spec 摘要 -->
+    <section>
+      <h2><span class="num">12</span>design-spec §4.6 落地摘要</h2>
+      <table>
+        <thead>
+          <tr><th>项</th><th>方案</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>真相源</td><td>MySQL 分库分表</td></tr>
+          <tr><td>写入顺序</td><td>幂等 → MySQL 事务提交 → Lua CAS 更新 Redis → 失效 Caffeine</td></tr>
+          <tr><td>读路径</td><td>命中零 DB；写回 CAS；丢弃回填后再 GET Redis；库存类不同步返回旧值</td></tr>
+          <tr><td>缓存策略</td><td>Cache-Aside + version CAS；常规不 DEL；Redis 失败时例外 DEL</td></tr>
+          <tr><td>击穿防护</td><td>Singleflight；Caffeine 写后失效；库存读同步刷新</td></tr>
+          <tr><td>一致性</td><td>DB 单分片强一致；缓存最终一致；跨存储可收敛；离线对账</td></tr>
+          <tr><td>离线对账</td><td>见 §10：增量 5min + 活动 30s；以 DB 为准修 Redis</td></tr>
+          <tr><td>缓存滞后</td><td>见 §11：9 类场景、窗口分级；防超卖靠 DB，展示准确靠对账</td></tr>
+          <tr><td>禁止项</td><td>先写 Redis、延时双删、无条件 SET、Redis 失败静默降级、跨存储 2PC</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- §13 修订说明 -->
+    <section>
+      <h2><span class="num">13</span>版本修订说明</h2>
+      <table>
+        <thead>
+          <tr><th>问题</th><th>严重度</th><th>修订</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>写路径无条件 SET 可覆盖新值</td>
+            <td><span class="tag tag-no">严重</span></td>
+            <td>写路径改为 Lua CAS（new_version &gt; current）</td>
+          </tr>
+          <tr>
+            <td>Redis 失败静默降级 vs 命中零 DB</td>
+            <td><span class="tag tag-no">严重</span></td>
+            <td>失败重试 → DEL key 或 503，禁止静默成功</td>
+          </tr>
+          <tr>
+            <td>§6 库存分段 vs §8 Redis 单 key 不对齐</td>
+            <td><span class="tag tag-warn">中等</span></td>
+            <td>§8 增加分段方案 B，与 MySQL 分段结构对齐</td>
+          </tr>
+          <tr>
+            <td>库存逻辑过期返回旧值</td>
+            <td><span class="tag tag-warn">中等</span></td>
+            <td>库存读改为同步刷新或直读 DB</td>
+          </tr>
+          <tr>
+            <td>Caffeine 写后不失效</td>
+            <td><span class="tag tag-warn">中等</span></td>
+            <td>写路径增加本地缓存失效 + Pub/Sub</td>
+          </tr>
+          <tr>
+            <td>路径 B 丢弃回填后返回旧 DB 值</td>
+            <td><span class="tag tag-warn">中等</span></td>
+            <td>丢弃后须再 GET Redis 返回新值</td>
+          </tr>
+          <tr>
+            <td>幂等与 version++ 未关联</td>
+            <td><span class="tag tag-warn">轻微</span></td>
+            <td>幂等命中跳过写路径，不重复递增 version</td>
+          </tr>
+          <tr>
+            <td>「准强一致」表述过强</td>
+            <td><span class="tag tag-warn">轻微</span></td>
+            <td>改为「最终一致，可收敛」</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>v1.3 新增</h3>
+      <table>
+        <thead>
+          <tr><th>变更</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>新增 §10 定时对账（离线）</td>
+            <td>增量/活动/全量频率、表结构、流程图、Lua 修复、告警规则</td>
+          </tr>
+          <tr>
+            <td>§12 补充离线对账摘要</td>
+            <td>design-spec 落地项增加对账说明</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>v1.4 新增</h3>
+      <table>
+        <thead>
+          <tr><th>变更</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>新增 §11 缓存可能滞后的场景</td>
+            <td>9 类滞后场景、窗口分级、CAS 拒绝补偿、方案局限与业务容忍度</td>
+          </tr>
+        </tbody>
+      </table>
+      <h3>v1.5 调整</h3>
+      <table>
+        <thead>
+          <tr><th>变更</th><th>说明</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>章节顺序重排</td>
+            <td>§10 对账 → §11 滞后 → §12 摘要 → §13 修订；增加文档目录</td>
+          </tr>
+          <tr>
+            <td>逻辑修订</td>
+            <td>§2 补充 CAS 拒绝补偿；对账 key 与 §8 方案 A/B 对齐；FORCE_FIXED 禁止 version 回退</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <footer>
+      生成自架构讨论定稿 · multi-agent-code-factory · docs/design/redis-mysql-consistency-final.html · v1.5
+    </footer>
+
+  </div>
+
+  <script>
+    mermaid.initialize({
+      startOnLoad: true,
+      theme: "neutral",
+      sequence: { actorMargin: 60, messageMargin: 40 }
+    });
+  </script>
+</body>
+</html>

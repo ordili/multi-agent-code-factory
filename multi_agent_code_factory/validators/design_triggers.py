@@ -1,4 +1,4 @@
-"""任务 tier 推断：决定部分 DES 规则是否要求非空字段。"""
+"""DES 规则触发条件：决定部分校验是否要求非空字段或章节。"""
 
 from __future__ import annotations
 
@@ -11,16 +11,21 @@ _NON_PERSISTENT_STORAGE = frozenset(
 )
 
 
-def is_spec_non_trivial(spec: SpecArtifact) -> bool:
-    """spec 是否超出 personal / best_effort / local_only 小任务档位（DES-011）。"""
+def spec_requires_non_functional(spec: SpecArtifact) -> bool:
+    """spec 是否触发 DES-011（传导表：operational_profile 含非 trivial NFR 信号）。"""
     op = spec.operational_profile
+    perf = op.performance
+    if any(
+        str(value).strip()
+        for value in (perf.latency, perf.throughput, perf.availability)
+        if value is not None
+    ):
+        return True
     if op.user_scale.value != "personal":
         return True
     if op.high_concurrency:
         return True
-    if op.performance.tier.value != "best_effort":
-        return True
-    return spec.consistency_profile.consistency_model.value != "local_only"
+    return perf.tier.value != "best_effort"
 
 
 def _spec_context_storage(spec: SpecArtifact) -> str | None:
@@ -33,7 +38,7 @@ def _spec_context_storage(spec: SpecArtifact) -> str | None:
 
 
 def spec_implies_persistence(spec: SpecArtifact | None) -> bool:
-    """spec 是否暗示需要持久化或表结构（DES-013）。"""
+    """spec 是否暗示需要持久化或表结构（DES-013 传导信号）。"""
     if spec is None:
         return False
     storage = _spec_context_storage(spec)
@@ -54,11 +59,7 @@ def design_has_filesystem_deps(design: DesignArtifact) -> bool:
 
 
 def design_has_table_columns(design: DesignArtifact) -> bool:
-    for table in design.table_schemas:
-        columns = table.get("columns") or []
-        if columns:
-            return True
-    return False
+    return any(table.columns for table in design.table_schemas)
 
 
 def requires_table_schemas(
@@ -80,11 +81,18 @@ def requires_transaction_constraints(
     spec: SpecArtifact | None = None,
 ) -> bool:
     """是否要求 ``transaction_constraints`` 非空（DES-014）。"""
-    if requires_table_schemas(design, spec):
-        return True
-    if design_has_filesystem_deps(design):
-        return True
+    _ = design
     return spec is not None and spec.consistency_profile.multi_writer
+
+
+def requires_diagram_pair(
+    design: DesignArtifact,
+    spec: SpecArtifact | None = None,
+) -> bool:
+    """是否要求 diagrams 含 sequence + flowchart（DES-017）。"""
+    if design.diagrams:
+        return True
+    return spec_implies_persistence(spec)
 
 
 def is_stateless_design(

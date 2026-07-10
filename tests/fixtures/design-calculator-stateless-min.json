@@ -3,9 +3,13 @@
   "spec_ref": "CLI Calculator",
   "revision": 1,
   "summary": "无持久化 CLI 计算器",
+  "design_goals": ["FEAT-1: 四则表达式求值", "异常输入有明确错误提示"],
   "non_goals": ["GUI"],
   "context_view": { "actors": ["User", "CalcCLI", "CalcCore"] },
-  "architecture": { "solution_strategy": "CLI + 纯函数求值" },
+  "architecture": {
+    "solution_strategy": "CLI + 纯函数求值",
+    "code_delta": { "summary": "空仓库" }
+  },
   "modules": [
     {
       "name": "CalcCore",

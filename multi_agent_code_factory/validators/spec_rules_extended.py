@@ -13,9 +13,53 @@ from multi_agent_code_factory.schemas.validation_report import Violation
 from multi_agent_code_factory.validators._report import error, warn
 
 
+def _text_refs_id(text: str, ref_id: str) -> bool:
+    return ref_id.lower() in text.lower()
+
+
+def _p0_user_story_ids(spec: SpecArtifact) -> set[str]:
+    valid_ids = {story.id for story in spec.user_stories}
+    story_ids: set[str] = set()
+    for feature in spec.features:
+        if feature.priority != FeaturePriority.P0:
+            continue
+        if feature.user_story_ids:
+            story_ids.update(sid for sid in feature.user_story_ids if sid in valid_ids)
+    if not story_ids and any(
+        feature.priority == FeaturePriority.P0 for feature in spec.features
+    ):
+        story_ids = valid_ids
+    return story_ids
+
+
+def _story_covered_by_ac_or_manual_kpi(spec: SpecArtifact, story_id: str) -> bool:
+    for ac in spec.acceptance_criteria:
+        if _text_refs_id(ac.description, story_id):
+            return True
+    for metric in spec.success_metrics:
+        if metric.verifiable_by != VerifiableBy.MANUAL:
+            continue
+        if _text_refs_id(metric.description, story_id) or _text_refs_id(
+            metric.target, story_id
+        ):
+            return True
+    return False
+
+
 def validate_spec_extended_rules(spec: SpecArtifact) -> list[Violation]:
     """SPEC-101 至 SPEC-114、SPEC-201–202 扩展规则。"""
     violations: list[Violation] = []
+
+    storage = spec.context.get("storage")
+    if not isinstance(storage, str) or not storage.strip():
+        violations.append(
+            error(
+                "SPEC-017",
+                "context.storage is required (e.g. none, local_file, json_file)",
+                path="/context/storage",
+                field="storage",
+            )
+        )
 
     feature_ids = {feature.id for feature in spec.features}
     for req in spec.requirement_pool:
@@ -105,6 +149,14 @@ def validate_spec_extended_rules(spec: SpecArtifact) -> list[Violation]:
         )
 
     cp = spec.consistency_profile
+    if cp.consistency_model == ConsistencyModel.CUSTOM and not (cp.notes or "").strip():
+        violations.append(
+            error(
+                "SPEC-111",
+                "consistency_profile.notes required when consistency_model=custom",
+                field="consistency_profile.notes",
+            )
+        )
     if (
         cp.consistency_model == ConsistencyModel.EVENTUAL
         and not (cp.notes or "").strip()
@@ -189,9 +241,50 @@ def validate_spec_extended_rules(spec: SpecArtifact) -> list[Violation]:
     for ac in spec.acceptance_criteria:
         if not ac.description.strip():
             violations.append(
-                warn(
+                error(
                     "SPEC-101",
-                    f"acceptance criterion {ac.id} description should be non-empty",
+                    f"acceptance criterion {ac.id} description must be non-empty",
+                    field="acceptance_criteria",
+                )
+            )
+
+    glossary = spec.context.get("glossary")
+    if isinstance(glossary, list):
+        for index, item in enumerate(glossary):
+            if not isinstance(item, dict):
+                violations.append(
+                    warn(
+                        "SPEC-118",
+                        f"context.glossary[{index}] must be an object",
+                        field="context.glossary",
+                    )
+                )
+                continue
+            term = item.get("term")
+            definition = item.get("definition")
+            if not isinstance(term, str) or not term.strip():
+                violations.append(
+                    warn(
+                        "SPEC-118",
+                        f"context.glossary[{index}].term must be non-empty",
+                        field="context.glossary",
+                    )
+                )
+            if not isinstance(definition, str) or not definition.strip():
+                violations.append(
+                    warn(
+                        "SPEC-118",
+                        f"context.glossary[{index}].definition must be non-empty",
+                        field="context.glossary",
+                    )
+                )
+
+    for story_id in sorted(_p0_user_story_ids(spec)):
+        if not _story_covered_by_ac_or_manual_kpi(spec, story_id):
+            violations.append(
+                warn(
+                    "SPEC-102",
+                    f"P0 user story {story_id} should be covered by AC or manual KPI",
                     field="acceptance_criteria",
                 )
             )

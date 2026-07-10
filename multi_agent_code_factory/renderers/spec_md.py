@@ -1,10 +1,49 @@
-"""spec.json → spec.md 渲染器（中文固定章节）。"""
+"""spec.json → spec.md 渲染器（中文固定章节，对齐 prd-spec 模板）。"""
 
 from __future__ import annotations
 
 from typing import Any
 
-from multi_agent_code_factory.schemas.spec import SpecArtifact
+from multi_agent_code_factory.schemas.spec import (
+    ConsistencyModel,
+    PerformanceTier,
+    SpecArtifact,
+    UserScale,
+    VerifiableBy,
+)
+
+_NON_PERSISTENT_STORAGE = frozenset(
+    {"", "none", "memory", "in_memory", "in-memory", "stateless"}
+)
+
+_USER_SCALE_LABELS = {
+    UserScale.PERSONAL: "个人使用",
+    UserScale.TEAM: "团队使用",
+    UserScale.MULTI_TENANT: "多租户",
+    UserScale.INTERNET: "互联网规模",
+}
+
+_PERFORMANCE_TIER_LABELS = {
+    PerformanceTier.BEST_EFFORT: "尽力而为",
+    PerformanceTier.INTERACTIVE: "交互可感知",
+    PerformanceTier.LOW_LATENCY: "低延迟",
+    PerformanceTier.CUSTOM: "自定义",
+}
+
+_CONSISTENCY_MODEL_LABELS = {
+    ConsistencyModel.LOCAL_ONLY: "本地单写",
+    ConsistencyModel.STRONG: "强一致",
+    ConsistencyModel.EVENTUAL: "最终一致",
+    ConsistencyModel.SESSION: "会话级",
+    ConsistencyModel.CUSTOM: "自定义",
+}
+
+_VERIFIABLE_BY_LABELS = {
+    VerifiableBy.AUTOMATED_TEST: "automated_test",
+    VerifiableBy.MANUAL: "manual",
+    VerifiableBy.DEPLOY_CHECK: "deploy_check",
+    VerifiableBy.LINT: "lint",
+}
 
 
 def _glossary_entries(context: dict[str, Any]) -> list[dict[str, str]]:
@@ -35,6 +74,25 @@ def _context_lines(context: dict[str, Any]) -> list[str]:
     return lines
 
 
+def _storage_kind(spec: SpecArtifact) -> str | None:
+    storage = spec.context.get("storage")
+    if isinstance(storage, str) and storage.strip():
+        return storage.strip().lower()
+    return None
+
+
+def _consistency_nfr_trivial(spec: SpecArtifact) -> bool:
+    storage = _storage_kind(spec)
+    if storage and storage not in _NON_PERSISTENT_STORAGE:
+        return False
+    cp = spec.consistency_profile
+    return (
+        cp.consistency_model == ConsistencyModel.LOCAL_ONLY
+        and not cp.multi_writer
+        and not cp.idempotency_required
+    )
+
+
 def render_spec_md(spec: SpecArtifact) -> str:
     """将 SpecArtifact 渲染为人类可读的 Markdown 文档。"""
     lines: list[str] = [
@@ -58,7 +116,7 @@ def render_spec_md(spec: SpecArtifact) -> str:
         for entry in glossary:
             lines.append(f"| {entry['term']} | {entry['definition']} |")
     else:
-        lines.append("—")
+        lines.append("无")
     lines.append("")
 
     lines.extend(["## 背景与上下文", ""])
@@ -69,20 +127,33 @@ def render_spec_md(spec: SpecArtifact) -> str:
         lines.append("—")
     lines.append("")
 
+    lines.extend(["## 业务指标", ""])
     if spec.success_metrics:
-        lines.extend(["## 业务指标", ""])
+        lines.extend(
+            [
+                "| ID | 名称 | 目标 | 验证方式 |",
+                "|----|------|------|----------|",
+            ]
+        )
         for metric in spec.success_metrics:
-            lines.append(
-                f"- **{metric.id}** {metric.name}: {metric.target} "
-                f"(`{metric.verifiable_by.value}`)"
+            verifiable = _VERIFIABLE_BY_LABELS.get(
+                metric.verifiable_by, metric.verifiable_by.value
             )
-        lines.append("")
+            lines.append(
+                f"| {metric.id} | {metric.name} | {metric.target} | {verifiable} |"
+            )
+    else:
+        lines.append("无")
+    lines.append("")
 
     lines.extend(["## 功能", ""])
     for feature in spec.features:
+        story_refs = ""
+        if feature.user_story_ids:
+            story_refs = f" — {', '.join(feature.user_story_ids)}"
         lines.append(
             f"- **{feature.id}** ({feature.priority.value}) {feature.name}: "
-            f"{feature.description}"
+            f"{feature.description}{story_refs}"
         )
     lines.append("")
 
@@ -116,48 +187,76 @@ def render_spec_md(spec: SpecArtifact) -> str:
     lines.append("")
 
     lines.extend(["## 范围", ""])
-    lines.append("**纳入：**")
+    lines.append("**本次包含**")
+    lines.append("")
     for item in spec.scope_in:
         lines.append(f"- {item}")
     lines.append("")
-    lines.append("**排除：**")
+    lines.append("**明确不做**")
+    lines.append("")
     if spec.scope_out:
         for item in spec.scope_out:
             lines.append(f"- {item}")
     else:
-        lines.append("- —")
+        lines.append("无")
     lines.append("")
 
     op = spec.operational_profile
     cp = spec.consistency_profile
-    lines.extend(
-        [
-            "## 非功能性需求",
-            "",
-            f"- **用户体量：** `{op.user_scale.value}`",
-            f"- **高并发：** `{op.high_concurrency}`",
-            f"- **性能档位：** `{op.performance.tier.value}`",
-        ]
+    lines.extend(["## 非功能性需求", ""])
+
+    lines.extend(["### 稳定性与性能", ""])
+    scale_label = _USER_SCALE_LABELS.get(op.user_scale, op.user_scale.value)
+    tier_label = _PERFORMANCE_TIER_LABELS.get(
+        op.performance.tier, op.performance.tier.value
     )
+    perf_desc = tier_label
     if op.performance.notes:
-        lines.append(f"- **性能说明：** {op.performance.notes}")
+        perf_desc = f"{tier_label} — {op.performance.notes}"
     lines.extend(
         [
-            f"- **一致性模型：** `{cp.consistency_model.value}`",
-            f"- **投递语义：** `{cp.delivery.value}`",
-            f"- **多写者：** `{cp.multi_writer}`",
-            f"- **幂等要求：** `{cp.idempotency_required}`",
+            "| 项 | 说明 |",
+            "|----|------|",
+            f"| 用户体量 | {scale_label} |",
+            f"| 高并发 | {'是' if op.high_concurrency else '否'} |",
+            f"| 性能预期 | {perf_desc} |",
+            "",
         ]
     )
-    if cp.conflict_strategy is not None:
-        lines.append(f"- **冲突策略：** `{cp.conflict_strategy.value}`")
-    if cp.notes:
-        lines.append(f"- **一致性说明：** {cp.notes}")
+
+    lines.extend(["### 数据一致性", ""])
+    if _consistency_nfr_trivial(spec):
+        lines.append("无")
+    else:
+        model_label = _CONSISTENCY_MODEL_LABELS.get(
+            cp.consistency_model, cp.consistency_model.value
+        )
+        lines.extend(
+            [
+                "| 项 | 说明 |",
+                "|----|------|",
+                f"| 一致性模型 | {model_label} |",
+                f"| 投递语义 | {cp.delivery.value} |",
+                f"| 多写者 | {'是' if cp.multi_writer else '否'} |",
+                f"| 须幂等 | {'是' if cp.idempotency_required else '否'} |",
+            ]
+        )
+        if cp.conflict_strategy is not None:
+            lines.append(f"| 冲突策略 | {cp.conflict_strategy.value} |")
+        if cp.notes:
+            lines.append(f"| 说明 | {cp.notes} |")
     lines.append("")
 
     lines.extend(["## 验收标准", ""])
+    lines.extend(
+        [
+            "| ID | 描述 | 验证方式 |",
+            "|----|------|----------|",
+        ]
+    )
     for ac in spec.acceptance_criteria:
-        lines.append(f"- **{ac.id}** {ac.description} (`{ac.verifiable_by.value}`)")
+        verifiable = _VERIFIABLE_BY_LABELS.get(ac.verifiable_by, ac.verifiable_by.value)
+        lines.append(f"| {ac.id} | {ac.description} | {verifiable} |")
     lines.append("")
 
     lines.extend(["## 约束", ""])
@@ -166,20 +265,11 @@ def render_spec_md(spec: SpecArtifact) -> str:
             lines.append(f"- {item}")
     else:
         lines.append("无额外约束。")
-    lines.extend(
-        [
-            "",
-            "## 待澄清项",
-            "",
-            "None",
-            "",
-            "---",
-            "",
-            f"task_profile: `{spec.profile}` · revision: `{spec.revision}`",
-        ]
-    )
+    lines.extend(["", "---", ""])
+    lines.append(f"task_profile: {spec.profile}")
+    lines.append(f"revision: {spec.revision}")
     if spec.parent_task_id:
-        lines.append(f"parent_task_id: `{spec.parent_task_id}`")
+        lines.append(f"parent_task_id: {spec.parent_task_id}")
     else:
         lines.append("parent_task_id: —")
     lines.append("")

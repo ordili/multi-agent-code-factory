@@ -50,7 +50,7 @@
 
 | 状态 | 项 | 落点 | 参考 |
 |------|-----|------|------|
-| [x] | **`design.md` 渲染** | `renderers/design_md.py`；`architect.py` 写入 | [artifact-templates/design-spec.md](./artifact-templates/design-spec.md)（中文 §1–§10） |
+| [x] | **`design.md` 渲染** | `renderers/design_md.py`；`architect.py` 写入 | [artifact-templates/design-spec.md](./artifact-templates/design-spec.md)（定稿 §1–§6 + 附录 A–D） |
 | [x] | **`spec.md` 渲染** | `renderers/spec_md.py` | [artifact-templates/prd-spec.md](./artifact-templates/prd-spec.md)（中文 §1–§12） |
 | [x] | `flow.mmd` / 多 `*.mmd` 写出 | `architect.py`（`mmd_files[]`） | [artifact-templates/flow-spec.md](./artifact-templates/flow-spec.md) |
 
@@ -64,14 +64,14 @@
 
 | 状态 | 项 | 落点 |
 |------|-----|------|
-| [x] | SPEC-101–114、201–202（可测性，多为 warn） | `validators/spec_rules.py` + `spec_rules_extended.py` |
-| [x] | SPEC-301–313（`spec.md` 格式） | `validators/spec_md_rules.py` |
+| [x] | SPEC-101–114、201–202、017（可测性 / storage，多为 warn） | `validators/spec_rules.py` + `spec_rules_extended.py` |
+| [x] | SPEC-301–316（`spec.md` 格式） | `validators/spec_md_rules.py` |
 
 ### 2.2 Design
 
 | 状态 | 项 | 落点 |
 |------|-----|------|
-| [x] | DES-012–034（域模型、错误码、接口、test_cases 等） | `validators/design_rules.py` + `design_rules_extended.py` |
+| [x] | DES-012–036（域模型、错误码、接口、交付 intent 等） | `validators/design_rules.py` + `design_rules_extended.py` |
 | [x] | DES-201–223（`design.md` / `*.mmd` 格式） | `validators/design_md_rules.py` |
 
 ### 2.3 Mermaid
@@ -188,8 +188,9 @@
 - [x] `docs/runs/<task_id>/` 含 **`design.md`**
 - [ ] `go_json` / `cargo_json` / `forge_json` Parser + Profile 各跑通一例
 - [ ] `resume --task-id` 从 checkpoint 续跑
-- [ ] `design.md` 符合 [artifact-templates/design-spec.md](./artifact-templates/design-spec.md)
+- [x] `design.md` 符合 [artifact-templates/design-spec.md](./artifact-templates/design-spec.md)
+- [x] `spec.md` 符合 [artifact-templates/prd-spec.md](./artifact-templates/prd-spec.md)
 
 ---
 
-*最后更新：2026-07-09（§6 tests_missing/git_diff、§8 LangSmith task_id 已对接）*
+*最后更新：2026-07-10（spec.md prd-spec 对齐；`design_triggers` 重命名；SPEC-017/314–316）*

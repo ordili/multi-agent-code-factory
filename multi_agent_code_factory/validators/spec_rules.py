@@ -6,7 +6,6 @@ from typing import Any
 
 from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.spec import (
-    ConsistencyModel,
     SpecArtifact,
 )
 from multi_agent_code_factory.schemas.validation_report import Violation
@@ -214,17 +213,6 @@ def validate_spec_rules(
             violations.append(error("SPEC-016", "multi_writer is required"))
         if cp.idempotency_required is None:
             violations.append(error("SPEC-016", "idempotency_required is required"))
-        if (
-            cp.consistency_model == ConsistencyModel.CUSTOM
-            and not (cp.notes or "").strip()
-        ):
-            violations.append(
-                error(
-                    "SPEC-016",
-                    "consistency_profile.notes required when consistency_model=custom",
-                    field="consistency_profile.notes",
-                )
-            )
 
     violations.extend(validate_spec_extended_rules(spec))
 

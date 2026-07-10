@@ -1,4 +1,4 @@
-"""SPEC-301 至 SPEC-313 spec.md 格式规则。"""
+"""SPEC-301 至 SPEC-316 spec.md 格式规则。"""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ _REQUIRED_SECTIONS = (
     ("SPEC-301", "## 概述"),
     ("SPEC-302", "## 验收标准"),
     ("SPEC-303", "## 范围"),
+    ("SPEC-306", "## 业务指标"),
     ("SPEC-307", "## 功能"),
     ("SPEC-308", "## 非功能性需求"),
     ("SPEC-309", "## 术语与领域概念"),
@@ -42,11 +43,36 @@ def validate_spec_md_rules(
                 )
             )
 
-    if spec.success_metrics and "## 业务指标" not in md_text:
+    if "**本次包含**" not in md_text:
         violations.append(
             warn(
-                "SPEC-306",
-                "spec.md missing ## 业务指标 while success_metrics is non-empty",
+                "SPEC-316",
+                "spec.md scope section missing **本次包含**",
+                field="spec.md",
+            )
+        )
+    if "**明确不做**" not in md_text:
+        violations.append(
+            warn(
+                "SPEC-316",
+                "spec.md scope section missing **明确不做**",
+                field="spec.md",
+            )
+        )
+
+    if "### 稳定性与性能" not in md_text:
+        violations.append(
+            warn(
+                "SPEC-314",
+                "spec.md missing ### 稳定性与性能 under NFR",
+                field="spec.md",
+            )
+        )
+    if "### 数据一致性" not in md_text:
+        violations.append(
+            warn(
+                "SPEC-315",
+                "spec.md missing ### 数据一致性 under NFR",
                 field="spec.md",
             )
         )

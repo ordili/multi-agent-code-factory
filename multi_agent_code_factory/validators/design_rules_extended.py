@@ -9,7 +9,8 @@ from multi_agent_code_factory.schemas.design import DesignArtifact, DiagramKind
 from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.schemas.validation_report import Violation
 from multi_agent_code_factory.validators._report import error, warn
-from multi_agent_code_factory.validators.task_tier import (
+from multi_agent_code_factory.validators.design_triggers import (
+    requires_diagram_pair,
     requires_table_schemas,
     requires_transaction_constraints,
 )
@@ -81,9 +82,8 @@ def validate_design_extended_rules(
 
     if requires_table_schemas(design, spec):
         has_table_schemas = bool(design.table_schemas)
-        has_data_model_columns = bool(design.data_model) and any(
-            isinstance(table.get("columns"), list) and table.get("columns")
-            for table in design.table_schemas
+        has_data_model_columns = any(
+            bool(entity.fields) for entity in design.data_model
         )
         if not has_table_schemas and not has_data_model_columns:
             violations.append(
@@ -126,11 +126,9 @@ def validate_design_extended_rules(
     elif spec is not None:
         covered_by_tests: set[str] = set()
         for tc in design.test_cases:
-            covers = tc.get("covers")
-            if isinstance(covers, list):
+            covers = tc.covers
+            if covers:
                 covered_by_tests.update(str(item) for item in covers)
-            elif isinstance(covers, str):
-                covered_by_tests.add(covers)
         for ac in spec.acceptance_criteria:
             if ac.id not in covered_by_tests:
                 violations.append(
@@ -141,33 +139,32 @@ def validate_design_extended_rules(
                     )
                 )
 
-    diagram_kinds = {
-        diagram.kind.value if hasattr(diagram.kind, "value") else str(diagram.kind)
-        for diagram in design.diagrams
-    }
-    if DiagramKind.SEQUENCE.value not in diagram_kinds:
-        violations.append(
-            error(
-                "DES-017",
-                "diagrams must include kind=sequence",
-                field="diagrams",
+    if requires_diagram_pair(design, spec):
+        diagram_kinds = {
+            diagram.kind.value if hasattr(diagram.kind, "value") else str(diagram.kind)
+            for diagram in design.diagrams
+        }
+        if DiagramKind.SEQUENCE.value not in diagram_kinds:
+            violations.append(
+                error(
+                    "DES-017",
+                    "diagrams must include kind=sequence",
+                    field="diagrams",
+                )
             )
-        )
-    if DiagramKind.FLOWCHART.value not in diagram_kinds:
-        violations.append(
-            error(
-                "DES-017",
-                "diagrams must include kind=flowchart",
-                field="diagrams",
+        if DiagramKind.FLOWCHART.value not in diagram_kinds:
+            violations.append(
+                error(
+                    "DES-017",
+                    "diagrams must include kind=flowchart",
+                    field="diagrams",
+                )
             )
-        )
 
     for table in design.table_schemas:
-        for col in table.get("columns") or []:
-            if not isinstance(col, dict):
-                continue
-            name = col.get("name", "?")
-            if not isinstance(col.get("nullable"), bool):
+        for col in table.columns:
+            name = col.name
+            if not isinstance(col.nullable, bool):
                 violations.append(
                     error(
                         "DES-018",
@@ -175,7 +172,7 @@ def validate_design_extended_rules(
                         field="table_schemas",
                     )
                 )
-            description = col.get("description")
+            description = col.description
             if not isinstance(description, str) or not description.strip():
                 violations.append(
                     error(
@@ -185,53 +182,46 @@ def validate_design_extended_rules(
                     )
                 )
 
-        storage = str(table.get("storage", ""))
+        storage = str(table.storage)
         if _is_relational_storage(storage):
-            column_names = {
-                str(col.get("name"))
-                for col in table.get("columns") or []
-                if isinstance(col, dict) and col.get("name")
-            }
+            column_names = {col.name for col in table.columns if col.name}
             for required_col in ("created_at", "updated_at"):
                 if required_col not in column_names:
                     violations.append(
                         error(
                             "DES-019",
-                            f"relational table {table.get('name', '?')!r} "
-                            f"missing {required_col}",
+                            f"relational table {table.name!r} missing {required_col}",
                             field="table_schemas",
                         )
                     )
-            audit = table.get("audit_policy") or {}
-            if audit.get("require_version") and "version" not in column_names:
+            audit = table.audit_policy
+            if audit and audit.require_version and "version" not in column_names:
                 violations.append(
                     error(
                         "DES-019",
-                        f"table {table.get('name', '?')!r} requires version column",
+                        f"table {table.name!r} requires version column",
                         field="table_schemas",
                     )
                 )
-            indexes = table.get("indexes") or []
-            notes = table.get("notes") or ""
+            indexes = table.indexes
+            notes = table.notes or ""
             if not indexes and not str(notes).strip():
                 violations.append(
                     error(
                         "DES-019",
-                        f"relational table {table.get('name', '?')!r} needs indexes "
+                        f"relational table {table.name!r} needs indexes "
                         f"or notes explaining PK-only",
                         field="table_schemas",
                     )
                 )
 
-        for idx in table.get("indexes") or []:
-            if not isinstance(idx, dict):
-                continue
-            purpose = idx.get("purpose")
+        for idx in table.indexes:
+            purpose = idx.purpose
             if not isinstance(purpose, str) or not purpose.strip():
                 violations.append(
                     warn(
                         "DES-020",
-                        f"index {idx.get('name', '?')!r} should include purpose",
+                        f"index {idx.name!r} should include purpose",
                         field="table_schemas",
                     )
                 )
@@ -251,7 +241,7 @@ def validate_design_extended_rules(
     negative_by_code: dict[str, list[dict[str, Any]]] = {}
     kinds_present: set[str] = set()
     for tc in design.test_cases:
-        tc_id = tc.get("id")
+        tc_id = tc.id
         if not isinstance(tc_id, str) or not _TC_ID_RE.match(tc_id):
             violations.append(
                 error(
@@ -263,9 +253,12 @@ def validate_design_extended_rules(
                     field="test_cases",
                 )
             )
-        kind = tc.get("kind")
+        kind = tc.kind
         if isinstance(kind, str):
             kinds_present.add(kind)
+        elif hasattr(kind, "value"):
+            kinds_present.add(kind.value)
+            kind = kind.value
         if isinstance(kind, str) and isinstance(tc_id, str):
             segment = tc_id.split("-")[1].lower()
             expected = {"hap": "happy", "neg": "negative", "bnd": "boundary"}.get(
@@ -279,7 +272,7 @@ def validate_design_extended_rules(
                         field="test_cases",
                     )
                 )
-        error_code = tc.get("error_code")
+        error_code = tc.error_code
         if isinstance(error_code, str) and error_code:
             if error_code not in catalog_codes:
                 violations.append(
@@ -398,7 +391,7 @@ def validate_design_extended_rules(
             )
 
     for tc in design.test_cases:
-        tc_id = tc.get("id")
+        tc_id = tc.id
         if isinstance(tc_id, str):
             domain = _tc_domain(tc_id)
             if domain and domain not in registered:
@@ -410,9 +403,9 @@ def validate_design_extended_rules(
                     )
                 )
 
-    interfaces_by_module: dict[str, list[dict[str, Any]]] = {}
+    interfaces_by_module: dict[str, list[Any]] = {}
     for iface in design.interfaces:
-        module_ref = iface.get("module_ref") or iface.get("name")
+        module_ref = iface.module_ref or iface.name
         if isinstance(module_ref, str):
             interfaces_by_module.setdefault(module_ref, []).append(iface)
 
@@ -429,7 +422,7 @@ def validate_design_extended_rules(
                 )
             )
         for iface in module_ifaces:
-            operations = iface.get("operations") or []
+            operations = iface.operations
             if not operations:
                 violations.append(
                     error(
@@ -439,39 +432,37 @@ def validate_design_extended_rules(
                     )
                 )
             for op in operations:
-                if not isinstance(op, dict):
-                    continue
-                summary = op.get("summary")
+                summary = op.summary
                 if not isinstance(summary, str) or not summary.strip():
                     violations.append(
                         error(
                             "DES-033",
-                            f"operation {op.get('name', '?')!r} requires summary",
+                            f"operation {op.name!r} requires summary",
                             field="interfaces",
                         )
                     )
-                if "inputs" not in op or not isinstance(op.get("inputs"), list):
+                if not isinstance(op.inputs, list):
                     violations.append(
                         error(
                             "DES-033",
-                            f"operation {op.get('name', '?')!r} requires inputs array",
+                            f"operation {op.name!r} requires inputs array",
                             field="interfaces",
                         )
                     )
-                if "outputs" not in op or not isinstance(op.get("outputs"), list):
+                if not isinstance(op.outputs, list):
                     violations.append(
                         error(
                             "DES-033",
-                            f"operation {op.get('name', '?')!r} requires outputs array",
+                            f"operation {op.name!r} requires outputs array",
                             field="interfaces",
                         )
                     )
-                for err_code in op.get("errors") or []:
+                for err_code in op.errors:
                     if isinstance(err_code, str) and err_code not in catalog_codes:
                         violations.append(
                             warn(
                                 "DES-034",
-                                f"operation {op.get('name', '?')!r} references "
+                                f"operation {op.name!r} references "
                                 f"unknown error {err_code!r}",
                                 field="interfaces",
                             )

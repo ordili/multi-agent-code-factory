@@ -40,12 +40,13 @@ def run_design_validate(
         )
     else:
         violations, require_hitl = validate_design_rules(design, profile, spec)
-        violations.extend(validate_design_md_file(design, flow_dir))
+        violations.extend(validate_design_md_file(design, flow_dir, spec=spec))
         violations.extend(
             validate_mermaid_files(
                 design,
                 flow_dir,
                 strict=gate.validate_mermaid,
+                spec=spec,
             )
         )
         report = build_validation_report(

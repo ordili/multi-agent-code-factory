@@ -90,6 +90,11 @@ class UserStory(BaseModel):
     so_that: str
 
 
+class GlossaryEntry(BaseModel):
+    term: str
+    definition: str
+
+
 class RequirementItem(BaseModel):
     id: str
     description: str
@@ -236,6 +241,21 @@ def _coerce_consistency_profile(value: Any) -> dict[str, Any]:
     return profile
 
 
+def _coerce_context(value: Any) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    context = dict(value)
+    glossary = context.get("glossary")
+    if isinstance(glossary, list):
+        coerced: list[dict[str, str]] = []
+        for item in glossary:
+            if isinstance(item, dict):
+                entry = GlossaryEntry.model_validate(item)
+                coerced.append(entry.model_dump())
+        context["glossary"] = coerced
+    return context
+
+
 def coerce_spec_payload(data: Any) -> Any:
     """Normalize common LLM JSON shapes before SpecArtifact validation."""
     if not isinstance(data, dict):
@@ -244,6 +264,8 @@ def coerce_spec_payload(data: Any) -> Any:
     payload.setdefault("version", "1")
     payload.setdefault("profile", "unknown")
     payload.setdefault("revision", 1)
+    if "context" in payload:
+        payload["context"] = _coerce_context(payload["context"])
     if "user_stories" in payload:
         payload["user_stories"] = _coerce_user_stories(payload["user_stories"])
     if "requirement_pool" in payload:
