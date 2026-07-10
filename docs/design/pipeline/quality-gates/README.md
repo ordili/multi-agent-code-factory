@@ -26,7 +26,7 @@
 
 **rule_id 合计（定稿）：** **106** 条已定义（`SPEC-*` **44** · `DES-*` **62** = **57** 活跃 + **5** 废弃/合并；HITL 无独立 rule_id）。
 
-**条件规则 / 任务 tier：** 部分 `DES-*`（如 013/014/017）按 spec + design 推断是否要求非空，见 [design-validate.md §4.1](./design-validate.md#41-json-结构error--warn) 与 `validators/task_tier.py`。spec 侧传导见 [spec-validate.md §spec→design](./spec-validate.md#spec--design-传导只读)。
+**条件规则：** 部分 `DES-*` 按 spec / design 字段信号决定是否要求非空，见 [design-validate.md §4.1](./design-validate.md#41-json-结构error--warn) 各条「触发条件」；spec 侧见 [spec-validate.md §spec→design](./spec-validate.md#spec--design-传导只读)。
 
 **规范 vs 实现：** [design-validate.md §规范与实现对照](./design-validate.md#规范与实现对照) 列出定稿规则与当前 `validators/` 已知偏差（改代码时消项，不在此目录改规范迁就实现）。
 
@@ -99,7 +99,7 @@ validation:
 | 字段 | 说明 |
 |------|------|
 | `enabled` | false 则跳过该 validate 节点（仍做 Pydantic 结构校验） |
-| `block_on` | `error` 阻断；`warn` 只记录；`never` 仅落盘报告 |
+| `block_on` | **`error`（默认）**：`passed=false` 时路由回 PM/Architect（spec/design 分别配置）。**warn 级 violation 不导致 `passed=false`**。`warn`：仍仅 error 计失败，且路由不检查 `block_on`（不阻断，仅落盘）。`never`：`passed` 恒为 true |
 | `require_hitl` | 规则通过后是否强制 `spec_hitl` / `design_hitl` |
 | `require_hitl_if_flags` | 命中 `design.hitl_flags` 时强制 `design_hitl` |
 | `validate_mermaid` | 是否解析 Run 目录 `*.mmd`（须含可识别的 sequence + flowchart；见 [flow-spec.md](../artifact-templates/flow-spec.md)） |
