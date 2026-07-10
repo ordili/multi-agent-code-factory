@@ -18,7 +18,7 @@
 > **状态：** 定稿 · [artifact-templates 索引](./README.md)  
 > **适用范围：** 所有 Profile 写入 `code_root` 的**业务代码**（语言无关）  
 > **语言细则：** 各 Profile `{language}-style-snippet.txt`；Python 详见 [python-style.md](../python-style.md)  
-> **注入：** Developer 节点 system prompt（`dev-principles-snippet.txt`）  
+> **注入：** Developer 节点 system prompt（`developer-principles-snippet.txt`）  
 > **非 Run 落盘产物：** 不生成 `dev-principles.md`；遵守情况体现在 `{code_root}/**` 与 `dev_manifest.json`
 
 ---
@@ -123,17 +123,17 @@
 
 | 角色 | 如何使用本文 |
 |------|----------------|
-| **Developer** | system prompt 注入 `dev-principles-snippet.txt` |
+| **Developer** | system prompt 注入 `developer-principles-snippet.txt` |
 | **QA** | 不读本文；跑 `toolchain.test_command` + `tests_missing` |
 | **Reviewer** | 对照本文 §1–§3（README、SRP、测试纪律）审查 `code_root` |
 | **Architect** | 在 `file_plan` / `test_strategy` 中体现 README 与测试布局 |
 
 ---
 
-> **待同步（实现层）：** `dev-principles-snippet.txt` 注入路径与 `builder.py` / `style_snippet.py`（以仓库实现为准）。Python 语言细则见 [python-style.md](../python-style.md)。
+> **待同步（实现层）：** `developer-principles-snippet.txt` 注入路径与 `builder.py` / `style_snippet.py`（以仓库实现为准）。Python 语言细则见 [python-style.md](../python-style.md)。
 
 ---
 
 ## 附录：snippet 与本文对应
 
-`dev-principles-snippet.txt` 为本文 §1–§6 的 condensed bullet，供 token 受限的 Developer 调用；更新原则时 **先改本文，再同步 snippet**。
+`developer-principles-snippet.txt` 为本文 §1–§6 的 condensed bullet，供 token 受限的 Developer 调用；更新原则时 **先改本文，再同步 snippet**。

@@ -50,14 +50,13 @@
 | `acceptance_criteria` | `{id, description, verifiable_by}[]` | §10 工程门禁 | 对象结构 + trace + `automated_test` | 有 AC-1 + `automated_test` | 无 | 字符串数组；缺 `verifiable_by` | **中** | 已加强；待多任务压测 |
 | `user_stories` | `{id, as_a, want, so_that}[]` | §6 用户行为 | `NOT plain strings` | 有 | **有**（字符串→Connextra 解析） | 纯字符串；缺字段 | 低 | 已加强；coerce 掩盖部分问题 |
 | `requirement_pool` | `{id, description, priority}[]` | §7 可排期细项 | `NOT nested dict` | 有 | **有**（嵌套 dict→列表） | 嵌套 dict；复制 US 原文 | 低 | 已加强 |
-| `features` | `FeatureItem[]`；非空（SPEC-009） | §5 能力级 | 仅「P0 + user_story_ids」 | 有 | 无 | 字符串数组；写成 US 句式 | **中** | **缺口**：无 `NOT plain strings` |
-| `operational_profile.user_scale` | `personal` \| `team` \| `multi_tenant` \| `internet` | §9 运行态 | **MUST 枚举** 已写 | `personal` | 默认 `personal`；**非法枚举不过** | `single_user`（与 `context.audience` 混淆） | 中 | **已加强**；live 曾观测 |
-| `operational_profile.performance.tier` | `PerformanceTier` 枚举 | §9 | 仅提 `performance.tier` | `best_effort` | 默认 `best_effort` | 自造 tier 名 | 中 | 枚举全集未写 |
-| `operational_profile` 整体 | 对象必填 | §9 | 对象字段概括 | 有 | **部分** default | `performance` 写成字符串 | 低 | coerce 可救 tier 字符串 |
-| `consistency_profile` | 多字段 + 多枚举 | §9 一致性 | prefer 档位；无全集 | 有（Todo 档） | **有**（字符串→对象；缺省填充） | 自造 enum；缺必填键 | 中 | 枚举全集未写 |
-| `context.storage` | 非空（SPEC-017） | §3 / 持久化 | 枚举列表已写 | **缺**（Todo 无 storage） | glossary 部分 | 省略或空字符串 | 中 | Example 缺口 |
-| `context.glossary` | `GlossaryEntry[]` | §2 术语 | 对象 `{term, definition}` | **常缺** | term/definition 校验 | 字符串数组 | 中 | 无 `NOT plain strings` |
-| `context.audience` 等 | 产品形态键（非 Pydantic 硬枚举） | §3 | 未单独写 | 不定 | 无 | 与 `user_scale` 混用 | 中 | **分工**：`audience=single_user` ≠ `user_scale=personal` |
+| `features` | `FeatureItem[]`；非空 | §5 能力级 | 对象结构 + `NOT strings` + 能力级分工 | 有 | 无 | 字符串数组 | 低 | **已加强**（2026-07） |
+| `operational_profile.user_scale` | 四枚举 | §9 运行态 | MUST 枚举 + audience 分工 | `personal` | 默认 `personal` | `single_user` | 低 | **已加强** |
+| `operational_profile.performance.tier` | `PerformanceTier` | §9 | 枚举全集 | `best_effort` | 默认 | 自造 tier | 低 | **已加强** |
+| `consistency_profile` | 多枚举 | §9 | 枚举全集 + prefer 档位 | 有 | **有** | 自造 enum | 低 | **已加强** |
+| `context.storage` | 非空 SPEC-017 | §3 | 枚举列表已写 | **有** `json_file` | 无 | 省略 | 低 | **已加强** |
+| `context.glossary` | `GlossaryEntry[]` | §2 | 对象 + `NOT strings` | 可选 | 静默丢字符串 | 字符串数组 | 中 | **已加强** |
+| `context.audience` 等 | 产品形态键 | §3 | audience ≠ user_scale | 不定 | 无 | 混用 | 低 | **已加强** |
 | `scope_in` / `scope_out` | `string[]` | §8 边界 | 仅点名 | 有 | 无 | 写成单个字符串 | 低 | — |
 | `constraints` | `string[]` | §11 | 举例 | 有 | 无 | 写成对象 | 低 | — |
 | `title` / `summary` | 非空 string | §1 | 点名 | 有 | 无 | 空 | 低 | — |
@@ -65,20 +64,17 @@
 
 ---
 
-## 4. 优先级队列（建议下一批）
+## 4. 优先级队列
 
-按 **风险 × prompt 缺口 × 无 coerce** 排序，**暂不实现**，仅作排期：
+2026-07 第二轮 prompt 已落实 P1/P2 项；剩余以 **多任务压测** 与 **Architect 同类审计** 为主。
 
-| 优先级 | 字段 | 理由 | 建议动作（未来） |
-|--------|------|------|------------------|
-| P1 | `features` | 无 `NOT plain strings`；与 US/REQ 易混 | pm.txt 补对象结构 + 能力级 vs US 分工 |
-| P1 | `context.storage` + Example | SPEC-017 硬门禁；`__llm_example__` 常缺 | Example 补 `storage`；小 CLI 示范 `none` |
-| P2 | `context.audience` vs `user_scale` | 文档允许 `audience: single_user`，模型误写入 `user_scale` | pm.txt 显式写「勿把 audience 值用于 user_scale」 |
-| P2 | `operational_profile.performance.tier` 等枚举 | 仅点名无全集 | pm.txt 或 Example 列枚举字面量 |
-| P2 | `consistency_profile` 枚举 | 同上 | 列 `consistency_model` / `delivery` / `conflict_strategy` 合法值 |
-| P3 | `acceptance_criteria` | 已写结构；需压测字符串数组是否仍出现 | 多任务 captures；必要时加 `NOT plain strings` |
-| P3 | `context.glossary` | 有对象说明无 NOT strings | 补一行 + Example 带 glossary |
-| P3 | `__llm_example__` vs 小 CLI | Pipeline Example 非空 KPI，与「宜 `[]`」并存 | 二选一：注释说明 / 第二示例 / 按 profile 切换 |
+| 优先级 | 项 | 状态 |
+|--------|-----|------|
+| — | PM `features` / `storage` / 枚举 / glossary / audience | **已做** |
+| — | Architect `error_catalog` / `test_cases` + Example | **已做** |
+| P1 | 多任务 Live 压测填 §6 | 待做 |
+| P2 | Architect 专用 `debug_architect_llm.py` | 待做 |
+| P3 | `__llm_example__` 小 CLI 第二示例（KPI `[]`） | 可选 |
 
 ---
 
@@ -110,3 +106,4 @@ SPEC-102 / SPEC-106 等 **warn** 规则关心追溯，不要求 KPI 非空。
 | 日期 | 说明 |
 |------|------|
 | 2026-07-10 | 初稿：基于 success_metrics 修复后的讨论与仓库现状 |
+| 2026-07-10 | 第二轮：pm/architect/reviewer prompt + Example 补强 |

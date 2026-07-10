@@ -290,7 +290,7 @@ class SpecArtifact(BaseModel):
         "revision": 1,
         "title": "CLI Todo App",
         "summary": "Command-line todo CRUD with JSON persistence",
-        "context": {"language": "python", "interface": "cli"},
+        "context": {"language": "python", "interface": "cli", "storage": "json_file"},
         "success_metrics": [
             {
                 "id": "KPI-1",

@@ -450,6 +450,14 @@ class DesignArtifact(BaseModel):
         "spec_ref": "CLI Todo App",
         "revision": 1,
         "summary": "CLI + JSON store",
+        "non_goals": ["Web UI"],
+        "design_goals": ["FEAT-1: Todo CRUD"],
+        "context_view": {"actors": ["User", "TodoCLI"]},
+        "architecture": {
+            "solution_strategy": "CLI commands with JSON file persistence",
+            "code_delta": {"summary": "greenfield"},
+        },
+        "cross_cutting": {},
         "modules": [
             {
                 "name": "TodoCLI",
@@ -464,7 +472,7 @@ class DesignArtifact(BaseModel):
                 "path": "src/todo_store.py",
                 "description": "JSON load/save",
                 "depends_on": [],
-                "covers": ["AC-1"],
+                "covers": ["AC-1", "FEAT-1"],
             }
         ],
         "external_dependencies": [
@@ -474,6 +482,31 @@ class DesignArtifact(BaseModel):
                 "purpose": "persistence",
                 "code_domain": "STORE",
             }
+        ],
+        "error_catalog": [
+            {
+                "code": "ERR-TODO-001",
+                "when": "todo id not found",
+                "message": "Todo not found",
+                "retryable": False,
+            }
+        ],
+        "test_cases": [
+            {
+                "id": "TC-HAP-TODO-001",
+                "kind": "happy",
+                "title": "add and list todos",
+                "covers": ["AC-1"],
+            },
+            {
+                "id": "TC-NEG-TODO-001",
+                "kind": "negative",
+                "title": "complete missing todo",
+                "error_code": "ERR-TODO-001",
+            },
+        ],
+        "traceability": [
+            {"spec_ref_id": "FEAT-1", "spec_ref_kind": "FEAT"},
         ],
     }
 

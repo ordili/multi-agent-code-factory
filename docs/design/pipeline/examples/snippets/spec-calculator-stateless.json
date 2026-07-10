@@ -6,7 +6,8 @@
   "summary": "命令行四则运算计算器",
   "context": {
     "language": "python",
-    "interface": "cli"
+    "interface": "cli",
+    "storage": "none"
   },
   "success_metrics": [],
   "features": [

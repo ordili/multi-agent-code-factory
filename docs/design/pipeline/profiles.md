@@ -153,13 +153,13 @@ run_tests Tool：setup（可选）→ build（可选）→ test_command → test
 
 | 层 | 文档 / 文件 | 注入 |
 |----|-------------|------|
-| **通用** | [dev-principles-spec.md](./artifact-templates/dev-principles-spec.md) | `profiles/_shared/prompts/dev-principles-snippet.txt`（Developer） |
+| **通用** | [dev-principles-spec.md](./artifact-templates/dev-principles-spec.md) | `profiles/_shared/prompts/developer-principles-snippet.txt`（Developer） |
 | **语言** | `{language}-style-snippet.txt`；Python 详见 [python-style.md](./python-style.md) | Developer，在通用 snippet 之后 |
 
 ### 编码规范 snippet（各语言）
 
 - 路径：`profiles/<language>/prompts/{language}-style-snippet.txt`（可选别名 `style-snippet.txt`）。
-- 注入：**Developer** 节点依次注入 `dev-principles-snippet.txt` + 语言 snippet；PM / Architect 等不注入。
+- 注入：**Developer** 节点依次注入 `developer-principles-snippet.txt` + 语言 snippet；PM / Architect 等不注入。
 - 解析：`agents/llm/prompt/style_snippet.py` · `load_dev_principles_snippet()`。
 
 ### Python（`python`）

@@ -36,7 +36,7 @@ profiles/
 - `{language}/prompts/developer.txt` — 角色任务说明（语言相关）
 - `{language}/prompts/{language}-style-snippet.txt` — 语言编码规范（Developer 注入，在通用原则之后）
 
-**所有语言 Developer** 另注入 `_shared/prompts/dev-principles-snippet.txt`（README、SRP 等；见 [dev-principles-spec.md](../../docs/design/pipeline/artifact-templates/dev-principles-spec.md)）。
+**所有语言 Developer** 另注入 `_shared/prompts/developer-principles-snippet.txt`（README、SRP 等；见 [dev-principles-spec.md](../../docs/design/pipeline/artifact-templates/dev-principles-spec.md)）。
 
 **PM / Architect / Reviewer** 与语言无关，共用 `profiles/_shared/prompts/{role}.txt`（产出 Spec / Design / Review JSON 或 Mermaid）。各语言目录可放 `{role}.txt` 覆盖共享版。
 
@@ -47,7 +47,7 @@ profiles/
 | PM | `_shared/prompts/pm.txt` | — |
 | Architect | `_shared/prompts/architect.txt` | — |
 | Reviewer | `_shared/prompts/reviewer.txt` | — |
-| Developer | `_shared/prompts/dev-principles-snippet.txt` | 各语言 `developer.txt` + `{language}-style-snippet.txt` |
+| Developer | `_shared/prompts/developer-principles-snippet.txt` | 各语言 `developer.txt` + `{language}-style-snippet.txt` |
 
 ## V1 语言 Profile
 

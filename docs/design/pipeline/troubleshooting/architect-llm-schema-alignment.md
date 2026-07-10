@@ -108,6 +108,9 @@ python scripts/debug_pm_spec_llm.py --show-prompts
 | 错误码 | `ERR-{域}-###`，如 `ERR-CALC-001` | `ERR-1`、`ERR-2` |
 | 用例 id | `TC-HAP-{域}-###` / `TC-NEG-...` / `TC-BND-...` | `TC-HAP-1`、`TC-NEG-1`、`TC-BND-1` |
 
+**prompt 修复（2026-07）：** `architect.txt` 已补充 `error_catalog` / `test_cases` 对象结构、
+`code` vs `id` 分工、`kind` 枚举与 ERR/TC 命名；`DesignArtifact.__llm_example__` 已含完整示范。
+
 ### 3.2 `error_catalog[]`
 
 | 字段 | 要求 | 模型输出 |

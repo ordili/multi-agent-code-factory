@@ -16,8 +16,12 @@ def test_language_agnostic_roles_use_shared_prompts() -> None:
         assert "SpecArtifact" in pm
         assert "success_metrics" in pm
         assert "NOT plain strings" in pm
+        assert "features:" in pm
         assert "DesignArtifact" in architect
+        assert "error_catalog" in architect
+        assert "kind REQUIRED" in architect
         assert "test_report.passed" in reviewer
+        assert "acceptance_coverage" in reviewer
 
 
 def test_artifact_language_snippet_injected_for_pm_architect_reviewer() -> None:

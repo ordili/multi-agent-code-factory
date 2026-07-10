@@ -137,15 +137,25 @@ Produce a complete SpecArtifact JSON that matches the pipeline schema:
   local_file | json_file | database | none | memory | stateless
   (drives downstream design table_schemas / diagrams obligations)
 - context.glossary: array of {{term, definition}} for domain terms and user personas
-  (user_stories.as_a should reuse glossary role terms;
-   each entry needs non-empty term/definition)
-- features (with P0 priorities and user_story_ids on P0 features)
+  — NOT plain strings; each entry needs non-empty term and definition
+  (user_stories.as_a should reuse glossary role terms)
+- context.audience / deployment (optional product-shape keys,
+  e.g. audience: single_user) are NOT operational_profile.user_scale —
+  user_scale MUST use personal | team | multi_tenant | internet
+- features: list of objects {{id, name, description, priority, user_story_ids?}}
+  — NOT plain strings; capability-level descriptions (not Connextra user-story wording)
+  P0 features should include user_story_ids with at least one US-* when possible
 - user_stories, requirement_pool
 - scope_in, scope_out
 - operational_profile: object with user_scale, high_concurrency (bool), performance.tier
   user_scale MUST be one of: personal | team | multi_tenant | internet
+  performance.tier MUST be one of: best_effort | interactive | low_latency | custom
 - consistency_profile: object with consistency_model, delivery, multi_writer,
   idempotency_required, conflict_strategy when relevant
+  consistency_model: local_only | strong | eventual | session | custom
+  delivery: best_effort | at_most_once | at_least_once | exactly_once
+  conflict_strategy: not_applicable | single_writer | last_write_wins |
+    versioned_merge | manual
   Stateless / no-persistence CLI (storage=none): prefer
   consistency_model=local_only, delivery=best_effort, multi_writer=false,
   idempotency_required=false, conflict_strategy=not_applicable
@@ -159,7 +169,9 @@ Produce a complete SpecArtifact JSON that matches the pipeline schema:
 - user_stories: list of objects {{id, as_a, want, so_that}} — NOT plain strings
 - requirement_pool: list of objects {{id, description, priority}} — NOT a nested dict
 - acceptance_criteria: list of objects {{id, description, verifiable_by}}
+  — NOT plain strings
   each P0 user story should be traceable in AC description or a manual KPI;
+  verifiable_by: automated_test | manual | deploy_check | lint
   include verifiable_by automated_test where profile test toolchain applies
 - constraints (e.g. no_secrets_in_repo)
 
@@ -177,7 +189,8 @@ and rendered spec.md / design.md / review.md):
   error_catalog user-facing messages, test case descriptions, review finding messages,
   Mermaid diagram node labels (sequence / flowchart).
 - Keep machine identifiers in English: id fields (FEAT-*, US-*, AC-*, REQ-*, KPI-*,
-  ERR-*, TC-*), code_domain, file paths, API/operation names, enum literal values.
+  ERR-*, TC-*), error_catalog[].code (not id), code_domain, file paths,
+  API/operation names, enum literal values.
 - spec.context.language is the implementation programming language (e.g. python),
   NOT the prose language of PRD/design documents.
 

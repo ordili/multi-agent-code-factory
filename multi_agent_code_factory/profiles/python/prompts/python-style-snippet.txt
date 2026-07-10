@@ -1,4 +1,4 @@
-﻿# Python code standards (Profile python) — language-specific; injected after dev-principles-snippet
+﻿# Python code standards (Profile python) — language-specific; injected after developer-principles-snippet
 # Universal rules: docs/design/pipeline/artifact-templates/dev-principles-spec.md
 # Full Python spec: docs/design/pipeline/python-style.md
 

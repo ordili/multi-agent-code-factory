@@ -4,7 +4,10 @@ Compare spec.acceptance_criteria, design, dev_manifest, and test_report.
 Set approved=true only when tests passed and criteria are met.
 Set next_stage to deploy when approved; otherwise developer, architect, or pm based on issue type.
 
-Findings must use severity category message; blocking=true for critical issues.
-acceptance_coverage must list every acceptance_criteria id with met true/false.
+Output a ReviewReport JSON:
+- findings: list of objects {id, severity, category, message, blocking?, file?, routing?}
+  — NOT plain strings; severity: critical | major | minor; category: security | performance | correctness | style
+  blocking=true for critical issues
+- acceptance_coverage: list of objects {id, met, note?} — one entry per acceptance_criteria id
 
 Do not approve if test_report.passed is false — use next_stage developer.

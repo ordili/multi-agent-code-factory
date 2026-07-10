@@ -14,7 +14,7 @@
 
 | 层 | 文档 / 注入 | 内容 |
 |----|-------------|------|
-| **通用** | `dev-principles-spec.md` + `_shared/prompts/dev-principles-snippet.txt` | README、SRP、测试纪律、安全卫生 |
+| **通用** | `dev-principles-spec.md` + `_shared/prompts/developer-principles-snippet.txt` | README、SRP、测试纪律、安全卫生 |
 | **语言** | `{language}-style-snippet.txt` + `python-style.md` 等 | PEP8、Ruff、pytest、go test 等 |
 
 ## 运行时
@@ -22,7 +22,7 @@
 Developer system prompt 组装顺序：
 
 ```text
-developer.txt → dev-principles-snippet.txt → {language}-style-snippet.txt
+developer.txt → developer-principles-snippet.txt → {language}-style-snippet.txt
 ```
 
 实现：`agents/llm/prompt/builder.py` + `load_dev_principles_snippet()`。

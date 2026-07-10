@@ -10,7 +10,14 @@ Given spec and profile, produce:
    - modules (each with code_domain), dev_tasks (unique paths), traceability (spec_ref_id + spec_ref_kind FEAT/AC)
    - dev_tasks.covers must include every P0 feature id and acceptance criterion id
    - external_dependencies: never leave empty — use [{"name":"none","kind":"none","purpose":"..."}] for stateless CLI
-   - error_catalog, test_cases (ERR-* / TC-HAP|NEG|BND-* ids), interfaces[] with operations[] per module
+   - error_catalog: list of objects {code, when?, message?, retryable?, recovery?} — NOT plain strings
+     Use field code (ERR-{DOMAIN}-###, e.g. ERR-CALC-001); derive DOMAIN from module code_domain
+     Do NOT use id, severity, or error_code as the catalog key — only code
+   - test_cases: list of objects {id, kind, title?, description?, expected?, covers?, error_code?}
+     — NOT plain strings; kind REQUIRED: happy | negative | boundary
+     id pattern: TC-HAP-{DOMAIN}-###, TC-NEG-{DOMAIN}-###, TC-BND-{DOMAIN}-###
+     NEG cases should set error_code to an error_catalog[].code; happy/boundary covers should prefer AC-* ids
+   - interfaces[] with operations[] per module (operation.errors reference error_catalog codes)
    - transaction_constraints: array of objects (not strings); required when spec has persistence/filesystem/db; may be [] for stateless in-memory CLI with local_only consistency
    - table_schemas: required when spec.context.storage, filesystem/db deps, or relational data; may be [] for pure stateless CLI (no persistence)
 2. Mermaid diagrams — one or more `*.mmd` files under the run directory:

@@ -7,8 +7,8 @@ from pathlib import Path
 from multi_agent_code_factory._paths import profiles_dir
 from multi_agent_code_factory.profile_config import ProfileConfig
 
-_DEV_PRINCIPLES_SNIPPET = (
-    profiles_dir() / "_shared" / "prompts" / "dev-principles-snippet.txt"
+_DEVELOPER_PRINCIPLES_SNIPPET = (
+    profiles_dir() / "_shared" / "prompts" / "developer-principles-snippet.txt"
 )
 _ARTIFACT_LANGUAGE_SNIPPET = (
     profiles_dir() / "_shared" / "prompts" / "artifact-language-snippet.txt"
@@ -16,10 +16,10 @@ _ARTIFACT_LANGUAGE_SNIPPET = (
 
 
 def load_dev_principles_snippet() -> str | None:
-    """读取跨语言 Developer 工程原则 snippet。"""
-    if not _DEV_PRINCIPLES_SNIPPET.is_file():
+    """读取跨语言 Developer 工程原则 snippet（developer-principles-snippet.txt）。"""
+    if not _DEVELOPER_PRINCIPLES_SNIPPET.is_file():
         return None
-    return _DEV_PRINCIPLES_SNIPPET.read_text(encoding="utf-8")
+    return _DEVELOPER_PRINCIPLES_SNIPPET.read_text(encoding="utf-8")
 
 
 def load_artifact_language_snippet() -> str | None:

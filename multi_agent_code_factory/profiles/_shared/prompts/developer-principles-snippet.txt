@@ -1,4 +1,4 @@
-# Universal dev principles (all languages) — injected into Developer system prompt
+# Universal developer principles (all languages) — injected into Developer system prompt
 # Full spec: docs/design/pipeline/artifact-templates/dev-principles-spec.md
 
 - Every new project MUST include README.md: intro, install/setup, usage, how to run tests.
