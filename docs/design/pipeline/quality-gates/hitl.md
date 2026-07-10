@@ -1,5 +1,20 @@
 # HITL 节点与 Reviewer 分工
 
+## 依赖上游文档（只读）
+
+审查 / 修订本文时 **仅以本表及正文流程约定为准**；不引用节点实现代码。
+
+
+| 分类        | 上游文档                                                                                  | 定位                              |
+| --------- | ------------------------------------------------------------------------------------- | ------------------------------- |
+| **JSON 契约** | [hitl-spec.md](../artifact-schemas/hitl-spec.md)                                      | Run `hitl.json` 字段              |
+| **门禁索引**  | [README.md](./README.md)                                                              | Profile `hitl` / `require_hitl` |
+| **规则**    | [spec-validate.md](./spec-validate.md) · [design-validate.md](./design-validate.md)   | 校验通过后的 HITL 路由前提                |
+| **总设计**   | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+
+
+---
+
 > **索引：** [quality-gates/README.md](./README.md)  
 > **Schema：** [hitl-spec.md](../artifact-schemas/hitl-spec.md)  
 > **规则清单：** [spec-validate.md](./spec-validate.md) · [design-validate.md](./design-validate.md)（HITL 无独立 `rule_id`，仅路由与 Profile 配置）

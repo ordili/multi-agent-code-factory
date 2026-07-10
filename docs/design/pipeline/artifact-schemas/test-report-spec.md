@@ -1,5 +1,19 @@
 # test-report-spec.md — TestReport（QA JSON 契约）
 
+## 依赖上游文档（只读）
+
+审查 / 修订本文时 **仅以本表及正文字段定义为准**；测试命令见 [profiles.md](../profiles.md)。
+
+
+| 分类          | 上游文档                                                         | 定位                  |
+| ------- | ------------------------------------------------------------ | ------------------- |
+| **总设计** | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **运行配置** | [profiles.md](../profiles.md)                                | `toolchain` 测试命令与解析器  |
+| **上游 schema** | [design-spec.md](./design-spec.md)                            | `test_cases` 字段语义   |
+
+
+---
+
 > **实现：** `multi_agent_code_factory/schemas/test_report.py`  
 > **Run 路径：** `test_report.json`  
 > **产生方式：** `run_tests` Tool（**非 LLM 编造**）

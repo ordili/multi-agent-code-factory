@@ -1,5 +1,18 @@
 ﻿# 术语表
 
+## 依赖上游文档（只读）
+
+本文 **非规范性** 术语速查；定义语境以总设计为准。
+
+
+| 分类      | 上游文档                                                                      | 定位        |
+| ------- | ------------------------------------------------------------------------- | --------- |
+| **总设计** | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **索引**  | [references/README.md](./README.md)                                       | 参考目录职责    |
+
+
+---
+
 > **主线：** [multi-agent-pipeline-design.md](../../pipeline/multi-agent-pipeline-design.md)
 
 | 术语 | 含义 |

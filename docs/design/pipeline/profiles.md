@@ -1,5 +1,19 @@
 ﻿# Profile 与 Toolchain
 
+## 依赖上游文档（只读）
+
+审查 / 修订 Profile 说明时 **以本表及正文字段语义为准**；YAML 取值以仓库 `profiles/*.yaml` 为准。`validation.*` / `hitl` 字段语义见 [quality-gates/README.md](./quality-gates/README.md)（下游）。
+
+
+| 分类       | 上游文档                                                                          | 定位                                      |
+| -------- | ----------------------------------------------------------------------------- | --------------------------------------- |
+| **总设计**  | [multi-agent-pipeline-design.md](./multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **配置载体** | `multi_agent_code_factory/profiles/*.yaml`                                    | 字段默认值与示例 Profile                       |
+| **领域（V2）** | [domains/README.md](../../../domains/README.md)                                | 领域 Profile 扩展                          |
+
+
+---
+
 > **配置以：** [`multi_agent_code_factory/profiles/`](../../../multi_agent_code_factory/profiles/) 下 `*.yaml` **为准**  
 > **主线：** [multi-agent-pipeline-design.md §1.1](./multi-agent-pipeline-design.md#11-profile领域配置)  
 > **V1 范围：** 本节矩阵与示例；**V2 领域 Profile** 见 [domains/](../../../domains/README.md)

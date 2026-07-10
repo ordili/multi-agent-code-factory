@@ -1,5 +1,19 @@
 ﻿# 工厂设计 — 细目索引
 
+## 依赖上游文档（只读）
+
+阅读 / 修订 pipeline 细目时 **以本表为目录级上游**；各子文档另含专属上游表，细则以子文档正文为准。
+
+
+| 分类        | 上游文档                                                        | 定位                          |
+| --------- | ----------------------------------------------------------- | --------------------------- |
+| **总览**    | [00-master-overview.md](../00-master-overview.md)           | V1 边界与 master 设计依据          |
+| **总设计**   | [multi-agent-pipeline-design.md](./multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **领域（V2）** | [domains/README.md](../../../domains/README.md)             | 领域 Profile 扩展（非 V1 主线）      |
+
+
+---
+
 > **主线文档：** [multi-agent-pipeline-design.md](./multi-agent-pipeline-design.md)（流程、路由、目录、验收）  
 > **本目录：** Profile、结构化产物规格、校验、示例与参考的 **详细设计 Spec**，避免主线过长。  
 > **V1 范围：** 通用流水线；**V2 领域**见 [domains/](../../../domains/README.md)
@@ -89,14 +103,14 @@ artifact-templates/review-spec.md           → review.md
 
 ## 文档规则
 
-### 1. 单向依赖
+### 1. 单向依赖 {#1-单向依赖}
 
 **每条设计文档只允许引用「上游」文档和本文自身内容，不引用、不描述下游文档的职责。**
 
 | 文档层 | 可引用 | 不可引用 / 不可展开 |
 |--------|--------|---------------------|
 | **artifact-schemas** | 上游 schema（如 design 引用 prd-spec）、Pydantic 路径、本文字段 | templates 章节写法、quality-gates rule_id、renderers |
-| **artifact-templates** | 上游 schemas、姊妹 templates（如 flow 引用 design）、本文 | quality-gates 具体规则、实现类名（除必要一行落点） |
+| **artifact-templates** | 总设计、**上游模板**（如 design-spec → prd-spec）、姊妹 templates（如 design-spec → flow-spec）、artifact-schemas 字段（正文引用，不进依赖表）、本文 | quality-gates 具体规则、实现类名（除必要一行落点） |
 | **quality-gates** | schemas + templates（校验基线） | 实现细节、下游 run 样例目录 |
 | **examples** | schemas（字段为准） | 自造与 schema 冲突的字段 |
 | **references** | 外部资料 | 不作为它 doc 的上游规范 |
@@ -115,7 +129,11 @@ artifact-templates/review-spec.md           → review.md
 | **examples = 片段** | 方便拷贝；与 schema 冲突时 **以 schema 为准** |
 | **references = 背景** | 不参与产物校验，不被 schemas 引用 |
 
-### 3. 命名约定
+### 3. 文首依赖表
+
+每个 `pipeline/**/*.md` 在 **H1 下** 须有 **`## 依赖上游文档（只读）`**（分类 · 上游文档 · 定位）；**只列独立上游文档**，章节不算单独一行；细则约定写在表前引导语并链到 [README.md §单向依赖](#1-单向依赖)。**`artifact-schemas/`** 不得把 `artifact-templates/`、`quality-gates/` 列入上游表；**`artifact-templates/`** 不得把 `artifact-schemas/`、`quality-gates/` 列入上游表。**`artifact-templates/`** 下各 `*-spec.md` **一般**须在表中列出流水线更早阶段的**上游人读模板**（分类 **上游模板**，定位 **上游人读 {name}-spec.md**）；同层配套（如 `flow-spec` 对 `design-spec`）在**下游**模板记 **姊妹模板**，在**本模板**记 **上游模板**。范例：[prd-spec.md（schemas）](./artifact-schemas/prd-spec.md#依赖上游文档只读) · [prd-spec.md（templates）](./artifact-templates/prd-spec.md#依赖上游文档只读) · [design-validate.md](./quality-gates/design-validate.md#依赖上游文档只读)（gates 层）。
+
+### 4. 命名约定
 
 ```text
 artifact-schemas/{name}-spec.md   →  JSON 契约说明（设计文档，非 run 文件）
@@ -125,7 +143,7 @@ docs/runs/<task_id>/{basename}    →  单次 run 落盘（spec.json、design.md
 
 后缀 **`-spec`** 表示 **格式/契约规范**；Run 落盘用 **短 basename**（`spec.json`、`design.md`）。
 
-### 4. 定稿与实现
+### 5. 定稿与实现
 
 - **定稿层：** `artifact-schemas/`、`artifact-templates/`、`quality-gates/` 下的 `*-spec.md` 为规格基线。
 - **实现层：** `schemas/`、`renderers/`、`validators/` 须与规格一致；滞后项记在 templates 页眉「待同步」或 [P1-backlog.md](./P1-backlog.md)，**不在 schemas 里写实现 TODO**。

@@ -1,5 +1,17 @@
 ﻿# Artifact Templates — 人读产物格式规范
 
+## 依赖上游文档（只读）
+
+审查 / 修订本目录人读格式时 **仅以本表及正文写作规范为准**。`artifact-schemas/`、`quality-gates/` 为**下游**，由彼引用本目录，不在此表列出（见 [README.md §单向依赖](../README.md#1-单向依赖)）。本目录各 `*-spec.md` 文首依赖表 **一般**列出总设计 + 流水线更早阶段的**上游人读模板**（分类 **上游模板**；见 [pipeline README §文首依赖表](../README.md#3-文首依赖表)）。
+
+
+| 分类      | 上游文档                                                                | 定位              |
+| ------- | ------------------------------------------------------------------- | --------------- |
+| **总设计** | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+
+
+---
+
 > **状态：** 定稿（本目录 `*-spec.md`）  
 > **设计文档（非 run 落盘）。** 运行时渲染结果见 `docs/runs/<task_id>/spec.md` 等。  
 > **JSON 字段规格（机器）：** [`../artifact-schemas/`](../artifact-schemas/README.md)  

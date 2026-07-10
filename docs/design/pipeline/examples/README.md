@@ -1,5 +1,19 @@
 ﻿# 工厂 — JSON / 图 示例
 
+## 依赖上游文档（只读）
+
+使用示例片段时 **以 artifact-schemas 字段为准**；与 schema 冲突时以 schema 为准（非规范参考）。
+
+
+| 分类        | 上游文档                                                    | 定位              |
+| --------- | ------------------------------------------------------- | --------------- |
+| **JSON 契约** | [artifact-schemas/README.md](../artifact-schemas/README.md) | 字段、类型、枚举权威定义    |
+| **人读模板**  | [artifact-templates/README.md](../artifact-templates/README.md) | 完整章节样例与写作约束     |
+| **总设计**   | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+
+
+---
+
 > **字段规格以：** [../artifact-schemas/](../artifact-schemas/README.md) **为准**  
 > **人读模板与长样例：** [../artifact-templates/](../artifact-templates/README.md)  
 > **主线：** [multi-agent-pipeline-design.md](../../pipeline/multi-agent-pipeline-design.md) §5 索引

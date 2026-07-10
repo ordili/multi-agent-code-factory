@@ -1,5 +1,19 @@
 ﻿# design-spec.md — Design Doc（人读）格式规范
 
+## 依赖上游文档（只读）
+
+审查 / 修订本文时 **仅以本表及正文写作规范为准**。`artifact-schemas/`、`quality-gates/` 为**下游**，不在此表列出（见 [README.md §单向依赖](../README.md#1-单向依赖)）。
+
+
+| 分类       | 上游文档                                                                | 定位                          |
+| -------- | ------------------------------------------------------------------- | --------------------------- |
+| **总设计**  | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **上游模板** | [prd-spec.md](./prd-spec.md)                                        | 上游人读 prd-spec.md              |
+| **姊妹模板** | [flow-spec.md](./flow-spec.md)                                      | Run `*.mmd` 配套              |
+
+
+---
+
 > **状态：** 定稿 · [artifact-templates 索引](./README.md)  
 > **Run 路径：** `docs/runs/<task_id>/design.md`  
 > **范围：** 本文 **只描述 Run `design.md` 怎么写**（面向 Architect / Developer / HITL）。正文 **宜中文**（标识符、路径、错误码等可保留英文）。  

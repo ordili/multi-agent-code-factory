@@ -1,5 +1,19 @@
 # dev-principles-spec.md — 生成代码通用工程原则
 
+## 依赖上游文档（只读）
+
+审查 / 修订本文时 **仅以本表及正文原则为准**。`artifact-schemas/` 为**下游**，不在此表列出（见 [README.md §单向依赖](../README.md#1-单向依赖)）。
+
+
+| 分类       | 上游文档                                                                | 定位                  |
+| -------- | ------------------------------------------------------------------- | ------------------- |
+| **总设计**  | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **索引**   | [README.md](./README.md)                                            | 模板目录职责              |
+| **语言细则** | [python-style.md](../python-style.md)                               | Python Profile 补充规范 |
+
+
+---
+
 > **状态：** 定稿 · [artifact-templates 索引](./README.md)  
 > **适用范围：** 所有 Profile 写入 `code_root` 的**业务代码**（语言无关）  
 > **语言细则：** 各 Profile `{language}-style-snippet.txt`；Python 详见 [python-style.md](../python-style.md)  

@@ -1,5 +1,18 @@
 # dev-manifest-spec.md — DevManifest（Developer JSON 契约）
 
+## 依赖上游文档（只读）
+
+审查 / 修订本文时 **仅以本表及正文字段定义为准**。`artifact-templates/dev-principles-spec` 为**下游**，不在此表列出。
+
+
+| 分类          | 上游文档                                                                | 定位                         |
+| ----------- | ------------------------------------------------------------------- | -------------------------- |
+| **上游 schema** | [design-spec.md](./design-spec.md)                                  | `dev_tasks[]`、`file_plan[]` 字段 |
+| **总设计**     | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+
+
+---
+
 > **实现：** `multi_agent_code_factory/schemas/dev_manifest.py`  
 > **Run 路径：** `dev_manifest.json`  
 > **产生方式：** Developer 节点（`role_id=developer`）；Live 为 Structured Output + Tool 写盘  

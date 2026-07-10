@@ -1,5 +1,18 @@
 ﻿# hitl-spec.md — HitlDecision（HITL JSON 契约）
 
+## 依赖上游文档（只读）
+
+审查 / 修订本文时 **仅以本表及正文字段定义为准**。`quality-gates/hitl.md` 为**下游**，不在此表列出。
+
+
+| 分类      | 上游文档                                                                          | 定位                            |
+| ------- | ----------------------------------------------------------------------------- | ----------------------------- |
+| **总设计** | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **运行配置** | [profiles.md](../profiles.md)                                               | `hitl`、`require_hitl` 等 Profile 字段 |
+
+
+---
+
 > **实现：** `multi_agent_code_factory/schemas/hitl.py`  
 > **Run 路径：** `hitl.json`  
 > **节点：** `spec_hitl`、`design_hitl`、`deploy_hitl`、`escalation_hitl`

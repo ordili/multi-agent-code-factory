@@ -1,5 +1,24 @@
 # spec_validate — 规则清单
 
+## 依赖上游文档（只读）
+
+审查 / 修订本文时 **仅以本表及正文规则表为准**；不引用 `validators/` 等下游实现。
+
+
+| 分类        | 上游文档                                                                          | 定位                              |
+| --------- | ----------------------------------------------------------------------------- | ------------------------------- |
+| **总设计**   | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **JSON 契约** | [artifact-schemas/prd-spec.md](../artifact-schemas/prd-spec.md)             | Run `spec.json` 字段与类型            |
+| **人读模板**  | [artifact-templates/prd-spec.md](../artifact-templates/prd-spec.md)         | Run `spec.md` 章节                |
+| **校验产出**  | [validation-report-spec.md](../artifact-schemas/validation-report-spec.md)  | `spec_validation.json` 与 `passed` |
+| **运行配置**  | [README.md](./README.md) · [profiles.md](../profiles.md)                    | `validation.spec.*` 开关语义（详见 README §2） |
+
+
+> **下游（不在此表）：** [design-validate.md](./design-validate.md) 只读引用本文 §spec→design 传导。
+
+
+---
+
 > **索引：** [quality-gates/README.md](./README.md)  
 > **实现：** `multi_agent_code_factory/validators/spec_rules.py` · `spec_md_rules.py`  
 > **JSON 契约：** [artifact-schemas/prd-spec.md](../artifact-schemas/prd-spec.md)  

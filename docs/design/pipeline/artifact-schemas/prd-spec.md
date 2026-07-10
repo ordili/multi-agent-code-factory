@@ -1,5 +1,18 @@
 ﻿# prd-spec.md — SpecArtifact（PM JSON 契约）
 
+## 依赖上游文档（只读）
+
+审查 / 修订本文时 **仅以本表及正文字段定义为准**。`artifact-templates/`、`quality-gates/` 为**下游**，引用本文，不在此表列出（见 [README.md §单向依赖](../README.md#1-单向依赖)）。
+
+
+| 分类       | 上游文档                                                                | 定位                               |
+| -------- | ------------------------------------------------------------------- | -------------------------------- |
+| **总设计**  | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **运行配置** | [profiles.md](../profiles.md)                                       | `profile`、`context` 等 Profile 注入字段语境 |
+
+
+---
+
 > **实现：** `multi_agent_code_factory/schemas/spec.py`  
 > **Run 路径：** `docs/runs/<task_id>/spec.json`
 

@@ -1,5 +1,21 @@
 # 产物校验与 HITL — 索引
 
+## 依赖上游文档（只读）
+
+审查 / 修订本目录规则时 **仅以本表及正文为准**；不引用 `validators/` 等下游实现。字段定义查 artifact-schemas，章节写法查 artifact-templates。
+
+
+| 分类        | 上游文档                                                                                  | 定位                          |
+| --------- | ------------------------------------------------------------------------------------- | --------------------------- |
+| **JSON 契约** | [artifact-schemas/README.md](../artifact-schemas/README.md)                         | 字段与「是否必填」交付 intent        |
+| **人读模板**  | [artifact-templates/README.md](../artifact-templates/README.md)                       | `spec.md` / `design.md` 格式  |
+| **总设计**   | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **产出契约**  | [validation-report-spec.md](../artifact-schemas/validation-report-spec.md)            | `ValidationReport` 结构       |
+| **运行配置**  | [profiles.md](../profiles.md)                                                       | `validation.*` YAML 载体      |
+
+
+---
+
 > **主线：** [multi-agent-pipeline-design.md §4.1.2](../multi-agent-pipeline-design.md#412-产物校验与-hitlpm--architect)  
 > **原则：** **规则校验（程序）** 为主、**可选人工 HITL** 为辅；均在 **Developer 写代码之前** 拦截 PM / Architect 产物。  
 > **实现：** `multi_agent_code_factory/validators/` · [`validation-report-spec.md`](../artifact-schemas/validation-report-spec.md)

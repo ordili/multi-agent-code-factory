@@ -1,5 +1,19 @@
 # V1 实现计划
 
+## 依赖上游文档（只读）
+
+编制 / 修订实现计划时 **以本表及正文阶段任务为准**；契约、模板与门禁以细目文档为准。**[P1-backlog.md](./P1-backlog.md)** 为下游跟踪清单，不在此表列出。
+
+
+| 分类      | 上游文档                                                                 | 定位                 |
+| ------- | -------------------------------------------------------------------- | ------------------ |
+| **总设计**  | [multi-agent-pipeline-design.md](./multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **细目索引** | [README.md](./README.md)                                             | pipeline 细目索引 |
+| **领域（V2）** | [domains/README.md](../../../domains/README.md)                       | 本计划不含 V2 领域包       |
+
+
+---
+
 > **依据：** [multi-agent-pipeline-design.md](./multi-agent-pipeline-design.md)（§1.2 MVP、§6.2 目录、§10 验收）  
 > **状态：** 设计已定稿，待编码  
 > **范围：** V1 通用流水线；**不含** V2 领域包（[domains/](../../../domains/README.md)）、checkpoint/resume、强制 HITL interrupt

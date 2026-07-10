@@ -1,5 +1,20 @@
 ﻿# 多 Agent 研发流水线 — 设计
 
+## 依赖上游文档（只读）
+
+审查 / 修订本文时 **以本表及正文设计结论为准**；JSON 字段、人读章节与校验规则见 [README.md](./README.md) 细目索引。
+
+
+| 分类       | 上游文档                                           | 定位                          |
+| -------- | ---------------------------------------------- | --------------------------- |
+| **总览**   | [00-master-overview.md](../00-master-overview.md) | V1 通用流水线边界                  |
+| **细目索引** | [README.md](./README.md)                       | Profile、Artifact、校验、示例分文档   |
+| **参考**   | [references/README.md](./references/README.md) | 术语、MetaGPT、调研（非规范）          |
+| **实现**   | `multi_agent_code_factory/`                    | 图、节点、schemas（以实现为准）         |
+
+
+---
+
 > **依据：** [00-master-overview.md](../00-master-overview.md)（**V1：通用流水线**，领域差异由 Profile 注入；**与具体业务无关**）  
 > **代码目录：** `multi_agent_code_factory/`  
 > **状态：** 草案，待评审  

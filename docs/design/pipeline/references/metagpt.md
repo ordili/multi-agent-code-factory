@@ -1,5 +1,19 @@
 ﻿# MetaGPT 借鉴清单
 
+## 依赖上游文档（只读）
+
+本文 **非规范性** 调研；机制取舍以本仓库 LangGraph 流水线为准。
+
+
+| 分类      | 上游文档                                                                | 定位              |
+| ------- | ------------------------------------------------------------------- | --------------- |
+| **总设计** | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **索引**  | [references/README.md](./README.md)                                 | 参考目录            |
+| **外部**  | MetaGPT 论文 · GitHub                                               | 原始 SOP 与实现（只读引用） |
+
+
+---
+
 > **参考：** [MetaGPT 论文](https://arxiv.org/html/2308.00352v7) · [GitHub](https://github.com/FoundationAgents/MetaGPT)  
 > **原则：** 不替换本项目的 LangGraph 流水线；吸收 SOP、结构化交接、executable feedback 等可验证机制。  
 > **主线：** [multi-agent-pipeline-design.md](../../pipeline/multi-agent-pipeline-design.md)

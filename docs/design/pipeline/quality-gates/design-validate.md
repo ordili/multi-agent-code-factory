@@ -7,14 +7,14 @@
 
 | 分类          | 上游文档                                                                                                   | 定位                                                                                                                                   |
 | ----------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **总设计**     | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
 | **spec 基线** | [artifact-schemas/prd-spec.md](../artifact-schemas/prd-spec.md)                                        | Run `spec.json` 字段定义；DES-101/102/011/013/014/017 等交叉校验的 spec 信号来源。                                                                   |
-| **spec 基线** | [spec-validate.md §传导](./spec-validate.md#spec--design-传导只读)                                           | spec 信号 → design 义务只读对照（§1 条件规则触发基线；字段细节查 prd-spec）。                                                                                 |
+| **spec 基线** | [spec-validate.md](./spec-validate.md)                                           | spec→design 传导只读对照（§1 条件规则触发基线；字段细节查 prd-spec）。                                                                                 |
 | **JSON 契约** | [artifact-schemas/design-spec.md](../artifact-schemas/design-spec.md)                                  | Run `design.json` 的 JSON 字段、类型、coerce 与 `ERR-*` / `TC-*` 标识符约定（§1 规则依据）。                                                               |
 | **人读模板**    | [artifact-templates/design-spec.md](../artifact-templates/design-spec.md)                              | Run `design.md` 固定章节、附录与 §4.x 子节写作模板（§2.1–2.3 规则依据）。                                                                                 |
 | **人读模板**    | [artifact-templates/flow-spec.md](../artifact-templates/flow-spec.md)                                  | Run `*.mmd` 图种类、命名约定与 `diagrams[]` 登记写法（§2.4 规则依据）。                                                                                  |
 | **校验产出**    | [artifact-schemas/validation-report-spec.md](../artifact-schemas/validation-report-spec.md)            | `design_validate` 产出的 `design_validation.json` 报告结构与 `passed` 语义。                                                                    |
-| **运行配置**    | [quality-gates/README.md §2](./README.md#2-profile-配置validation)                                       | `validation.design.*`（`enabled`、`block_on`、`validate_mermaid`、`require_hitl_if_flags` 等）开关语义；YAML 载体见 [profiles.md](../profiles.md)。 |
-| **流水线**     | [multi-agent-pipeline-design.md §4.1.2](../multi-agent-pipeline-design.md#412-产物校验与-hitlpm--architect) | `design_validate` 在流水线中的位置、与 PM/Architect 环关系及失败后回路。                                                                                 |
+| **运行配置**    | [README.md](./README.md) · [profiles.md](../profiles.md)                                       | `validation.design.*` 开关语义（详见 README §2）；YAML 载体见 profiles。 |
 
 
 **rule_id 合计：** **55** 条（§1 JSON **38** · §2 `design.md` / `*.mmd` **16** · §3 HITL **1**）

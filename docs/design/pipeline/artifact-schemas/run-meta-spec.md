@@ -1,5 +1,18 @@
 ﻿# run-meta-spec.md — RunMeta（run 元数据 JSON 契约）
 
+## 依赖上游文档（只读）
+
+审查 / 修订本文时 **仅以本表及正文字段定义为准**；回路上限见总设计 routing。
+
+
+| 分类      | 上游文档                                                                | 定位                    |
+| ------- | ------------------------------------------------------------------- | --------------------- |
+| **总设计** | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **运行配置** | [profiles.md](../profiles.md)                                       | Profile 引用与预算字段        |
+
+
+---
+
 > **实现：** `multi_agent_code_factory/schemas/run_meta.py`  
 > **Run 路径：** `docs/runs/<task_id>/run_meta.json`
 

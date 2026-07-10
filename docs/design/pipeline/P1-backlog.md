@@ -1,5 +1,18 @@
 # P1 Backlog — 待办与验收跟踪
 
+## 依赖上游文档（只读）
+
+维护 backlog 时 **以本表及正文勾选清单为准**；冲突时以总设计与实现计划为准。`quality-gates/` 规则细目为**下游**，正文按需查阅。
+
+
+| 分类       | 上游文档                                                                          | 定位                    |
+| -------- | ----------------------------------------------------------------------------- | --------------------- |
+| **总设计**  | [multi-agent-pipeline-design.md](./multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **实现计划** | [implementation-plan.md](./implementation-plan.md)                            | 阶段、PR 拆分与验收对照    |
+
+
+---
+
 > **用途：** 将分散在各设计 Spec 中的 **P1（及关联 P2）** 项汇总为一份可勾选清单。  
 > **权威来源：** 冲突时以 [multi-agent-pipeline-design.md](./multi-agent-pipeline-design.md) §1.2、§10 与 [implementation-plan.md](./implementation-plan.md) 为准。  
 > **维护：** 完成某项后在本文件勾选，并在 PR 中引用对应 rule_id / 模块路径。

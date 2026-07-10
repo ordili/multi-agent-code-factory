@@ -1,5 +1,18 @@
 ﻿# validation-report-spec.md — ValidationReport（校验 JSON 契约）
 
+## 依赖上游文档（只读）
+
+审查 / 修订本文时 **仅以本表及正文字段定义为准**。`quality-gates/` 定义 `rule_id` 语义，为**下游**，不在此表列出。
+
+
+| 分类      | 上游文档                                                                          | 定位                                    |
+| ------- | ----------------------------------------------------------------------------- | ------------------------------------- |
+| **总设计** | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **运行配置** | [profiles.md](../profiles.md)                                               | `validation.*` 开关（报告落盘时机）              |
+
+
+---
+
 > **实现：** `multi_agent_code_factory/schemas/validation_report.py`  
 > **产生方式：** **程序规则**（`spec_validate` / `design_validate`），非 LLM  
 > **Run 路径：** `spec_validation.json` | `design_validation.json`

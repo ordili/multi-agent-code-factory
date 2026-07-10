@@ -1,5 +1,19 @@
 ﻿# 其它开源与设计参考
 
+## 依赖上游文档（只读）
+
+本文 **非规范性** 调研；不替代 `multi_agent_code_factory` 主干设计。
+
+
+| 分类       | 上游文档                                                                | 定位             |
+| -------- | ------------------------------------------------------------------- | -------------- |
+| **总设计**  | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **MetaGPT** | [metagpt.md](./metagpt.md)                                          | 专项借鉴清单         |
+| **索引**   | [references/README.md](./README.md)                                 | 参考目录           |
+
+
+---
+
 > **原则：** 不替换 `multi_agent_code_factory` 主干（LangGraph + Profile + JSON Schema）。按 **模块** 从不同项目摘最佳实践。  
 > **MetaGPT 开源态：** [main](https://github.com/FoundationAgents/MetaGPT/tree/main) 偏维护，**思想仍有效**；机制见 [metagpt.md](./metagpt.md)。  
 > **主线：** [multi-agent-pipeline-design.md](../../pipeline/multi-agent-pipeline-design.md)

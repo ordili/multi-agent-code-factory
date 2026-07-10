@@ -1,5 +1,19 @@
 ﻿# flow-spec.md — `*.mmd` 格式规范
 
+## 依赖上游文档（只读）
+
+审查 / 修订本文时 **仅以本表及正文写作规范为准**。`artifact-schemas/`、`quality-gates/` 为**下游**，不在此表列出（见 [README.md §单向依赖](../README.md#1-单向依赖)）。
+
+
+| 分类       | 上游文档                                                                | 定位                            |
+| -------- | ------------------------------------------------------------------- | ----------------------------- |
+| **总设计**  | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **上游模板** | [design-spec.md](./design-spec.md)                        | 上游人读 design-spec.md                  |
+| **运行配置** | [profiles.md](../profiles.md)                                       | `validation.design.validate_mermaid` 等 |
+
+
+---
+
 > **状态：** 定稿 · [artifact-templates 索引](./README.md)  
 > **配套规范：** [prd-spec.md](./prd-spec.md) · [design-spec.md](./design-spec.md) · [review-spec.md](./review-spec.md)  
 > **Run 路径：** `docs/runs/<task_id>/*.mmd`（常见 `flow.mmd`、`flow-*.mmd`、`architecture-*.mmd`）  

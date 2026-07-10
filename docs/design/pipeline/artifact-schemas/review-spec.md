@@ -1,5 +1,18 @@
 ﻿# review-spec.md — ReviewReport（Reviewer JSON 契约）
 
+## 依赖上游文档（只读）
+
+审查 / 修订本文时 **仅以本表及正文字段定义为准**。`artifact-templates/` 为**下游**，不在此表列出。
+
+
+| 分类          | 上游文档                                                                          | 定位                         |
+| ----------- | ----------------------------------------------------------------------------- | -------------------------- |
+| **上游 schema** | [prd-spec.md](./prd-spec.md) · [design-spec.md](./design-spec.md)             | AC、`dev_tasks` 等追溯字段语义      |
+| **总设计**     | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+
+
+---
+
 > **实现：** `multi_agent_code_factory/schemas/review.py`  
 > **Run 路径：** `review.json`  
 > **产生方式：** LLM Structured Output（`role_id=reviewer`）

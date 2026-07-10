@@ -1,5 +1,18 @@
 ﻿# Python 代码规范
 
+## 依赖上游文档（只读）
+
+审查 / 修订本文时 **以本表及正文为准**；语言无关原则见 [dev-principles-spec.md](./artifact-templates/dev-principles-spec.md)（下游）。
+
+
+| 分类       | 上游文档                                                                          | 定位                |
+| -------- | ----------------------------------------------------------------------------- | ----------------- |
+| **总设计** | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **工具配置** | [pyproject.toml](../../../pyproject.toml)                                     | Ruff / mypy / pytest 权威配置 |
+
+
+---
+
 > **适用范围：** `language: python` 的 Profile（V1 主要为 `python`）  
 > **通用工程原则：** [artifact-templates/dev-principles-spec.md](./artifact-templates/dev-principles-spec.md)（README、SRP 等；Developer 必遵）  
 > **工具配置以：** 仓库根 [`pyproject.toml`](../../../pyproject.toml) 中 `[tool.ruff]`、`[tool.mypy]`、`[tool.pytest]` **为准**
