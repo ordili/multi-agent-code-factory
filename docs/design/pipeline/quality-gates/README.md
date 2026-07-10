@@ -28,8 +28,6 @@
 
 **条件规则：** 部分 `DES-*` 按 spec / design 字段信号决定是否要求非空，见 [design-validate.md §1](./design-validate.md#1-designjsonerror--warn) 各条「触发条件」；spec 侧见 [spec-validate.md §spec→design](./spec-validate.md#spec--design-传导只读)。
 
-**规范 vs 实现：** [design-validate.md §规范与实现对照](./design-validate.md#规范与实现对照) 列出定稿规则与当前 `validators/` 已知偏差（改代码时消项，不在此目录改规范迁就实现）。
-
 **Run 落盘 vs 格式规范：** Run 使用短 basename（`spec.json` / `design.json`）；字段定义见 **artifact-schemas**；章节模板见 **artifact-templates**。
 
 ---

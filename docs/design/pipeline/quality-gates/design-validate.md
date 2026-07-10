@@ -1,6 +1,6 @@
 # design_validate — 规则清单
 
-> [quality-gates/README.md](./README.md) · JSON [artifact-schemas/design-spec.md](../artifact-schemas/design-spec.md) · 模板 [artifact-templates/design-spec.md](../artifact-templates/design-spec.md) · [flow-spec.md](../artifact-templates/flow-spec.md)
+> [quality-gates/README.md](./README.md) · JSON [artifact-schemas/design-spec.md](../artifact-schemas/design-spec.md) · spec [artifact-schemas/prd-spec.md](../artifact-schemas/prd-spec.md) · 模板 [artifact-templates/design-spec.md](../artifact-templates/design-spec.md) · [flow-spec.md](../artifact-templates/flow-spec.md)
 
 **rule_id 合计：** **56** 条（§1 JSON **38** · §2 `design.md` / `*.mmd` **17** · §3 HITL **1**）
 
@@ -8,10 +8,11 @@
 
 - **必检** — 是否执行该 rule：`是` = 每次 `design_validate` 均评估；`条件` = 仅当触发条件成立。key / `null` / `[]` / `""` 行为见 [空值与两层校验](#空值与两层校验)
 - **触发条件** — 何时要求字段/章节非空；未触发时 JSON 可为 `[]`、MD 可省略子节；语义见 [design-spec](../artifact-schemas/design-spec.md) · [spec→design 传导](./spec-validate.md#spec--design-传导只读)
-- **严重度** — 规则列 `error` / `warn`。**默认** Profile `validation.design.block_on: error`（与 [README §2](./README.md#2-profile-配置validation) 一致）。`design_validation.passed=false` **仅**当存在 **error** violation（**warn 不计入失败**）。默认：**有 error → 阻断**（`route_after_design_validate` → architect）；warn 只写入报告、不阻断
+- **严重度** — 规则列 `error` / `warn`。**默认** Profile `validation.design.block_on: error`（与 [README §2](./README.md#2-profile-配置validation) 一致）。`design_validation.passed=false` **仅**当存在 **error** violation（**warn 不计入失败**）。默认：**有 error → 阻断**（回 Architect 重出设计，见 [主线 §4.1.2](../multi-agent-pipeline-design.md#412-产物校验与-hitlpm--architect)）；warn 只写入报告、不阻断
 - **字段 · 判定** — 规则本体：JSON 路径或检查对象 + 通过/失败条件
+- **无任务 tier** — 能否省略字段/章节，只看各 rule「触发条件」列；写作范例见 [artifact-templates/design-spec.md](../artifact-templates/design-spec.md#小任务--无持久化极简指引)
 
-> **本文规则表 = 定稿规范**（应与 [artifact-schemas/design-spec.md](../artifact-schemas/design-spec.md) 及 templates 一致）。**当前 Python 实现若有偏差**，见 [§规范与实现对照](#规范与实现对照)（只读，改实现时消项）。
+> **本文规则表 = 定稿规范**（应与 [artifact-schemas/design-spec.md](../artifact-schemas/design-spec.md) 及 templates 一致）。
 
 ---
 
@@ -21,11 +22,11 @@
 
 | 字段 | schema 是否必填 | 定稿 JSON 规则 | 说明 |
 |------|----------------|----------------|------|
-| `summary` | 是 | **无** non-empty 规则 | **DES-102** 仅在 spec 有 `scope_out` 时交叉检查 |
+| `summary` | 是 | **无** non-empty 规则 | **DES-102** 仅在 [prd-spec `scope_out`](../artifact-schemas/prd-spec.md) 非空时交叉检查 |
 | `design_goals` | 是 | **无** | 人读 §2 由 **DES-201**（`design.md`）覆盖 |
 | `file_plan` | 是 | **DES-104**（仅当非空） | 空 `[]` 不触发 path 一致性 |
 | `architecture.code_delta` | 是 | **无** JSON 规则 | 人读附录 D 由 **DES-202 / DES-207** 覆盖 |
-| `interfaces` | 是 | **DES-032**、**DES-033** | 顶层 `interfaces[]`；每模块（`SYS` 豁免）至少一条 |
+| `interfaces` | 是 | **DES-032**、**DES-033** | 顶层 `interfaces[]`；每模块（`code_domain=SYS` 豁免，见 §1.6 脚注）至少一条 |
 | `modules`、`dev_tasks`、`traceability` 等 | 是 | **DES-001～009** 等 | 见 [§1](#1-designjsonerror--warn) |
 
 ---
@@ -53,17 +54,19 @@
 | `DES-008` | error | 是 | — | `non_goals`、`context_view`、`architecture.solution_strategy` | 非空 |
 | `DES-009` | error | 是 | — | `traceability` | 非空；P0 `FEAT` 须在 `traceability` 或 `dev_tasks[].covers` 中可追溯 |
 | `DES-010` | error | 是 | — | `cross_cutting` | 须存在（可为 `{}`） |
-| `DES-101` | error | 条件 | 提供 spec | `traceability`、`dev_tasks[].covers` | 覆盖全部 `acceptance_criteria[].id` |
-| `DES-102` | error | 条件 | spec 有 `scope_out` | `summary`、`modules[]` | 不得实现 scope_out 项 |
+| `DES-101` | error | 条件 | Run 含 `spec.json`（[prd-spec](../artifact-schemas/prd-spec.md)） | `traceability`、`dev_tasks[].covers` | 覆盖全部 `acceptance_criteria[].id` |
+| `DES-102` | error | 条件 | [prd-spec `scope_out`](../artifact-schemas/prd-spec.md) 非空 | `summary`、`modules[]` | 不得实现 scope_out 项 |
 
 ### 1.3 依赖、存储与 NFR
 
+> **spec 侧信号：** 字段定义见 [prd-spec.md](../artifact-schemas/prd-spec.md)；与 design 义务对照见 [spec→design 传导](./spec-validate.md#spec--design-传导只读)（只读）。
+
 | rule_id | 严重度 | 必检 | 触发条件 | 字段 | 判定 |
 |---------|--------|------|----------|------|------|
-| `DES-011` | error | 条件 | spec `operational_profile` 含性能/可用性量化要求 | `non_functional` | 非空 |
+| `DES-011` | error | 条件 | 传导表：`operational_profile` 含性能/可用性量化要求 | `non_functional` | 非空 |
 | `DES-012` | error | 是 | — | `external_dependencies` | 非空（无中间件时显式 `filesystem`/`none`） |
-| `DES-013` | error | 条件 | spec `context.storage` 为持久化 **或** design 含 `table_schemas` / `data_model` 项 | `table_schemas`、`data_model` | 非空或字段级 `columns` 齐全 |
-| `DES-014` | error | 条件 | spec `consistency_profile.multi_writer=true` **或** 跨存储/多写场景 | `transaction_constraints` | 非空（**未触发**时不检，可为 `[]`） |
+| `DES-013` | error | 条件 | 传导表：`context.storage` 持久化；**或** design 已含 `table_schemas` / `data_model` 项 | `table_schemas`、`data_model` | 非空或字段级 `columns` 齐全 |
+| `DES-014` | error | 条件 | 传导表：`consistency_profile.multi_writer=true` 或多写场景 | `transaction_constraints` | 非空（**未触发**时不检，可为 `[]`） |
 | `DES-018` | error | 条件 | `table_schemas[].columns[]` 非空 | `table_schemas[].columns[]` | 显式 `nullable`；`description` 非空 |
 | `DES-019` | error | 条件 | `table_schemas[].storage` 为关系型 DB | `table_schemas[]` | 含 `created_at`、`updated_at`；索引或 `notes`；`version`（若 Profile 要求） |
 | `DES-020` | warn | 条件 | `table_schemas[].indexes[]` 非空 | `indexes[]` | 每条含 `purpose` |
@@ -74,7 +77,7 @@
 
 | rule_id | 严重度 | 必检 | 触发条件 | 字段 | 判定 |
 |---------|--------|------|----------|------|------|
-| `DES-017` | error | 条件 | spec `context.storage` 为持久化 **或** `diagrams[]` 已登记任一条 | `diagrams[]` | **须**同时含 `kind=sequence` 与 `kind=flowchart`（可同文件多段） |
+| `DES-017` | error | 条件 | 传导表：`context.storage` 持久化；**或** `diagrams[]` 已登记任一条 | `diagrams[]` | **须**同时含 `kind=sequence` 与 `kind=flowchart`（可同文件多段） |
 
 > **未触发**时 `diagrams` **可为 `[]`**（如无持久化 CLI、含多模块但未登记 `diagrams`）。多步业务流、design.md §4.7 人读要求见 **DES-206 / DES-217**（[§2](#2-designmd--mmd-格式p1)）。多模块拓扑图见 **DES-223**（`kind=context`，与 DES-017 无关）。文件层见 [§2.4](#24-mmd-图与-diagrams)（DES-203 / DES-214）。
 
@@ -84,24 +87,26 @@
 |---------|--------|------|----------|------|------|
 | `DES-015` | error | 是 | — | `error_catalog` | 非空 |
 | `DES-016` | error | 是 | — | `test_cases` | 非空 |
-| `DES-016` | warn | 条件 | 提供 spec | `test_cases[].covers` | 每个 AC 宜有用例 `covers`（**DES-101** 对缺 cover 报 **error**，本条为温和提示） |
+| `DES-016` | warn | 条件 | Run 含 `spec.json` | `test_cases[].covers` | 每个 AC 宜有用例 `covers`（**DES-101** 对缺 cover 报 **error**，本条为温和提示） |
 | `DES-021` | error | 是 | — | `error_catalog[].code`、`test_cases[]` | 每 code ≥1 条 `kind=negative` 且 `error_code` 匹配 |
 | `DES-022` | warn | 是 | — | `test_cases[]` | 含 `happy`、`negative`、`boundary`；P0 FEAT/US 有 happy |
 | `DES-023` | error | 是 | — | `error_catalog[].code` | 匹配 `^ERR-[A-Z][A-Z0-9_]{1,11}-\d{3}$` |
 | `DES-024` | error | 是 | — | `test_cases[].id` | 匹配 `^TC-(HAP\|NEG\|BND)-[A-Z][A-Z0-9_]{1,11}-\d{3}$` |
 | `DES-025` | error | 是 | — | `test_cases[].error_code` | 须存在于 `error_catalog[].code` |
 | `DES-026` | warn | 是 | — | `test_cases[].kind`、`test_cases[].id` | `kind` 与 id 中段一致 |
-| `DES-029` | error | 是 | — | `error_catalog[].code` | `{域}` 段在已注册域集合 |
-| `DES-030` | error | 是 | — | `test_cases[].id` | `{域}` 段在已注册域集合 |
+| `DES-029` | error | 是 | — | `error_catalog[].code` | `{域}` 段在已注册域集合（见 [design-spec 标识符约定](../artifact-schemas/design-spec.md#标识符约定)） |
+| `DES-030` | error | 是 | — | `test_cases[].id` | `{域}` 段在已注册域集合（同上） |
 | `DES-031` | warn | 条件 | `kind=negative` 且填 `error_code` | `test_cases[]` | `error_code` 与 `id` 域段宜一致 |
 
 ### 1.6 接口
 
 | rule_id | 严重度 | 必检 | 触发条件 | 字段 | 判定 |
 |---------|--------|------|----------|------|------|
-| `DES-032` | error | 是 | — | `interfaces[]`（顶层） | 每模块（`SYS` 豁免）至少一条；`module_ref` 匹配 `modules[].name` |
+| `DES-032` | error | 是 | — | `interfaces[]`（顶层） | 每模块至少一条；`module_ref` 匹配 `modules[].name`（`code_domain=SYS` 豁免） |
 | `DES-033` | error | 是 | — | `interfaces[].operations[]` | 非空；`summary`、`inputs`、`outputs` 齐全 |
 | `DES-034` | warn | 条件 | `operations[].errors[]` 非空 | `operations[].errors[]` | 须存在于 `error_catalog[].code` |
+
+> **`SYS`：** `modules[].code_domain` 取字面 `SYS` 的横切/基础设施模块，可无 `interfaces[]` 条目。
 
 > **字段** 列与 [artifact-schemas/design-spec.md](../artifact-schemas/design-spec.md) JSON 契约一致（英文键名）。
 
@@ -129,7 +134,7 @@ Run `design.md` 须 **中文固定章节**（**§1–§6 + 附录 A–D**）；*
 
 | rule_id | 严重度 | 必检 | 触发条件 | 判定 |
 |---------|--------|------|----------|------|
-| `DES-223` | warn | 条件 | 模块 ≥2 或 §4.4 有外部依赖 | 宜含 4.2 系统架构图 + architecture-*.mmd（见下「§4 子节标题」） |
+| `DES-223` | warn | 条件 | `modules` ≥2 **或** `external_dependencies` 含 `kind≠none` 项 | 宜含 4.2 系统架构图 + architecture-*.mmd（见下「§4 子节标题」） |
 | `DES-220` | warn | 条件 | `modules` 非空 | 须含 4.3 模块划分；表宜含 `code_domain` / 域前缀 |
 | `DES-212` | warn | 条件 | 有中间件/第三方/`filesystem`（非仅 `none`） | 须含 4.4 外部依赖 |
 | `DES-221` | warn | 条件 | `interfaces` 非空 | 须含 4.5 接口定义 |
@@ -145,7 +150,7 @@ Run `design.md` 须 **中文固定章节**（**§1–§6 + 附录 A–D**）；*
 
 | rule_id | 严重度 | 必检 | 触发条件 | 判定 |
 |---------|--------|------|----------|------|
-| `DES-224` | warn | 条件 | `non_functional` 非空或 spec §9 有 design 增量 | 宜含 5. 非功能性目标（二级标题，见上「DES-201 章节」格式） |
+| `DES-224` | warn | 条件 | `non_functional` 非空；或传导表 DES-011 同类 spec 信号 | 宜含 5. 非功能性目标（二级标题，见上「DES-201 章节」格式） |
 | `DES-219` | warn | 条件 | `test_cases` 非空 | 6. 测试用例列表表宜含「类型」列（happy / negative / boundary） |
 
 ### 2.4 *.mmd 图与 diagrams[]
@@ -157,9 +162,9 @@ Run `design.md` 须 **中文固定章节**（**§1–§6 + 附录 A–D**）；*
 | `DES-214` | error* | 条件 | 同 DES-017 | `diagrams[]` 登记 **须**与 Run 内 `*.mmd` 一致；同文件多段可登记多条 |
 
 > **`DES-208`（非 rule_id）：** Run **不得**含 Rollout & Deployment 章节。  
-> \* `DES-203` / `DES-214` 在 `validation.design.validate_mermaid: false` 时降为 warn 或跳过。
+> \* `DES-203` / `DES-214` 在 Profile `validation.design.validate_mermaid: false` 时降为 warn 或跳过（见 [README §2](./README.md#2-profile-配置validation)）。
 
-**规则未通过：** `route_after_design_validate` → **architect**；violations 注入 Architect prompt。
+**JSON error 未通过：** 默认阻断并回 Architect（见上文 **严重度** · [主线 §4.1.2](../multi-agent-pipeline-design.md#412-产物校验与-hitlpm--architect)）。§2 **warn** 默认不令 `passed=false`。
 
 ---
 
@@ -175,16 +180,16 @@ Run `design.md` 须 **中文固定章节**（**§1–§6 + 附录 A–D**）；*
 
 ## 空值与两层校验
 
-「**必检 = 是**」= 进入 `design_validate` 后**每次都会评估**该 rule；**不等于** JSON 里必须显式写出该 key。空 key / `null` / `[]` / `""` 先经 **Pydantic 解析**，再经 **`DES-*` 规则**（实现见 `schemas/design.py` · `validators/`）。
+「**必检 = 是**」= 进入 `design_validate` 后**每次都会评估**该 rule；**不等于** JSON 里必须显式写出该 key。空 key / `null` / `[]` / `""` 先经 [design-spec JSON 归一化（coerce）](../artifact-schemas/design-spec.md#json-归一化coerce)，再经 **`DES-*` 规则**评估。
 
 ### 两层门禁
 
 | 阶段 | 时机 | 失败时 |
 |------|------|--------|
-| **Pydantic** | `DesignArtifact.model_validate(design.json)`（Architect 落盘前/后） | 缺 `version` / `spec_ref` / `revision`、类型非法 → **ValidationError**，**进不了** `design_validate` |
-| **`DES-*` 规则** | `design_validate` 节点（Profile `validation.design.enabled: true`） | 写入 `design_validation.json`；默认 **error → `passed=false` → architect**（见上文 **严重度**） |
+| **JSON 结构校验** | 落盘 `design.json` 解析为 [design-spec](../artifact-schemas/design-spec.md) 契约对象（见 [Pydantic 结构必填](../artifact-schemas/design-spec.md#pydantic-结构必填)） | 缺 `spec_ref`、类型非法等 → **不进** `design_validate` |
+| **`DES-*` 规则** | `design_validate` 节点（Profile `validation.design.enabled: true`） | 写入 [validation-report `design_validation.json`](../artifact-schemas/validation-report-spec.md)；默认 **error → `passed=false`**（见上文 **严重度**） |
 
-Profile `validation.design.enabled: false` 时跳过 **`DES-*`**，**仍**做 Pydantic 结构校验（见 [README §2](./README.md#2-profile-配置validation)）。
+Profile `validation.design.enabled: false` 时跳过 **`DES-*`**，**仍**做 JSON 结构校验（见 [README §2](./README.md#2-profile-配置validation)）。
 
 ### §1 JSON：空值怎么读
 
@@ -217,48 +222,11 @@ Profile `validation.design.enabled: false` 时跳过 **`DES-*`**，**仍**做 Py
 | `file_plan` | `[]` | `[]` | **DES-104 不触发**（仅非空时检 path） |
 | `diagrams` | `[]` | `[]` | **DES-017 不触发**（未满足触发条件时可为 `[]`） |
 | `transaction_constraints` | `[]` | `[]` | **DES-014 不触发**（未满足触发条件时可为 `[]`） |
+| `table_schemas` · `data_model` | `[]` | `[]` | **DES-013 不触发**（传导表未要求持久化且 design 未自登记表项时） |
+| `non_functional` | `[]` / 缺 | `[]` / 缺 | **DES-011 不触发**（传导表未要求 NFR 增量时） |
 
-> **必检 = 条件**（DES-013/014/017 等）：上表「不触发」= 触发条件列不成立时，不要求非空。
+> **必检 = 条件**（DES-013/014/011/017 等）：上表「不触发」= [§1](#1-designjsonerror--warn)「触发条件」列不成立时，不要求非空。
 
-**Live 与 stub 差异** — **Live Architect** 在 validate 前 `enrich_design_for_validation`，可能自动补 `non_goals`、`context_view`、`architecture.solution_strategy`，并将 `cross_cutting: null` 设为 `{}`——空值**未必**落到 DES-008/010。**stub / fixture** 不 enrich，空值直接进上表判定。
-
-**一句话** — 列表字段：缺/null/[] 等价 → 判非空则 error；`cross_cutting` 仅 null/缺失失败、`{}` 可过；条件规则未触发时 `[]` 允许；默认 error 阻断。
+**一句话** — 列表字段：缺/null/[] 等价 → 判非空则 error；`cross_cutting` 仅 null/缺失失败、`{}` 可过；条件规则未触发时 `[]` 允许；默认 error 阻断。coerce 后的形状见 [design-spec §JSON 归一化](../artifact-schemas/design-spec.md#json-归一化coerce)。
 
 §2（`design.md` / `*.mmd`）：校 **Run 目录文件**（章节、`*.mmd`），不是 JSON key。缺章节多为 **warn**，默认**不**阻断（见上文 **严重度**）。
-
----
-
-## 简单任务 vs 复杂任务
-
-**不另设任务 tier。** 简单/复杂靠 **spec 信号** + **「必检 = 条件」** + [templates 极简 / 中等规模指引](../artifact-templates/design-spec.md#小任务--无持久化极简指引) 分化，**不是**靠 Profile 开关。
-
-| 维度 | 简单（无持久化 CLI、单进程脚本等） | 复杂（持久化、多写、spec §9 有 NFR 增量等） |
-|------|-----------------------------------|---------------------------------------------|
-| **JSON · 必检 = 是** | 骨架始终检：`dev_tasks`、`modules`、`traceability`、`test_cases`、`error_catalog`、`external_dependencies`（`kind=none`）、`interfaces` 等 | **同左**（底线相同） |
-| **JSON · 必检 = 条件** | **DES-013/014/011/017** 等**不触发** → `table_schemas`、`transaction_constraints`、`diagrams`、`non_functional` 可为 `[]` | 触发 → 须非空或满足判定 |
-| **图（DES-017）** | spec 无持久化 **且** `diagrams[]` 为空 → **不触发**（双模块计算器 **不**因模块数 alone 触发） | spec 持久化 **或** 已登记 `diagrams[]` → **须** sequence + flowchart |
-| **MD §4 子节** | **DES-201/202** 等固定 warn；**DES-212/213/206/223** 等**不触发** | design.md §4.4/4.6/4.7、§5 等按触发条件 warn |
-| **阻断** | 仅 **error** 级 JSON 规则（默认 `block_on: error`）；§2 warn 不阻断 | 同左 |
-
-> **必检 = 是** 只表示「每次都评估」，**不**表示简单任务可省略该字段；能否为空看 **判定** 列与 **触发条件** 列。
-
----
-
-## 规范与实现对照
-
-**消项用；非定稿规则来源。** 改 `validators/` 时以此表消项；**正文规则表不改**，除非 templates / schema 定稿变更。
-
-| 区域 | 定稿规范（本文） | 当前实现（`validators/`） |
-|------|------------------|---------------------------|
-| **DES-017 / 203 / 214** | 条件：spec 持久化 **或** `diagrams[]` 已登记 → **须** sequence+flowchart（**不**因 `modules` 数量 alone 触发） | 实现 **无条件**要求 sequence+flowchart |
-| **DES-032** | 顶层 `interfaces[]` | 已按顶层 `interfaces[]` 实现 |
-| **DES-201** | §1–§6 + 附录 A–D | `design_md_rules.py` 仍检 **§1–§10** 旧章（含方案对比/横切/监控等） |
-| **DES-202 / 207** | 附录 A–D | 仍检附录 **D=测试用例**、**E=代码对照** |
-| **§4 子节编号** | 4.2 架构 / 4.3 模块 / 4.4 依赖 / 4.5 接口 / 4.6 存储 / 4.7 流程 | 仍用 **4.3 外部依赖**、**4.5 数据模型**、**4.6 流程** 等旧标题 |
-| **DES-216** | §4.6「一致性与事务」 | 仍检 6.1 / 6.2 旧位置（三级标题） |
-| **DES-219** | 6. 测试用例列表「类型」列 | 仍检附录 D + 8. 测试计划 分支 |
-| **§6 / DES-201** | 6. 测试用例列表（不凭 JSON 豁免） | 实现仍引用 8. 测试计划 |
-| **DES-224** | 条件 warn：5. 非功能性目标 | **未实现**（`design_md_rules.py` 无对应检查） |
-| **§4 子节条件触发** | DES-212/213/216/221/223 等按「触发条件」列 | 实现 **多数 unconditional**（缺标题即告警，不看触发条件） |
-| **DES-016 vs DES-101** | AC 覆盖：101=error，016=warn | 实现中两者均存在；101 优先作 hard gate |
-| **summary / design_goals / code_delta** | schema 交付必填；见 [JSON 契约 vs 规则](#json-契约-vs-规则与-schema是否必填对齐) | JSON 层 **无** 对应 non-empty 规则（符合上表「定稿 JSON 规则」列） |
