@@ -8,7 +8,10 @@ Required layout for default Go profile:
 - packages under paths referenced in design (e.g. cmd/, internal/, pkg/)
 - *_test.go covering acceptance criteria
 
-When retry_bundle is present, read test_report.failures and fix failing tests/files.
+When retry_bundle is present:
+- read test_report.failures and fix failing tests/files
+- if tests_missing is set, add tests for each listed source path
+- if auto_generate_tests is true, prioritize creating missing test files
 Do not add secrets. Prefer standard library unless spec requires otherwise.
 
 Return tasks_completed (dev_task ids) and source_files with full file contents.

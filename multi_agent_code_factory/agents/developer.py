@@ -7,6 +7,9 @@ from multi_agent_code_factory.agents.base import agent_context
 from multi_agent_code_factory.agents.developer_output import apply_developer_output
 from multi_agent_code_factory.agents.live import require_llm_runner
 from multi_agent_code_factory.agents.llm import LlmRunner
+from multi_agent_code_factory.agents.llm.prompt.validation_feedback import (
+    format_qa_retry_feedback,
+)
 from multi_agent_code_factory.agents.llm.schemas import DeveloperLLMOutput
 from multi_agent_code_factory.agents.stub.fixtures import (
     default_stub_fixtures,
@@ -45,6 +48,7 @@ def run_developer(
                 role_id=AgentRole.DEVELOPER,
                 output_schema=DeveloperLLMOutput,
                 context=agent_context(AgentRole.DEVELOPER, state, profile),
+                extra_system=format_qa_retry_feedback(state),
             )
             manifest = apply_developer_output(profile, output)
 

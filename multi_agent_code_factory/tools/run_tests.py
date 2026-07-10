@@ -23,6 +23,8 @@ def _run_shell(command: str, cwd: Path) -> CommandResult:
         shell=True,
         capture_output=True,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         check=False,
     )
     duration = time.perf_counter() - started

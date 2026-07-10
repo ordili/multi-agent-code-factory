@@ -74,6 +74,21 @@ def test_trim_test_report_caps_failures_and_output() -> None:
     assert len(trimmed["failures"][0]["output"]) <= 500
 
 
+def test_trim_test_report_keeps_tests_missing() -> None:
+    payload = {
+        "version": "1",
+        "passed": False,
+        "exit_code": 0,
+        "summary": {"total": 1, "passed": 1, "failed": 0, "skipped": 0},
+        "command": "pytest",
+        "duration_sec": 0.1,
+        "parser": "junit_xml",
+        "tests_missing": ["src/cli.py"],
+    }
+    trimmed = trim_test_report(payload)
+    assert trimmed["tests_missing"] == ["src/cli.py"]
+
+
 def test_trim_retry_bundle_truncates_code_snippets() -> None:
     payload = {
         "spec": SpecArtifact.model_validate(

@@ -11,6 +11,14 @@ from multi_agent_code_factory.schemas.dev_manifest import ChangeType, DevManifes
 _TEST_DIR_MARKERS = ("tests/", "test/", "__tests__/")
 _TEST_NAME_MARKERS = ("test_", "_test")
 
+_LANGUAGE_SOURCE_SUFFIXES: dict[str, frozenset[str]] = {
+    "python": frozenset({".py"}),
+    "go": frozenset({".go"}),
+    "java": frozenset({".java"}),
+    "rust": frozenset({".rs"}),
+    "solidity": frozenset({".sol"}),
+}
+
 
 def _posix(path: str) -> str:
     return path.replace("\\", "/")
@@ -46,6 +54,16 @@ def _test_stems(test_files: list[str]) -> set[str]:
 
 def _source_stem(path: str) -> str:
     return PurePosixPath(_posix(path)).stem.lower()
+
+
+def _requires_matching_test(path: str, *, language: str) -> bool:
+    """仅对实现语言源码扩展名要求对应测试；文档/配置/占位文件跳过。"""
+    normalized = _posix(path).lower()
+    if normalized.endswith(".gitkeep"):
+        return False
+    suffix = PurePosixPath(normalized).suffix
+    allowed = _LANGUAGE_SOURCE_SUFFIXES.get(language, frozenset({".py"}))
+    return suffix in allowed
 
 
 def _has_matching_test(
@@ -110,6 +128,7 @@ def detect_tests_missing(
     missing = [
         path
         for path in source_paths
-        if not _has_matching_test(path, test_stems, language=language)
+        if _requires_matching_test(path, language=language)
+        and not _has_matching_test(path, test_stems, language=language)
     ]
     return missing

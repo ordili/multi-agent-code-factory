@@ -83,3 +83,42 @@ def format_design_validation_feedback(state: PipelineState) -> str | None:
         ),
         footer=footer,
     )
+
+
+def format_qa_retry_feedback(state: PipelineState) -> str | None:
+    """将上次 QA test_report 失败格式化为 Developer 重试时的 extra_system 提示。"""
+    if state.impl_retry_count <= 0:
+        return None
+    report = state.test_report
+    if report is None or report.passed:
+        return None
+
+    lines = [
+        "Previous QA run failed. Fix every issue before resubmitting source_files:",
+    ]
+    summary = report.summary
+    lines.append(
+        f"- pytest summary: passed={summary.passed} failed={summary.failed} "
+        f"total={summary.total} skipped={summary.skipped}"
+    )
+    if report.tests_missing:
+        lines.append(
+            "- tests_missing (add tests/test_<module>.py for each source path):"
+        )
+        for path in report.tests_missing:
+            lines.append(f"  - {path}")
+    if report.failures:
+        lines.append("- failing tests:")
+        for failure in report.failures[:10]:
+            location = failure.file or failure.test_id
+            lines.append(f"  - {failure.test_id} @ {location}: {failure.message}")
+        if len(report.failures) > 10:
+            lines.append(f"  - ... +{len(report.failures) - 10} more")
+    elif not report.tests_missing:
+        lines.append(
+            f"- exit_code={report.exit_code}; check raw_output_tail in retry_bundle"
+        )
+    lines.append(
+        "Patch failing tests and/or add missing test files; keep passing tests green."
+    )
+    return "\n".join(lines)

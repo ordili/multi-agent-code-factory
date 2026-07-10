@@ -72,6 +72,31 @@ def test_detect_tests_missing_resolved_by_test_file(tmp_path: Path) -> None:
     assert missing == []
 
 
+def test_detect_tests_missing_ignores_docs_and_config(tmp_path: Path) -> None:
+    code_root = tmp_path / "project"
+    src = code_root / "src"
+    src.mkdir(parents=True)
+    (code_root / "README.md").write_text("# app\n", encoding="utf-8")
+    (code_root / "pyproject.toml").write_text("[project]\n", encoding="utf-8")
+    (src / "cli.py").write_text("def main(): pass\n", encoding="utf-8")
+
+    manifest = DevManifest(
+        version="1",
+        changed_files=[
+            ChangedFile(path="README.md", change_type=ChangeType.CREATE),
+            ChangedFile(path="pyproject.toml", change_type=ChangeType.CREATE),
+            ChangedFile(path="src/cli.py", change_type=ChangeType.CREATE),
+        ],
+    )
+
+    missing = detect_tests_missing(
+        _profile(code_root),
+        code_root,
+        dev_manifest=manifest,
+    )
+    assert missing == ["src/cli.py"]
+
+
 def test_run_tests_marks_failed_when_tests_missing(tmp_path: Path) -> None:
     from multi_agent_code_factory.tools.run_tests import run_tests
 

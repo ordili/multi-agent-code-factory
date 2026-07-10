@@ -127,6 +127,9 @@ def trim_test_report(payload: dict[str, Any]) -> dict[str, Any]:
     raw_tail = payload.get("raw_output_tail")
     if isinstance(raw_tail, str):
         result["raw_output_tail"] = _truncate_text(raw_tail, MAX_TEXT_CHARS)
+    tests_missing = payload.get("tests_missing")
+    if isinstance(tests_missing, list):
+        result["tests_missing"] = tests_missing
     return result
 
 

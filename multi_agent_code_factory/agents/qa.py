@@ -64,6 +64,14 @@ def run_qa(
             )
         if report.passed:
             logger.info("qa tests passed")
+        elif report.tests_missing and report.summary.failed == 0:
+            logger.warning(
+                "qa blocked by tests_missing count=%s paths=%s "
+                "(pytest green: passed=%s)",
+                len(report.tests_missing),
+                report.tests_missing,
+                report.summary.passed,
+            )
         else:
             logger.warning(
                 "qa tests failed passed=%s failed=%s",

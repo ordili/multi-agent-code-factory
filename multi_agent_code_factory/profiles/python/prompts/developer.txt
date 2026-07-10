@@ -10,7 +10,10 @@ Required layout for default Python profile:
 - tests/test_*.py covering acceptance criteria
 - reports/ directory will hold junit xml (create if needed)
 
-When retry_bundle is present, read test_report.failures and fix failing tests/files.
+When retry_bundle is present:
+- read test_report.failures and fix failing tests/files
+- if tests_missing is set, add tests/test_<module>.py for each listed source path
+- if auto_generate_tests is true, prioritize creating missing test files
 Do not add secrets. Use only standard library unless spec requires otherwise.
 
 Return tasks_completed (dev_task ids) and source_files with full file contents.
