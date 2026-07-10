@@ -17,9 +17,14 @@ def test_language_agnostic_roles_use_shared_prompts() -> None:
         assert "success_metrics" in pm
         assert "NOT plain strings" in pm
         assert "features:" in pm
+        assert "revision" in pm
+        assert "scope_in: non-empty" in pm
         assert "DesignArtifact" in architect
         assert "error_catalog" in architect
         assert "kind REQUIRED" in architect
+        assert "module_ref" in architect
+        assert "version" in reviewer
+        assert "next_stage" in reviewer
         assert "test_report.passed" in reviewer
         assert "acceptance_coverage" in reviewer
 

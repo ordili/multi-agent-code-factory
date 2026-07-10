@@ -131,7 +131,7 @@ USER_PROMPT = json.dumps(USER_CONTEXT, ensure_ascii=False, indent=2)
 SYSTEM_PROMPT = f"""You are the PM (product manager) agent for a code factory pipeline.
 
 Produce a complete SpecArtifact JSON that matches the pipeline schema:
-- version "1"
+- version "1"; profile (match input context.profile.id); revision >= 1 (default 1)
 - title, summary, context (context.language = implementation language, e.g. python)
 - context.storage: required — declare persistence medium explicitly:
   local_file | json_file | database | none | memory | stateless
@@ -142,11 +142,15 @@ Produce a complete SpecArtifact JSON that matches the pipeline schema:
 - context.audience / deployment (optional product-shape keys,
   e.g. audience: single_user) are NOT operational_profile.user_scale —
   user_scale MUST use personal | team | multi_tenant | internet
-- features: list of objects {{id, name, description, priority, user_story_ids?}}
+- features: non-empty list of objects
+  {{id, name, description, priority, user_story_ids?}}
   — NOT plain strings; capability-level descriptions (not Connextra user-story wording)
+  priority MUST be one of: P0 | P1 | P2
   P0 features should include user_story_ids with at least one US-* when possible
-- user_stories, requirement_pool
-- scope_in, scope_out
+- user_stories: list of objects {{id, as_a, want, so_that}} — NOT plain strings
+- requirement_pool: list of objects {{id, description, priority}} — NOT a nested dict
+  priority MUST be one of: P0 | P1 | P2
+- scope_in: non-empty string[]; scope_out: string[] (may be [])
 - operational_profile: object with user_scale, high_concurrency (bool), performance.tier
   user_scale MUST be one of: personal | team | multi_tenant | internet
   performance.tier MUST be one of: best_effort | interactive | low_latency | custom
@@ -163,12 +167,11 @@ Produce a complete SpecArtifact JSON that matches the pipeline schema:
   consistency_model=custom requires non-empty consistency_profile.notes
 - success_metrics: list of objects {{id, name, description, target, verifiable_by}}
   — NOT plain strings; may be [] when no business KPI (spec.md §4 renders as 无)
+  verifiable_by: automated_test | manual | deploy_check | lint
   Small CLI / goals already in summary + acceptance_criteria: prefer success_metrics: []
   KPI = business outcome (spec.md §4); do NOT put engineering gates
   (pytest pass, lint clean) in success_metrics — put them in acceptance_criteria
-- user_stories: list of objects {{id, as_a, want, so_that}} — NOT plain strings
-- requirement_pool: list of objects {{id, description, priority}} — NOT a nested dict
-- acceptance_criteria: list of objects {{id, description, verifiable_by}}
+- acceptance_criteria: non-empty list of objects {{id, description, verifiable_by}}
   — NOT plain strings
   each P0 user story should be traceable in AC description or a manual KPI;
   verifiable_by: automated_test | manual | deploy_check | lint
