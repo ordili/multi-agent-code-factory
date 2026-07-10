@@ -2,12 +2,13 @@
 
 ## 依赖上游文档（只读）
 
-审查 / 修订本文时 **仅以本表及正文字段定义为准**。`artifact-templates/`、`quality-gates/` 为**下游**，引用本文，不在此表列出（见 [README.md §单向依赖](../README.md#1-单向依赖)）。
+审查 / 修订本文时 **以本表、正文字段定义及同名上游人读 § 映射为准**。`quality-gates/` 为**下游**，不在此表列出（见 [README.md §单向依赖](../README.md#1-单向依赖)）。
 
 
 | 分类       | 上游文档                                                                | 定位                               |
 | -------- | ------------------------------------------------------------------- | -------------------------------- |
 | **总设计**  | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **人读模板** | [artifact-templates/prd-spec.md](../artifact-templates/prd-spec.md) | 上游人读 prd-spec.md               |
 | **运行配置** | [profiles.md](../profiles.md)                                       | `profile`、`context` 等 Profile 注入字段语境 |
 
 

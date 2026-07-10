@@ -109,7 +109,7 @@ artifact-templates/review-spec.md           → review.md
 
 | 文档层 | 可引用 | 不可引用 / 不可展开 |
 |--------|--------|---------------------|
-| **artifact-schemas** | 上游 schema（如 design 引用 prd-spec）、Pydantic 路径、本文字段 | templates 章节写法、quality-gates rule_id、renderers |
+| **artifact-schemas** | 上游 schema（如 design 引用 prd-spec）、**人读模板**（同名 `artifact-templates/*-spec.md`）、Pydantic 路径、本文字段 | quality-gates rule_id、renderers |
 | **artifact-templates** | 总设计、**上游模板**（如 design-spec → prd-spec）、姊妹 templates（如 design-spec → flow-spec）、artifact-schemas 字段（正文引用，不进依赖表）、本文 | quality-gates 具体规则、实现类名（除必要一行落点） |
 | **quality-gates** | schemas + templates（校验基线） | 实现细节、下游 run 样例目录 |
 | **examples** | schemas（字段为准） | 自造与 schema 冲突的字段 |
@@ -131,7 +131,7 @@ artifact-templates/review-spec.md           → review.md
 
 ### 3. 文首依赖表
 
-每个 `pipeline/**/*.md` 在 **H1 下** 须有 **`## 依赖上游文档（只读）`**（分类 · 上游文档 · 定位）；**只列独立上游文档**，章节不算单独一行；细则约定写在表前引导语并链到 [README.md §单向依赖](#1-单向依赖)。**`artifact-schemas/`** 不得把 `artifact-templates/`、`quality-gates/` 列入上游表；**`artifact-templates/`** 不得把 `artifact-schemas/`、`quality-gates/` 列入上游表。**`artifact-templates/`** 下各 `*-spec.md` **一般**须在表中列出流水线更早阶段的**上游人读模板**（分类 **上游模板**，定位 **上游人读 {name}-spec.md**）；同层配套（如 `flow-spec` 对 `design-spec`）在**下游**模板记 **姊妹模板**，在**本模板**记 **上游模板**。范例：[prd-spec.md（schemas）](./artifact-schemas/prd-spec.md#依赖上游文档只读) · [prd-spec.md（templates）](./artifact-templates/prd-spec.md#依赖上游文档只读) · [design-validate.md](./quality-gates/design-validate.md#依赖上游文档只读)（gates 层）。
+每个 `pipeline/**/*.md` 在 **H1 下** 须有 **`## 依赖上游文档（只读）`**（分类 · 上游文档 · 定位）；**只列独立上游文档**，章节不算单独一行；细则约定写在表前引导语并链到 [README.md §单向依赖](#1-单向依赖)。**`artifact-schemas/`** 不得把 `quality-gates/` 列入上游表，**同名** `artifact-templates/*-spec.md`（人读格式）**须**列入上游表（分类 **人读模板**，定位 **上游人读 {name}-spec.md**）；**`artifact-templates/`** 不得把 `artifact-schemas/`、`quality-gates/` 列入上游表。**`artifact-templates/`** 下各 `*-spec.md` **一般**须在表中列出流水线更早阶段的**上游人读模板**（分类 **上游模板**）；同层配套（如 `flow-spec` 对 `design-spec`）在**下游**模板记 **姊妹模板**，在**本模板**记 **上游模板**。范例：[prd-spec.md（schemas）](./artifact-schemas/prd-spec.md#依赖上游文档只读) · [prd-spec.md（templates）](./artifact-templates/prd-spec.md#依赖上游文档只读) · [design-validate.md](./quality-gates/design-validate.md#依赖上游文档只读)（gates 层）。
 
 ### 4. 命名约定
 

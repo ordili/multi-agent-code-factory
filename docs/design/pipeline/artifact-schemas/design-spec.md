@@ -2,14 +2,15 @@
 
 ## 依赖上游文档（只读）
 
-审查 / 修订本文时 **仅以本表及正文字段定义为准**。`artifact-templates/`、`quality-gates/` 为**下游**，不在此表列出（见 [README.md §单向依赖](../README.md#1-单向依赖)）。
+审查 / 修订本文时 **以本表、正文字段定义及同名上游人读 § 映射为准**。`quality-gates/` 为**下游**，不在此表列出（见 [README.md §单向依赖](../README.md#1-单向依赖)）。
 
 
-| 分类          | 上游文档                                                                | 定位                               |
-| ----------- | ------------------------------------------------------------------- | -------------------------------- |
-| **上游 schema** | [prd-spec.md](./prd-spec.md)                                        | 同 Run `spec.json` 字段与 `context` 信号 |
-| **总设计**     | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
-| **运行配置**    | [profiles.md](../profiles.md)                                       | Profile 注入相关字段语境                   |
+| 分类            | 上游文档                                                                | 定位                                        |
+| ------------- | ------------------------------------------------------------------- | ----------------------------------------- |
+| **总设计**       | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书                                  |
+| **上游 JSON 契约** | [prd-spec.md](./prd-spec.md)                                        | 上游 JSON 契约 prd-spec.md（Run `spec.json`） |
+| **人读模板**      | [artifact-templates/design-spec.md](../artifact-templates/design-spec.md) | 上游人读 design-spec.md                       |
+| **运行配置**      | [profiles.md](../profiles.md)                                       | Profile 注入相关字段语境                            |
 
 
 ---
