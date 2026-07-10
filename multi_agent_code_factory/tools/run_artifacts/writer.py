@@ -53,8 +53,25 @@ class RunArtifactWriter:
         limits: LoopLimits,
         *,
         factory_config: FactoryConfig | None = None,
+        user_request: str | None = None,
     ) -> RunMeta:
-        return self._meta.init(profile, limits, factory_config=factory_config)
+        return self._meta.init(
+            profile,
+            limits,
+            factory_config=factory_config,
+            user_request=user_request,
+        )
+
+    def prepare_continue(
+        self,
+        *,
+        reentry_node: str,
+        reset_loops: bool = True,
+    ) -> RunMeta:
+        return self._meta.prepare_continue(
+            reentry_node=reentry_node,
+            reset_loops=reset_loops,
+        )
 
     def update_meta(self, **updates: Any) -> RunMeta:
         return self._meta.update(**updates)

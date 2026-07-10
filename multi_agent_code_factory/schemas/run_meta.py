@@ -32,6 +32,7 @@ class BudgetUsage(BaseModel):
 class RunMeta(BaseModel):
     version: ARTIFACT_VERSION
     task_id: str
+    user_request: str | None = None
     profile: dict[str, Any]
     loop_limits: dict[str, Any]
     impl_retry_count: int = Field(default=0, ge=0)
@@ -46,3 +47,5 @@ class RunMeta(BaseModel):
     artifact_layout: str | None = None
     started_at: str | None = None
     finished_at: str | None = None
+    last_continue_at: str | None = None
+    last_reentry_node: str | None = None

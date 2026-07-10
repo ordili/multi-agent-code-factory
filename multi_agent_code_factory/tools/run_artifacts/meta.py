@@ -56,6 +56,7 @@ class RunMetaStore:
         limits: LoopLimits,
         *,
         factory_config: FactoryConfig | None = None,
+        user_request: str | None = None,
     ) -> RunMeta:
         """初始化 run_meta.json 并标记运行状态为 RUNNING。"""
         budget_usage = None
@@ -69,6 +70,7 @@ class RunMetaStore:
         meta = RunMeta(
             version="1",
             task_id=self._task_id,
+            user_request=user_request,
             profile=profile_snapshot(profile),
             loop_limits=loop_limits_snapshot(limits),
             deploy_status=DeployStatus.SKIPPED,
@@ -78,6 +80,45 @@ class RunMetaStore:
         )
         self._write_model("run_meta.json", meta)
         return meta
+
+    def prepare_continue(
+        self,
+        *,
+        reentry_node: str,
+        reset_loops: bool = True,
+    ) -> RunMeta:
+        """续跑前重置 budget / 触顶回路计数，并记录 continue 审计字段。"""
+        meta = self.read()
+        if meta is None:
+            msg = f"run_meta.json not initialized for task {self._task_id!r}"
+            raise FileNotFoundError(msg)
+
+        limits = LoopLimits.model_validate(meta.loop_limits)
+        updates: dict[str, Any] = {
+            "status": RunStatus.RUNNING,
+            "finished_at": None,
+            "last_continue_at": _iso_now(),
+            "last_reentry_node": reentry_node,
+        }
+
+        budget = meta.budget
+        if budget is not None:
+            updates["budget"] = budget.model_copy(
+                update={"used_llm_calls": 0, "used_tokens": 0}
+            )
+
+        if reset_loops and meta.status == RunStatus.FAILED:
+            impl_retry = meta.impl_retry_count
+            if impl_retry >= limits.max_impl_retries:
+                updates["impl_retry_count"] = 0
+            design_rev = meta.design_revision_count
+            if design_rev >= limits.max_design_revisions:
+                updates["design_revision_count"] = 0
+            spec_rev = meta.spec_revision_count
+            if spec_rev >= limits.max_spec_revisions:
+                updates["spec_revision_count"] = 0
+
+        return self.update(**updates)
 
     def update(self, **updates: Any) -> RunMeta:
         """合并更新字段并写回 run_meta.json。"""

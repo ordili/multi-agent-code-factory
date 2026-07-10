@@ -41,6 +41,18 @@ python -m multi_agent_code_factory run \
 
 Success when the terminal prints `status=completed`.
 
+### 3. Continue from existing artifacts
+
+If a run failed or stopped, resume from `docs/runs/<task-id>/` without re-running PM/Architect:
+
+```bash
+python -m multi_agent_code_factory continue \
+  --task-id calculator \
+  --live
+```
+
+The pipeline re-runs the gate for the inferred stage first (e.g. QA re-tests code), then calls LLM agents only if needed. Re-running the same `task-id` with `run` is rejected unless you pass `--force-new`.
+
 ## Where outputs go
 
 | What | Path |

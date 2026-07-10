@@ -65,7 +65,7 @@ def _pick_pipeline_route(state: PipelineState) -> str:
     return state.pipeline_route
 
 
-def build_graph() -> Any:
+def build_graph(*, checkpointer: Any | None = None) -> Any:
     """注册节点与边，返回编译后的 LangGraph 应用。"""
     graph = StateGraph(PipelineState, context_schema=PipelineRunContext)
     route_map = conditional_route_map()
@@ -140,4 +140,4 @@ def build_graph() -> Any:
     graph.add_edge(N.FAIL, END)
     graph.add_edge(N.ESCALATION_HITL, N.FAIL)
 
-    return graph.compile()
+    return graph.compile(checkpointer=checkpointer)

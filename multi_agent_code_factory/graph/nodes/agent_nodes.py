@@ -12,7 +12,11 @@ from multi_agent_code_factory.agents.pm import run_pm
 from multi_agent_code_factory.agents.qa import run_qa
 from multi_agent_code_factory.agents.reviewer import run_reviewer
 from multi_agent_code_factory.graph.pipeline_run_context import PipelineRunContext
-from multi_agent_code_factory.state import PipelineState
+from multi_agent_code_factory.state import PipelineState, normalize_pipeline_state
+
+
+def _state(state: PipelineState) -> PipelineState:
+    return normalize_pipeline_state(state)
 
 
 def node_pm(
@@ -21,6 +25,7 @@ def node_pm(
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
     """PM Agent：根据 ``user_request`` 生成 spec（``spec.json`` / ``spec.md``）。"""
+    state = _state(state)
     ctx = runtime.context
     return run_pm(
         state,
@@ -38,6 +43,7 @@ def node_architect(
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
     """Architect Agent：基于 spec 生成设计产物（``design.json`` / ``flow.mmd`` 等）。"""
+    state = _state(state)
     ctx = runtime.context
     return run_architect(
         state,
@@ -55,6 +61,7 @@ def node_developer(
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
     """Developer Agent：根据设计与 spec 实现代码，产出 ``dev_manifest.json``。"""
+    state = _state(state)
     ctx = runtime.context
     return run_developer(
         state,
@@ -71,6 +78,7 @@ def node_qa(
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
     """QA Agent：运行测试并写入 ``test_report.json``。"""
+    state = _state(state)
     ctx = runtime.context
     return run_qa(
         state,
@@ -87,6 +95,7 @@ def node_reviewer(
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
     """Reviewer Agent：评审实现质量，产出 ``review.json`` 并决定 ``next_stage``。"""
+    state = _state(state)
     ctx = runtime.context
     return run_reviewer(
         state,

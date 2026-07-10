@@ -13,7 +13,11 @@ from multi_agent_code_factory.nodes.design_hitl import run_design_hitl
 from multi_agent_code_factory.nodes.escalation_hitl import run_escalation_hitl
 from multi_agent_code_factory.nodes.fail import run_fail
 from multi_agent_code_factory.nodes.spec_hitl import run_spec_hitl
-from multi_agent_code_factory.state import PipelineState
+from multi_agent_code_factory.state import PipelineState, normalize_pipeline_state
+
+
+def _state(state: PipelineState) -> PipelineState:
+    return normalize_pipeline_state(state)
 
 
 def node_spec_hitl(
@@ -22,6 +26,7 @@ def node_spec_hitl(
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
     """Spec 阶段人机协作占位。"""
+    state = _state(state)
     ctx = runtime.context
     return run_spec_hitl(state, ctx.profile, ctx.writer)
 
@@ -32,6 +37,7 @@ def node_design_hitl(
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
     """Design 阶段人机协作占位。"""
+    state = _state(state)
     ctx = runtime.context
     return run_design_hitl(state, ctx.profile, ctx.writer)
 
@@ -42,6 +48,7 @@ def node_deploy_hitl(
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
     """Deploy 前人机协作占位。"""
+    state = _state(state)
     ctx = runtime.context
     return run_deploy_hitl(state, ctx.profile, ctx.writer)
 
@@ -52,6 +59,7 @@ def node_deploy(
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
     """Deploy 终止节点。"""
+    state = _state(state)
     ctx = runtime.context
     return run_deploy(state, ctx.profile, ctx.writer)
 
@@ -62,6 +70,7 @@ def node_fail(
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
     """失败终止节点。"""
+    state = _state(state)
     return run_fail(state, runtime.context.writer)
 
 
@@ -71,4 +80,5 @@ def node_escalation_hitl(
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
     """升环 HITL 占位。"""
+    state = _state(state)
     return run_escalation_hitl(state, runtime.context.writer)

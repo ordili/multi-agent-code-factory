@@ -14,7 +14,7 @@ from multi_agent_code_factory.graph_routing import (
     decide_after_spec_validate,
     decide_after_test,
 )
-from multi_agent_code_factory.state import PipelineState
+from multi_agent_code_factory.state import PipelineState, normalize_pipeline_state
 
 
 def node_route_after_spec_validate(
@@ -23,6 +23,7 @@ def node_route_after_spec_validate(
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
     """spec 校验后路由。"""
+    state = normalize_pipeline_state(state)
     ctx = runtime.context
     decision = decide_after_spec_validate(state, ctx.profile, ctx.loop_limits)
     return apply_route(decision, state, ctx)
@@ -34,6 +35,7 @@ def node_route_after_design_validate(
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
     """design 校验后路由。"""
+    state = normalize_pipeline_state(state)
     ctx = runtime.context
     decision = decide_after_design_validate(state, ctx.profile, ctx.loop_limits)
     return apply_route(decision, state, ctx)
@@ -45,6 +47,7 @@ def node_route_after_qa(
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
     """QA 测试后路由。"""
+    state = normalize_pipeline_state(state)
     ctx = runtime.context
     decision = decide_after_test(state, ctx.loop_limits)
     return apply_route(decision, state, ctx)
@@ -56,6 +59,7 @@ def node_route_after_reviewer(
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
     """Review 后路由。"""
+    state = normalize_pipeline_state(state)
     ctx = runtime.context
     decision = decide_after_review(state, ctx.loop_limits)
     return apply_route(decision, state, ctx)
