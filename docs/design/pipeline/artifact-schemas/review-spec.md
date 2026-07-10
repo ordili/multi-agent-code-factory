@@ -5,11 +5,12 @@
 审查 / 修订本文时 **以本表、正文字段定义及同名上游人读 § 映射为准**。`quality-gates/` 为**下游**，不在此表列出。
 
 
-| 分类          | 上游文档                                                                          | 定位                         |
-| ----------- | ----------------------------------------------------------------------------- | -------------------------- |
-| **上游 schema** | [prd-spec.md](./prd-spec.md) · [design-spec.md](./design-spec.md)             | AC、`dev_tasks` 等追溯字段语义      |
-| **总设计**     | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
-| **人读模板**    | [artifact-templates/review-spec.md](../artifact-templates/review-spec.md)     | 上游人读 review-spec.md        |
+| 分类            | 上游文档                                                                          | 定位                              |
+| ------------- | ----------------------------------------------------------------------------- | ------------------------------- |
+| **总设计**       | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **上游 JSON 契约** | [prd-spec.md](./prd-spec.md)                                                  | 上游 JSON 契约 prd-spec.md（Run `spec.json`） |
+| **上游 JSON 契约** | [design-spec.md](./design-spec.md)                                            | 上游 JSON 契约 design-spec.md（Run `design.json`） |
+| **人读模板**      | [artifact-templates/review-spec.md](../artifact-templates/review-spec.md)     | 上游人读 review-spec.md             |
 
 
 ---

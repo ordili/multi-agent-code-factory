@@ -5,10 +5,10 @@
 审查 / 修订本文时 **仅以本表及正文字段定义为准**。`artifact-templates/dev-principles-spec` 为**下游**，不在此表列出。
 
 
-| 分类          | 上游文档                                                                | 定位                         |
-| ----------- | ------------------------------------------------------------------- | -------------------------- |
-| **上游 schema** | [design-spec.md](./design-spec.md)                                  | `dev_tasks[]`、`file_plan[]` 字段 |
-| **总设计**     | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| 分类            | 上游文档                                                                | 定位                                    |
+| ------------- | ------------------------------------------------------------------- | ------------------------------------- |
+| **总设计**       | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **上游 JSON 契约** | [design-spec.md](./design-spec.md)                                  | 上游 JSON 契约 design-spec.md（`dev_tasks[]`、`file_plan[]`） |
 
 
 ---

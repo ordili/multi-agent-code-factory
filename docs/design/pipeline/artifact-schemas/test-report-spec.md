@@ -5,11 +5,11 @@
 审查 / 修订本文时 **仅以本表及正文字段定义为准**；测试命令见 [profiles.md](../profiles.md)。
 
 
-| 分类          | 上游文档                                                         | 定位                  |
-| ------- | ------------------------------------------------------------ | ------------------- |
-| **总设计** | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
-| **运行配置** | [profiles.md](../profiles.md)                                | `toolchain` 测试命令与解析器  |
-| **上游 schema** | [design-spec.md](./design-spec.md)                            | `test_cases` 字段语义   |
+| 分类            | 上游文档                                                         | 定位                                       |
+| ------------- | ------------------------------------------------------------ | ---------------------------------------- |
+| **总设计**       | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **上游 JSON 契约** | [design-spec.md](./design-spec.md)                            | 上游 JSON 契约 design-spec.md（`test_cases` 字段语义） |
+| **运行配置**      | [profiles.md](../profiles.md)                                | `toolchain` 测试命令与解析器                      |
 
 
 ---

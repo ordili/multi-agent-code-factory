@@ -7,10 +7,11 @@
 
 | 分类        | 上游文档                                                                                  | 定位                              |
 | --------- | ------------------------------------------------------------------------------------- | ------------------------------- |
+| **总设计**   | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
 | **JSON 契约** | [hitl-spec.md](../artifact-schemas/hitl-spec.md)                                      | Run `hitl.json` 字段              |
 | **门禁索引**  | [README.md](./README.md)                                                              | Profile `hitl` / `require_hitl` |
-| **规则**    | [spec-validate.md](./spec-validate.md) · [design-validate.md](./design-validate.md)   | 校验通过后的 HITL 路由前提                |
-| **总设计**   | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **规则**    | [spec-validate.md](./spec-validate.md)                                                | spec 校验通过后的 HITL 路由前提           |
+| **规则**    | [design-validate.md](./design-validate.md)                                            | design 校验通过后的 HITL 路由前提         |
 
 
 ---

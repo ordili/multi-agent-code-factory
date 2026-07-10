@@ -7,9 +7,9 @@
 
 | 分类        | 上游文档                                                    | 定位              |
 | --------- | ------------------------------------------------------- | --------------- |
+| **总设计**   | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
 | **JSON 契约** | [artifact-schemas/README.md](../artifact-schemas/README.md) | 字段、类型、枚举权威定义    |
 | **人读模板**  | [artifact-templates/README.md](../artifact-templates/README.md) | 完整章节样例与写作约束     |
-| **总设计**   | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
 
 
 ---

@@ -5,10 +5,11 @@
 本文 **非规范性** 参考；与 pipeline 定稿冲突时以总设计为准。
 
 
-| 分类      | 上游文档                                                                      | 定位            |
-| ------- | ------------------------------------------------------------------------- | ------------- |
+| 分类      | 上游文档                                                                | 定位            |
+| ------- | ------------------------------------------------------------------- | ------------- |
 | **总设计** | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
-| **调研**  | [metagpt.md](./metagpt.md) · [open-source-survey.md](./open-source-survey.md) | 外部项目借鉴（不参与校验） |
+| **调研**  | [metagpt.md](./metagpt.md)                                          | MetaGPT 专项借鉴  |
+| **调研**  | [open-source-survey.md](./open-source-survey.md)                    | 开源项目调研        |
 
 
 ---

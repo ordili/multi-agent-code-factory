@@ -7,8 +7,8 @@
 
 | 分类       | 上游文档                                                         | 定位                    |
 | -------- | ------------------------------------------------------------ | --------------------- |
-| **索引**   | [README.md](../README.md)                           | 目录职责与文档单向依赖           |
 | **总设计**  | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **索引**   | [README.md](../README.md)                           | 目录职责与文档单向依赖           |
 | **类型实现** | `multi_agent_code_factory/schemas/`                          | Pydantic 定义（以实现为准）    |
 
 

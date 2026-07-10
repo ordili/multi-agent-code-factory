@@ -7,9 +7,9 @@
 
 | 分类        | 上游文档                                                                                  | 定位                          |
 | --------- | ------------------------------------------------------------------------------------- | --------------------------- |
+| **总设计**   | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
 | **JSON 契约** | [artifact-schemas/README.md](../artifact-schemas/README.md)                         | 字段与「是否必填」交付 intent        |
 | **人读模板**  | [artifact-templates/README.md](../artifact-templates/README.md)                       | `spec.md` / `design.md` 格式  |
-| **总设计**   | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
 | **产出契约**  | [validation-report-spec.md](../artifact-schemas/validation-report-spec.md)            | `ValidationReport` 结构       |
 | **运行配置**  | [profiles.md](../profiles.md)                                                       | `validation.*` YAML 载体      |
 
