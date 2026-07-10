@@ -8,17 +8,17 @@
 | 分类       | 上游文档                                                                | 定位                            |
 | -------- | ------------------------------------------------------------------- | ----------------------------- |
 | **总设计**  | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
-| **上游模板** | [design-spec.md](./design-spec.md)                        | 上游人读 design-spec.md                  |
-| **运行配置** | [profiles.md](../profiles.md)                                       | `validation.design.validate_mermaid` 等 |
+| **上游模板** | [prd-spec.md](./prd-spec.md)                                        | 上游人读 prd-spec.md（持久化信号） |
+| **上游模板** | [design-spec.md](./design-spec.md)                                  | 上游人读 design-spec.md         |
 
 
 ---
 
 > **状态：** 定稿 · [artifact-templates 索引](./README.md)  
-> **配套规范：** [prd-spec.md](./prd-spec.md) · [design-spec.md](./design-spec.md) · [review-spec.md](./review-spec.md)  
+> **配套规范：** [prd-spec.md](./prd-spec.md) · [design-spec.md](./design-spec.md)  
 > **Run 路径：** `docs/runs/<task_id>/*.mmd`（常见 `flow.mmd`、`flow-*.mmd`、`architecture-*.mmd`）  
-> **登记：** `design.json` → `diagrams[]`（[`artifact-schemas/design-spec.md`](../artifact-schemas/design-spec.md) · `DiagramRef`）  
-> **校验：** `DES-203`、`DES-214`（[design-validate.md §2.4](../quality-gates/design-validate.md#24-mmd-图与-diagrams)）  
+> **登记：** `design.json` → `diagrams[]`（字段定义见下游 [artifact-schemas/design-spec.md](../artifact-schemas/design-spec.md)）  
+> **程序校验：** 见 [quality-gates/design-validate.md](../quality-gates/design-validate.md)（不在此展开 rule_id）  
 > **对应：** [design-spec.md](./design-spec.md) **§4.2 系统架构图**（静态拓扑）· **§4.7 流程与时序**（动态路径）
 
 ---
@@ -42,7 +42,7 @@
 | 项 | 约定 |
 |----|------|
 | **节点说明** | 宜 **中文**（如「解析失败」「库存不足」） |
-| **participant / 节点名** | 与 §4.3 模块名 / 域前缀标签一致（`DES-204`） |
+| **participant / 节点名** | 与 [design-spec.md §4.3](./design-spec.md#43-模块设计) 模块名 / 域前缀标签一致 |
 | **错误码** | 异常节点标注 `ERR-{域}-{序号}`，与 design §4.5 / §6 一致 |
 | **文件内容** | **仅 Mermaid** — 不要 markdown 围栏（`` ```mermaid ``） |
 
@@ -53,8 +53,8 @@
 | design.md 情况 | Run `.mmd` 要求 |
 |----------------|-----------------|
 | **§4.7 整节省略**（如计算器级小任务） | §4.2 架构图 **可选**；**不强制** sequence/flowchart；`diagrams` 可为 `[]` |
-| **spec 持久化**（[传导表](../quality-gates/spec-validate.md#spec--design-传导只读)） | **DES-017** 要求 `diagrams[]` 同时含 `sequence` + `flowchart`（与是否写 §4.7 无关） |
-| **已登记任一条 `diagrams[]`**（含仅 `context`） | 同 **DES-017**；须补全 `sequence` + `flowchart` |
+| **上游 spec 要求持久化 / 有状态**（见 [prd-spec.md](./prd-spec.md) `context.storage`） | `diagrams[]` **宜** 同时含 `sequence` + `flowchart`（与是否写 §4.7 无关） |
+| **已登记任一条 `diagrams[]`**（含仅 `context`） | **宜** 补全 `sequence` + `flowchart`（与 [design-spec §4.7](./design-spec.md#47-流程与时序选填) 对照表一致） |
 | **写了 §4.7** | §4.7 **US → 图表对照表** 中引用的每个 `.mmd` **须存在**；每个 **主要 US**（P0 FEAT 关联）**至少 1 张图**（时序 **或** 流程均可） |
 | **§4.2 写了架构图** | 对应 `architecture-*.mmd` 须存在，登记 `kind: context` |
 
@@ -65,8 +65,8 @@
 | **主要 US 配图** | 每个主要 `US-*` **≥1** 张可追溯图（时序 **或** 流程，或同文件多段） | `sequenceDiagram` / `flowchart` |
 | **Run 级建议** | 全 run **宜** 同时含 **≥1** 时序与 **≥1** 流程（可分布在不同 US、不同文件） | 异常/分支 **宜** 用 flowchart 表达 |
 | **登记** | `diagrams[]` 每条须 `path` + `kind` + `title`（title 宜含 `US-*`） | 同文件多段可登记多条、同 `path` |
-| **解析** | `DES-203` | `validation.design.validate_mermaid: true` 时须可解析 |
-| **命名** | `DES-204` | participant / 节点 ≡ §4.3 模块（或微服务）名 |
+| **解析** | Profile 启用 Mermaid 解析时，`.mmd` 须为可解析的纯 Mermaid | 程序开关见下游 `profiles` / `quality-gates`（不在此展开） |
+| **命名** | participant / 节点 ≡ [design-spec §4.3](./design-spec.md#43-模块设计) 模块（或微服务）名 |
 | **异常** | 流程图 **宜** 含 ≥1 条异常路径 | 节点标注 `ERR-*`，对齐 §6 NEG 用例 |
 
 **同文件多段：** 一个 `.mmd` 内连续多段 Mermaid（空行分隔）计为 **多张图**；§4.7 对照表「图类型」列可写 `时序 + 流程` 表示同文件多段，**仍满足**「该 US 至少 1 张图」。
@@ -111,7 +111,7 @@
 
 ---
 
-## 同文件多段（DES-214）
+## 同文件多段
 
 同一 `.mmd` 可连续写多段 Mermaid（段间空行分隔）。`diagrams[]` **同一 `path` 可登记多条**（不同 `kind` / `title`）：
 
@@ -123,7 +123,7 @@ flowchart TD
     ...
 ```
 
-门禁 `DES-214` 要求该文件内 **可识别** sequence 与 flowchart 两类图（**仅当** Profile 启用且该文件声称含两类图时）。
+同一文件内 **宜** 可识别 `sequenceDiagram` 与 `flowchart` 两类图（与 [design-spec §4.7](./design-spec.md#47-流程与时序选填) US 配图约定一致）。
 
 ---
 
@@ -242,14 +242,3 @@ sequenceDiagram
 ```
 
 完整片段见 [design-spec · 完整示例 · 补充片段](./design-spec.md#补充片段)。
-
----
-
-## 实现与校验
-
-| 组件 | 说明 |
-|------|------|
-| `design_validate` | 规则见 [design-validate.md §1.4 / §2.4](../quality-gates/design-validate.md#14-图diagrams)（**DES-017** / **DES-203** / **DES-214**） |
-| `validate_mermaid` | Profile `validation.design.validate_mermaid`（`default` Profile 为 **false**；为 `true` 时 **DES-203** 解析 `*.mmd`） |
-| `mermaid.py` | Mermaid 解析与 **DES-204** participant 校验 |
-| Architect | 图与 [design-spec.md](./design-spec.md) §4.3 模块名、§4.5 / §6 错误码一致；`diagrams[]` 与 Run 文件一致 |

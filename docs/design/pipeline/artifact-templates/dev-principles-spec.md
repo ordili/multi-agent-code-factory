@@ -2,12 +2,13 @@
 
 ## 依赖上游文档（只读）
 
-审查 / 修订本文时 **仅以本表及正文原则为准**。`artifact-schemas/` 为**下游**，不在此表列出（见 [README.md §单向依赖](../README.md#1-单向依赖)）。
+审查 / 修订本文时 **仅以本表及正文原则为准**。`artifact-schemas/`、`quality-gates/` 为**下游**，不在此表列出（见 [README.md §单向依赖](../README.md#1-单向依赖)）。
 
 
 | 分类       | 上游文档                                                                | 定位                  |
 | -------- | ------------------------------------------------------------------- | ------------------- |
 | **总设计**  | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
+| **上游模板** | [design-spec.md](./design-spec.md)                                  | 上游人读 design-spec.md |
 | **索引**   | [README.md](./README.md)                                            | 模板目录职责              |
 | **语言细则** | [python-style.md](../python-style.md)                               | Python Profile 补充规范 |
 
@@ -124,19 +125,12 @@
 |------|----------------|
 | **Developer** | system prompt 注入 `dev-principles-snippet.txt` |
 | **QA** | 不读本文；跑 `toolchain.test_command` + `tests_missing` |
-| **Reviewer** | 对照 README、测试覆盖、SRP；见 [review-spec.md](./review-spec.md) |
+| **Reviewer** | 对照本文 §1–§3（README、SRP、测试纪律）审查 `code_root` |
 | **Architect** | 在 `file_plan` / `test_strategy` 中体现 README 与测试布局 |
 
 ---
 
-## §8 实现落点
-
-| 项 | 路径 |
-|----|------|
-| 本文（定稿） | `docs/design/pipeline/artifact-templates/dev-principles-spec.md` |
-| LLM 摘要 | `multi_agent_code_factory/profiles/_shared/prompts/dev-principles-snippet.txt` |
-| 注入逻辑 | `agents/llm/prompt/builder.py`、`style_snippet.py` |
-| Python 语言细则 | [python-style.md](../python-style.md) |
+> **待同步（实现层）：** `dev-principles-snippet.txt` 注入路径与 `builder.py` / `style_snippet.py`（以仓库实现为准）。Python 语言细则见 [python-style.md](../python-style.md)。
 
 ---
 

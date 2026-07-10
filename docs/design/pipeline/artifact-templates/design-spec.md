@@ -18,8 +18,8 @@
 > **Run 路径：** `docs/runs/<task_id>/design.md`  
 > **范围：** 本文 **只描述 Run `design.md` 怎么写**（面向 Architect / Developer / HITL）。正文 **宜中文**（标识符、路径、错误码等可保留英文）。  
 > **上游需求：** [prd-spec.md](./prd-spec.md) → Run `spec.md`。机器契约见 [artifact-schemas/design-spec.md](../artifact-schemas/design-spec.md)（`design.json` 字段与类型）。**JSON ↔ 人读 § 映射见本文。**  
-> **配套规范：** [flow-spec.md](./flow-spec.md) → Run `*.mmd`（与 §4.2 / §4.7 引用一致；`design.json` → `diagrams[]`）。  
-> **待同步（实现层）：** `design_md.py` 渲染器 · `design_md_rules.py` / `mermaid.py` 校验 · `docs/runs/` 示例 run。
+> **配套规范：** [flow-spec.md](./flow-spec.md) → Run `*.mmd`（与 §4.2 / §4.7 引用一致；`design.json` → `diagrams[]` 字段见下游 schemas）。  
+> **程序校验：** 见 [quality-gates/design-validate.md](../quality-gates/design-validate.md)（不在此展开 rule_id）。
 
 **不含** 上线/部署（Rollout、K8s 清单、发布回滚等）——由 Platform / CI 单独承载。
 
@@ -34,7 +34,7 @@
 | 3 | [各节写法](#各节写法) | **主规范**：§1～§6、附录 A～D 逐节怎么写 |
 | 4 | [小任务 / 无持久化极简指引](#小任务--无持久化极简指引) | 计算器级 Profile |
 | 5 | [中等规模单体指引](#中等规模单体指引) | 单服务 + DB 的默认 Profile |
-| 6 | [标识符规范（错误码 & 测试用例）](#标识符规范错误码--测试用例) | 写作落点；格式细节见 [schemas 标识符](../artifact-schemas/design-spec.md#标识符约定) |
+| 6 | [标识符规范（错误码 & 测试用例）](#标识符规范错误码--测试用例) | 写作落点；格式细节见下游 schemas §标识符约定 |
 | 7 | [多微服务场景](#多微服务场景单-spec--单-designmd) | 扩展 Profile + 拆分原则（读完「各节写法」再看） |
 | 8 | [完整示例](#完整示例) | 计算器全文 + 订单/微服务补充片段 |
 | — | [flow-spec.md](./flow-spec.md) | `.mmd` 命名、Mermaid 语法、`diagrams[]` 登记 |
@@ -115,7 +115,7 @@
 
 ## JSON ↔ 人读 `design.md` 映射
 
-渲染器 / HITL 按本表对齐 **Run `design.json`**（[artifact-schemas/design-spec.md](../artifact-schemas/design-spec.md)）与 **Run `design.md`**。字段键名 **不随 MD 改**。
+渲染器 / HITL 按本表对齐 **Run `design.json`**（字段见下游 schemas）与 **Run `design.md`**。字段键名 **不随 MD 改**。
 
 | Run `design.md` | 必填 | 主要 JSON 字段 |
 |-----------------|------|----------------|
@@ -522,7 +522,7 @@
 | **§5** | spec §9 有 **设计侧增量**（QPS、延迟等）时写 |
 | **§6** | HAP + NEG + BND；每个 ERR 至少 1 条 NEG |
 | **图** | §4.2 架构图 **任务级推荐**；写了 §4.7 则对照 [§4.7](#47-流程与时序选填) 与 [flow-spec.md](./flow-spec.md) |
-| **`diagrams[]`（JSON）** | spec 持久化时 **[DES-017](../quality-gates/design-validate.md#14-图diagrams)** 要求 `sequence` + `flowchart`；**与 §4.7 是否省略无关**（简单 CRUD 可仅有 JSON 图、无人读 §4.7 专节） |
+| **`diagrams[]`（JSON）** | 上游 [prd-spec](./prd-spec.md) 若要求持久化/有状态，则 `diagrams[]` **宜** 同时登记 `sequence` + `flowchart`（详见 [flow-spec.md](./flow-spec.md)；**与 §4.7 是否省略无关**） |
 
 与 [小任务指引](#小任务--无持久化极简指引) 的差异：**须写 §4.4 + §4.6**；模块表常含 **Repository / HTTP 入口**；附录 B/C 路径为 `src/`、`api/` 等单体布局。
 
@@ -532,7 +532,7 @@
 ## 标识符规范（错误码 & 测试用例）
 
 > **说明：** 本节为 **规范文档** 作者参考；Run design.md **不设**独立「标识符规范」章，规则落在 §4.3 / §4.5 / §6。  
-> **格式与正则：** [artifact-schemas/design-spec.md §标识符约定](../artifact-schemas/design-spec.md#标识符约定)（DES-023 / DES-024 校验基线）。
+> **格式与正则：** 字段键名与正则见下游 [artifact-schemas/design-spec.md §标识符约定](../artifact-schemas/design-spec.md#标识符约定)；本节只写 Run `design.md` 写作落点。
 
 **原则：** `ERR-`* 与 `TC-`* **共用域前缀注册表**（以 §4.3 模块域为主；§4.4 仅在无封装模块时补充）。
 
