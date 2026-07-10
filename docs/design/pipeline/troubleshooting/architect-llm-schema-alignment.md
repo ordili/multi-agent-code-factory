@@ -50,6 +50,8 @@ python scripts/debug_pm_spec_llm.py --show-prompts
 
 **prompt 修复（2026-07）：** `pm.txt` 已补充 `success_metrics` 对象结构与 KPI/AC 分工；`LlmParseError` 重试会附带校验错误摘要。
 
+**后续审计：** 见 [pm-spec-prompt-audit.md](./pm-spec-prompt-audit.md)（PM 字段 prompt ↔ schema 对照草稿）。
+
 ### `operational_profile.user_scale`
 
 | | 格式 |
