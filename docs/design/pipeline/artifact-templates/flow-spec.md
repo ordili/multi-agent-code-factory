@@ -38,7 +38,9 @@
 
 | design.md 情况 | Run `.mmd` 要求 |
 |----------------|-----------------|
-| **§4.7 整节省略**（如计算器级小任务） | §4.2 架构图 **可选**；**不强制** sequence/flowchart；若产出图仍须登记 `diagrams[]` |
+| **§4.7 整节省略**（如计算器级小任务） | §4.2 架构图 **可选**；**不强制** sequence/flowchart；`diagrams` 可为 `[]` |
+| **spec 持久化**（[传导表](../quality-gates/spec-validate.md#spec--design-传导只读)） | **DES-017** 要求 `diagrams[]` 同时含 `sequence` + `flowchart`（与是否写 §4.7 无关） |
+| **已登记任一条 `diagrams[]`**（含仅 `context`） | 同 **DES-017**；须补全 `sequence` + `flowchart` |
 | **写了 §4.7** | §4.7 **US → 图表对照表** 中引用的每个 `.mmd` **须存在**；每个 **主要 US**（P0 FEAT 关联）**至少 1 张图**（时序 **或** 流程均可） |
 | **§4.2 写了架构图** | 对应 `architecture-*.mmd` 须存在，登记 `kind: context` |
 
@@ -233,7 +235,7 @@ sequenceDiagram
 
 | 组件 | 说明 |
 |------|------|
-| `design_validate` | `multi_agent_code_factory/nodes/design_validate.py` — MVP：`flow.mmd` **存在且非空**（`DES-017` warn） |
-| `validate_mermaid` | Profile `validation.design.validate_mermaid`（默认 **false**）；为 `true` 时启用 `DES-203` 解析 |
-| `mermaid.py` | **P1 计划** — 完整 Mermaid 解析与 `DES-204` participant 校验 |
+| `design_validate` | 规则见 [design-validate.md §1.4 / §2.4](../quality-gates/design-validate.md#14-图diagrams)（**DES-017** / **DES-203** / **DES-214**） |
+| `validate_mermaid` | Profile `validation.design.validate_mermaid`（`default` Profile 为 **false**；为 `true` 时 **DES-203** 解析 `*.mmd`） |
+| `mermaid.py` | Mermaid 解析与 **DES-204** participant 校验 |
 | Architect | 图与 [design-spec.md](./design-spec.md) §4.3 模块名、§4.5 / §6 错误码一致；`diagrams[]` 与 Run 文件一致 |

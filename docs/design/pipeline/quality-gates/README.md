@@ -24,7 +24,7 @@
 | [design-validate.md](./design-validate.md) | `design_validate` · `DES-*` · Run `design.json` / `design.md` / `*.mmd` |
 | [hitl.md](./hitl.md) | `spec_hitl` / `design_hitl` / `deploy_hitl` / `escalation_hitl` · 与 Reviewer 分工 |
 
-**rule_id 合计（定稿）：** **100** 条已定义（`SPEC-*` **44** · `DES-*` **56**；HITL 无独立 rule_id）。
+**rule_id 合计（定稿）：** **99** 条已定义（`SPEC-*` **44** · `DES-*` **55**；HITL 无独立 rule_id）。
 
 **条件规则：** 部分 `DES-*` 按 spec / design 字段信号决定是否要求非空，见 [design-validate.md §1](./design-validate.md#1-designjsonerror--warn) 各条「触发条件」；spec 侧见 [spec-validate.md §spec→design](./spec-validate.md#spec--design-传导只读)。
 
@@ -100,7 +100,7 @@ validation:
 | `block_on` | **`error`（默认）**：`passed=false` 时路由回 PM/Architect（spec/design 分别配置）。**warn 级 violation 不导致 `passed=false`**。`warn`：仍仅 error 计失败，且路由不检查 `block_on`（不阻断，仅落盘）。`never`：`passed` 恒为 true |
 | `require_hitl` | 规则通过后是否强制 `spec_hitl` / `design_hitl` |
 | `require_hitl_if_flags` | 命中 `design.hitl_flags` 时强制 `design_hitl` |
-| `validate_mermaid` | 是否解析 Run 目录 `*.mmd`（须含可识别的 sequence + flowchart；见 [flow-spec.md](../artifact-templates/flow-spec.md)） |
+| `validate_mermaid` | 是否解析 Run 目录 `*.mmd`（**仅当** [DES-017](./design-validate.md#14-图diagrams) 触发时要求 sequence + flowchart；`default` Profile 为 **false**，见 [flow-spec.md](../artifact-templates/flow-spec.md)） |
 
 **生产级 Profile 示例（P1）：** 可设 `validation.spec.require_hitl: true`、`validation.design.require_hitl: true`，并配置 `hitl.sensitive_globs` / `hitl.flags` 触发 `deploy_hitl`。
 

@@ -508,6 +508,7 @@
 | **§5** | spec §9 有 **设计侧增量**（QPS、延迟等）时写 |
 | **§6** | HAP + NEG + BND；每个 ERR 至少 1 条 NEG |
 | **图** | §4.2 架构图 **任务级推荐**；写了 §4.7 则对照 [§4.7](#47-流程与时序选填) 与 [flow-spec.md](./flow-spec.md) |
+| **`diagrams[]`（JSON）** | spec 持久化时 **[DES-017](../quality-gates/design-validate.md#14-图diagrams)** 要求 `sequence` + `flowchart`；**与 §4.7 是否省略无关**（简单 CRUD 可仅有 JSON 图、无人读 §4.7 专节） |
 
 与 [小任务指引](#小任务--无持久化极简指引) 的差异：**须写 §4.4 + §4.6**；模块表常含 **Repository / HTTP 入口**；附录 B/C 路径为 `src/`、`api/` 等单体布局。
 

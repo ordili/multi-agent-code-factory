@@ -7,7 +7,7 @@
 
 **rule_id 合计：** **44** 条（§3.1 结构 **15** · §3.2 可测性 **16** · §3.3 `spec.md` 格式 **13**）。
 
-> **spec 通过 ≠ design 通过。** spec 环只校验 [prd-spec.md](../artifact-schemas/prd-spec.md)；Architect 还须通过 [design-validate.md](./design-validate.md)（**56** 条 `DES-*`）。  
+> **spec 通过 ≠ design 通过。** spec 环只校验 [prd-spec.md](../artifact-schemas/prd-spec.md)；Architect 还须通过 [design-validate.md](./design-validate.md)（**55** 条 `DES-*`）。
 > **必检** = 是否执行该 rule；**触发条件** = 何时执行或何时要求字段非空（与 [design-validate](./design-validate.md) 各 rule 的「触发条件」列一致）。
 
 ### spec → design 传导（只读）
@@ -16,11 +16,13 @@ Run `spec.md` 章节写法见 [artifact-templates/prd-spec.md](../artifact-templ
 
 | spec 信号 | 建议写法 | 触发的 design 义务 |
 |-----------|----------|-------------------|
-| `context.storage` 为持久化（`local_file` / `database` 等） | **须显式声明**介质 | `DES-013` 非空（`table_schemas` / `data_model`） |
-| `context.storage` ∈ `none`/`memory`/`stateless`，且 `consistency_model=local_only`，且 `multi_writer=false` | 无持久化 CLI 定稿写法 | `table_schemas` / `transaction_constraints` 可为 `[]`；仍须 `external_dependencies`（`kind=none`）等 |
+| `context.storage` 为持久化（`local_file` / `database` 等） | **须显式声明**介质 | `DES-013` 非空（`table_schemas` / `data_model`）；`DES-017` 要求 `diagrams[]` 同时含 `sequence` + `flowchart`（与是否写 §4.7 无关） |
+| `context.storage` ∈ `none`/`memory`/`stateless`，且 `consistency_model=local_only`，且 `multi_writer=false` | 无持久化 CLI 定稿写法 | `table_schemas` / `transaction_constraints` / `diagrams` 可为 `[]`；仍须 `external_dependencies`（`kind=none`）等 |
 | `consistency_profile.multi_writer=true` 或跨存储/多写 | 多写场景 | `DES-014` 非空 |
 | `operational_profile` 含性能/可用性量化要求 | spec §9 非 trivial 占位 | `DES-011` |
 | `acceptance_criteria` + `SPEC-201` | 宜含 `automated_test` | `DES-016` / `DES-101` 覆盖 AC |
+| design `modules` ≥2 **或** `external_dependencies` 含 `kind≠none` | 多模块 / 有外部依赖 | `DES-223`（warn §4.2 架构图 + `kind=context`） |
+| design 已登记任一条 `diagrams[]`（含仅 `context`） | 宜与 Run `*.mmd` 一致 | `DES-017` / `DES-214`（须补全 `sequence` + `flowchart`） |
 
 > **`storage` 省略：** 文档定稿要求 PM **不可省略**；当前校验器未单独门禁（待 SPEC）。省略时下游 **不得** 视为已定稿 spec。  
 > **与 design schema 对齐：** [design-spec 是否必填](../artifact-schemas/design-spec.md#字段) 中 `summary`、`design_goals`、`file_plan`、`architecture.code_delta` 标 **是**，但 JSON 层 **无** 对等 `DES-*` non-empty — 见 [design-validate §JSON 契约 vs 规则](./design-validate.md#json-契约-vs-规则与-schema是否必填对齐)。

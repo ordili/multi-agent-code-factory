@@ -103,7 +103,7 @@
 | `architecture` | 是 | ArchitectureOverview | 至少 `solution_strategy` |
 | `modules` | 是 | ModuleSpec[] | 每模块含 `name`、`path`、`responsibility`、`code_domain` |
 | `external_dependencies` | 是 | ExternalDependency[] | 无中间件时显式 `kind=none` 或 `filesystem` |
-| `interfaces` | 是 | InterfaceSpec[] | 顶层数组；`module_ref` 须匹配 `modules[].name` |
+| `interfaces` | 是 | InterfaceSpec[] | 顶层数组；每模块至少一条 `module_ref`（`code_domain=SYS` 模块豁免，见 [design-validate DES-032](../quality-gates/design-validate.md#16-接口)） |
 | `data_model` | 否 | DataEntity[] | 有持久化/结构化存储时**须填** |
 | `table_schemas` | 否 | TableSchema[] | 有表/文件项/Redis/MQ schema 时**须填**；无持久化 CLI 可为 `[]` |
 | `transaction_constraints` | 否 | TransactionConstraint[] | 多写者/跨存储、spec 一致性非 trivial 时**须填** |
@@ -146,13 +146,13 @@
 
 | 种类 | 格式 | 说明 |
 |------|------|------|
-| 错误码 | `ERR-{域}-{序号}` | `{域}`=责任方大写缩写 2～12 字符；`{序号}`=三位数字，从 001 起 |
-| 测试用例 | `TC-{种类}-{域}-{序号}` | `{种类}`=`HAP` \| `NEG` \| `BND` |
+| 错误码 | `ERR-{域}-{序号}` | `{域}`=责任方大写缩写 2～12 字符；`{序号}`=三位数字，从 001 起；正则见 [DES-023](../quality-gates/design-validate.md#15-错误目录与测试用例) |
+| 测试用例 | `TC-{种类}-{域}-{序号}` | `{种类}`=`HAP` \| `NEG` \| `BND`；正则 `^TC-(HAP\|NEG\|BND)-[A-Z][A-Z0-9_]{1,11}-\d{3}$`（**DES-024**） |
 | 事务 | `TX-{域}-{序号}` | 可选，用于 `transaction_constraints[].id` |
 
 **联动：** `OperationSpec.errors[]` 与 `error_catalog[].code` 一致；`TestCase.error_code`（NEG）须引用已定义的 `ERR-*`；`TestCase.covers[]` 宜含上游 `US-*` / `AC-*`。
 
-**`code_domain`：** 每模块唯一；`ExternalDependency.code_domain` 在 `kind≠none` 时必填，且非 `filesystem` 依赖须使用独立域（与封装模块域不重复）。
+**`code_domain`：** 每模块唯一；字面量 **`SYS`** 表示横切/基础设施模块，**DES-032** 下可无对应 `interfaces[]` 条目；`ExternalDependency.code_domain` 在 `kind≠none` 时必填，且非 `filesystem` 依赖须使用独立域（与封装模块域不重复）。
 
 ---
 
@@ -170,7 +170,7 @@
 
 `path` 须与 Run 目录落盘的 `*.mmd` 文件名 **完全一致**。同一文件可登记多条（不同 `kind` / `title`）。
 
-**数量（契约层）：** 无持久化的纯 CLI（stateless）且未声明多步流程时，`diagrams` **可为 `[]`**；存在持久化、多模块拓扑或多步业务/数据流时，宜含 `context` 及至少一种 `sequence` / `flowchart`。
+**数量（契约层）：** 无持久化、未登记 `diagrams[]` 时可为 `[]`。下列任一成立时 **DES-017**（[design-validate](../quality-gates/design-validate.md#14-图diagrams)）要求同时含 `kind=sequence` 与 `kind=flowchart`（可同文件多段）：spec `context.storage` 持久化；或 `diagrams[]` 已登记任一条（含仅 `context`）。多模块拓扑另宜 `kind=context`（**DES-223**，warn）。
 
 ---
 
