@@ -4,6 +4,7 @@ from pathlib import Path
 
 from multi_agent_code_factory.agents.llm.prompt.validation_feedback import (
     format_design_validation_feedback,
+    format_spec_validation_feedback,
 )
 from multi_agent_code_factory.agents.normalizers.design_enrichment import (
     enrich_design_for_validation,
@@ -121,4 +122,46 @@ def test_format_design_validation_feedback_lists_violations() -> None:
 
     assert feedback is not None
     assert "DES-008" in feedback
+    assert "(error)" in feedback
+    assert "field=non_goals" in feedback
     assert "non_goals must not be empty" in feedback
+
+
+def test_format_spec_validation_feedback_lists_violations_with_path() -> None:
+    report = ValidationReport(
+        version="1",
+        target=ValidationTarget.SPEC,
+        passed=False,
+        error_count=1,
+        warn_count=1,
+        violations=[
+            Violation(
+                rule_id="SPEC-017",
+                severity="error",
+                message="context.storage is required",
+                field="storage",
+                path="/context/storage",
+            ),
+            Violation(
+                rule_id="SPEC-102",
+                severity="warn",
+                message="P0 user story US-1 not traced",
+                field="user_stories",
+            ),
+        ],
+    )
+    state = PipelineState(
+        user_request="calc",
+        spec_validation=report,
+    )
+
+    feedback = format_spec_validation_feedback(state)
+
+    assert feedback is not None
+    assert "Previous spec failed validation" in feedback
+    assert "SPEC-017" in feedback
+    assert "(error)" in feedback
+    assert "path=/context/storage" in feedback
+    assert "SPEC-102" in feedback
+    assert "(warn)" in feedback
+    assert feedback.index("SPEC-017") < feedback.index("SPEC-102")

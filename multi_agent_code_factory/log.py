@@ -76,7 +76,8 @@ def format_violations(violations: list[Violation], *, limit: int = 5) -> str:
     parts: list[str] = []
     for item in violations[:limit]:
         field = f" field={item.field}" if item.field else ""
-        parts.append(f"{item.rule_id}{field}: {item.message}")
+        path = f" path={item.path}" if item.path else ""
+        parts.append(f"{item.rule_id} ({item.severity}){field}{path}: {item.message}")
     if len(violations) > limit:
         parts.append(f"... +{len(violations) - limit} more")
     return "; ".join(parts)

@@ -6,6 +6,9 @@ from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.agents.base import agent_context
 from multi_agent_code_factory.agents.live import require_llm_runner
 from multi_agent_code_factory.agents.llm import LlmRunner
+from multi_agent_code_factory.agents.llm.prompt.validation_feedback import (
+    format_spec_validation_feedback,
+)
 from multi_agent_code_factory.agents.normalizers.spec import normalize_spec
 from multi_agent_code_factory.agents.stub.fixtures import (
     StubScenario,
@@ -48,6 +51,7 @@ def run_pm(
                 role_id=AgentRole.PM,
                 output_schema=SpecArtifact,
                 context=agent_context(AgentRole.PM, state, profile),
+                extra_system=format_spec_validation_feedback(state),
             )
             spec = normalize_spec(spec, profile, state)
 
