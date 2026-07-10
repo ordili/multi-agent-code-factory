@@ -8,8 +8,14 @@ from typing import Any, TypeVar
 from pydantic import BaseModel
 
 from multi_agent_code_factory.agents.llm.budget.guard import check_llm_budget
-from multi_agent_code_factory.agents.llm.errors import wrap_invoke_failure
+from multi_agent_code_factory.agents.llm.errors import (
+    LlmParseError,
+    wrap_invoke_failure,
+)
 from multi_agent_code_factory.agents.llm.prompt.builder import build_llm_messages
+from multi_agent_code_factory.agents.llm.prompt.validation_feedback import (
+    format_llm_parse_retry_feedback,
+)
 from multi_agent_code_factory.agents.llm.retry.executor import RetryExecutor
 from multi_agent_code_factory.agents.llm.retry.policy import default_retry_policy
 from multi_agent_code_factory.agents.llm.strategies.base import InvokeStrategy
@@ -78,14 +84,20 @@ class StructuredInvokePipeline:
             self._runtime.output_mode,
         )
 
+        parse_retry_feedback: str | None = None
+
         def attempt_fn(attempt: int) -> T:
+            nonlocal parse_retry_feedback
             started = time.perf_counter()
+            effective_system = system_prompt
+            if parse_retry_feedback:
+                effective_system = f"{system_prompt}\n\n{parse_retry_feedback}"
             try:
                 result = self._strategy.invoke(
                     self._model,
                     role_id=request.role_id,
                     output_schema=request.output_schema,
-                    system_prompt=system_prompt,
+                    system_prompt=effective_system,
                     user_prompt=user_prompt,
                 )
             except BaseException as exc:
@@ -108,6 +120,8 @@ class StructuredInvokePipeline:
                     output_schema_name,
                     exc,
                 )
+                if isinstance(exc, LlmParseError):
+                    parse_retry_feedback = format_llm_parse_retry_feedback(exc)
                 raise
 
             duration_ms = int((time.perf_counter() - started) * 1000)

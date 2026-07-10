@@ -1,0 +1,7 @@
+Pipeline PM live 调用链（prompted_json）:
+  1. load_profile + PipelineState(user_request)
+  2. context = agent_context(PM)  →  watch: user_request, profile, spec_validation, review
+  3. system = pm.txt + artifact-language-snippet + json_output_instructions(SpecArtifact)
+  4. user   = JSON.stringify(context)
+  5. chat model invoke (DeepSeek/Ollama)
+  6. json.loads + SpecArtifact.model_validate

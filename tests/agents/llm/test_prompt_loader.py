@@ -14,6 +14,8 @@ def test_language_agnostic_roles_use_shared_prompts() -> None:
         architect = load_role_prompt(profile, AgentRole.ARCHITECT)
         reviewer = load_role_prompt(profile, AgentRole.REVIEWER)
         assert "SpecArtifact" in pm
+        assert "success_metrics" in pm
+        assert "NOT plain strings" in pm
         assert "DesignArtifact" in architect
         assert "test_report.passed" in reviewer
 

@@ -1,0 +1,7 @@
+{
+  "factory_provider": "deepseek",
+  "model": "deepseek-v4-pro",
+  "output_mode": "prompted_json",
+  "profile": "python",
+  "user_request": "Build a calculator with add, subtract, multiply, and divide"
+}

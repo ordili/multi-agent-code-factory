@@ -337,7 +337,7 @@ class SpecArtifact(BaseModel):
         "acceptance_criteria": [
             {
                 "id": "AC-1",
-                "description": "pytest suite passes",
+                "description": "pytest suite passes (covers US-1)",
                 "verifiable_by": "automated_test",
             }
         ],
