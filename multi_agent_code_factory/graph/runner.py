@@ -21,19 +21,16 @@ from multi_agent_code_factory.config import BudgetConfig, FactoryConfig, LoopLim
 from multi_agent_code_factory.graph.graph_builder import build_graph
 from multi_agent_code_factory.graph.pipeline_run_context import PipelineRunContext
 from multi_agent_code_factory.log import (
-    ERROR_LOG_FILENAME,
-    RUN_LOG_FILENAME,
-    WARNING_LOG_FILENAME,
     attach_run_file_logging,
     detach_run_file_logging,
     get_logger,
-    run_log_dir,
 )
 from multi_agent_code_factory.nodes.design_validate import run_design_validate
 from multi_agent_code_factory.nodes.prd_validate import run_prd_validate
 from multi_agent_code_factory.observability import build_run_config, is_tracing_enabled
 from multi_agent_code_factory.pipeline_nodes import PipelineNode
 from multi_agent_code_factory.profile_config import ProfileConfig, load_profile
+from multi_agent_code_factory.run_summary import log_run_outcome
 from multi_agent_code_factory.schemas.run_meta import RunMeta, RunStatus
 from multi_agent_code_factory.state import (
     PipelineState,
@@ -219,7 +216,7 @@ def run_pipeline(
             logger.info("langsmith tracing enabled task_id=%s", task_id)
         final_raw = app.invoke(initial, context=run_context, config=run_config)
         result = _finalize_result(writer, final_raw)
-        _log_pipeline_finish(task_id, writer, result.status)
+        _log_pipeline_finish(task_id, writer, result.status, stub=stub)
         return result
     finally:
         detach_run_file_logging()
@@ -311,7 +308,7 @@ def continue_pipeline(
 
             final_raw = app.invoke(None, context=run_context, config=langgraph_config)
             result = _finalize_result(writer, final_raw)
-            _log_pipeline_finish(task_id, writer, result.status)
+            _log_pipeline_finish(task_id, writer, result.status, stub=stub)
             return result
     finally:
         detach_run_file_logging()
@@ -321,6 +318,8 @@ def _log_pipeline_finish(
     task_id: str,
     writer: RunArtifactWriter,
     status: RunStatus,
+    *,
+    stub: bool = False,
 ) -> None:
     logger.info(
         "pipeline finished task_id=%s status=%s run_dir=%s",
@@ -328,30 +327,4 @@ def _log_pipeline_finish(
         status.value,
         writer.directory,
     )
-    meta = writer.read_meta()
-    if meta is not None and meta.budget is not None:
-        logger.info(
-            "llm budget used_llm_calls=%s used_tokens=%s",
-            meta.budget.used_llm_calls,
-            meta.budget.used_tokens,
-        )
-    usage = writer.read_llm_usage()
-    if usage is not None:
-        logger.info(
-            "llm usage totals calls=%s prompt_tokens=%s "
-            "completion_tokens=%s total_tokens=%s",
-            usage.totals.llm_calls,
-            usage.totals.prompt_tokens,
-            usage.totals.completion_tokens,
-            usage.totals.total_tokens,
-        )
-    log_dir = run_log_dir(writer.directory)
-    run_log = log_dir / RUN_LOG_FILENAME
-    warning_log = log_dir / WARNING_LOG_FILENAME
-    error_log = log_dir / ERROR_LOG_FILENAME
-    if run_log.is_file():
-        logger.info("run log file=%s", run_log)
-    if warning_log.is_file():
-        logger.info("warning log file=%s", warning_log)
-    if error_log.is_file():
-        logger.info("error log file=%s", error_log)
+    log_run_outcome(logger, writer.directory, stub=stub)
