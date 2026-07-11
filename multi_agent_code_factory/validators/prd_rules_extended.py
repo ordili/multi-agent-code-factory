@@ -248,6 +248,16 @@ def validate_prd_extended_rules(prd: PrdArtifact) -> list[Violation]:
                 )
             )
 
+    background = prd.context.get("background")
+    if not isinstance(background, str) or not background.strip():
+        violations.append(
+            warn(
+                "PRD-119",
+                "context.background must be non-empty narrative for prd.md §3",
+                field="context.background",
+            )
+        )
+
     glossary = prd.context.get("glossary")
     if isinstance(glossary, list):
         for index, item in enumerate(glossary):

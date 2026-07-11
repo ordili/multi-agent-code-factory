@@ -7,7 +7,8 @@
   "context": {
     "language": "python",
     "interface": "cli",
-    "storage": "none"
+    "storage": "none",
+    "background": "面向需要在终端快速验算的用户，以本地 CLI 交付，无需联网、不保存历史。"
   },
   "success_metrics": [],
   "features": [

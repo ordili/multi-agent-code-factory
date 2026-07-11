@@ -278,6 +278,9 @@ def _coerce_context(value: Any) -> dict[str, Any]:
     if not isinstance(value, dict):
         return {}
     context = dict(value)
+    background = context.get("background")
+    if isinstance(background, str):
+        context["background"] = background.strip()
     glossary = context.get("glossary")
     if isinstance(glossary, list):
         coerced: list[dict[str, str]] = []
@@ -299,6 +302,11 @@ def coerce_prd_payload(data: Any) -> Any:
     payload.setdefault("revision", 1)
     if "context" in payload:
         payload["context"] = _coerce_context(payload["context"])
+    if isinstance(payload.get("background"), str):
+        context = dict(payload.get("context") or {})
+        if not context.get("background"):
+            context["background"] = payload.pop("background").strip()
+            payload["context"] = context
     if "user_stories" in payload:
         payload["user_stories"] = _coerce_user_stories(payload["user_stories"])
     if "requirement_pool" in payload:
@@ -343,6 +351,10 @@ class PrdArtifact(BaseModel):
                 "language": "python",
                 "interface": "cli",
                 "storage": "json_file",
+                "background": (
+                    "面向需要在本地管理待办的用户，以 CLI 交付增删查能力，"
+                    "数据持久化到 JSON 文件，无需联网与多用户协作。"
+                ),
             },
             "success_metrics": [
                 {

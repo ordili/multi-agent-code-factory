@@ -9,6 +9,7 @@
     "runtime": "python",
     "interface": "cli",
     "storage": "json_file",
+    "background": "面向需要在本地管理待办的个人用户，以 CLI 子命令完成增删查，数据持久化到 JSON 文件，无需联网与多用户协作。",
     "glossary": [
       {
         "term": "待办",

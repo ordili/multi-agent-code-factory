@@ -70,6 +70,9 @@ def test_render_prd_md_contains_sections(snippets_dir: Path) -> None:
     assert "# CLI Todo App" in md
     assert "## 术语与领域概念" in md
     assert "## 背景与上下文" in md
+    assert "本地管理待办" in md
+    assert "### 产品形态" in md
+    assert "**interface：**" in md
     assert "## 业务指标" in md
     assert "### 稳定性与性能" in md
     assert "### 数据一致性" in md
@@ -83,3 +86,48 @@ def test_render_prd_md_contains_sections(snippets_dir: Path) -> None:
     assert "task_profile: python" in md
     assert "revision: 1" in md
     assert "## 待澄清项" not in md
+
+
+def test_render_prd_md_background_fallback_to_context_keys() -> None:
+    spec = PrdArtifact.model_validate(
+        {
+            "version": "1",
+            "profile": "python",
+            "revision": 1,
+            "title": "Legacy",
+            "summary": "Legacy spec without background narrative",
+            "context": {"language": "python", "interface": "cli", "storage": "none"},
+            "success_metrics": [],
+            "features": [
+                {
+                    "id": "FEAT-1",
+                    "name": "Core",
+                    "description": "core",
+                    "priority": "P0",
+                }
+            ],
+            "scope_in": ["CLI"],
+            "operational_profile": {
+                "user_scale": "personal",
+                "high_concurrency": False,
+                "performance": {"tier": "best_effort"},
+            },
+            "consistency_profile": {
+                "consistency_model": "local_only",
+                "delivery": "best_effort",
+                "multi_writer": False,
+                "idempotency_required": False,
+            },
+            "acceptance_criteria": [
+                {
+                    "id": "AC-1",
+                    "description": "passes",
+                    "verifiable_by": "automated_test",
+                }
+            ],
+        }
+    )
+    md = render_prd_md(spec)
+    assert "## 背景与上下文" in md
+    assert "**interface：** `cli`" in md
+    assert "### 产品形态" not in md

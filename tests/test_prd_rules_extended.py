@@ -17,7 +17,11 @@ def _minimal_spec(**overrides: object) -> PrdArtifact:
         "revision": 1,
         "title": "Test",
         "summary": "summary",
-        "context": {"language": "python", "storage": "none"},
+        "context": {
+            "language": "python",
+            "storage": "none",
+            "background": "面向本地 CLI 的测试需求背景。",
+        },
         "success_metrics": [],
         "features": [
             {
@@ -118,11 +122,26 @@ def test_prd_default_passes_spec_102(snippets_dir: Path) -> None:
     assert not [v for v in violations if v.rule_id == "PRD-102"]
 
 
+def test_prd_119_warns_when_background_missing() -> None:
+    spec = _minimal_spec(
+        context={"language": "python", "storage": "none"},
+    )
+    violations = validate_prd_extended_rules(spec)
+    assert any(v.rule_id == "PRD-119" for v in violations)
+
+
+def test_prd_119_passes_with_background() -> None:
+    spec = _minimal_spec()
+    violations = validate_prd_extended_rules(spec)
+    assert not [v for v in violations if v.rule_id == "PRD-119"]
+
+
 def test_prd_118_warns_on_empty_glossary_term() -> None:
     spec = _minimal_spec(
         context={
             "language": "python",
             "storage": "none",
+            "background": "Glossary validation fixture background.",
             "glossary": [{"term": "  ", "definition": "ok"}],
         }
     )

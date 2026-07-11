@@ -60,17 +60,53 @@ def _glossary_entries(context: dict[str, Any]) -> list[dict[str, str]]:
     return entries
 
 
-def _context_lines(context: dict[str, Any]) -> list[str]:
-    skip = {"language", "glossary"}
+_CONTEXT_SHAPE_KEYS = frozenset(
+    {"interface", "storage", "audience", "deployment", "runtime", "domain"}
+)
+
+_CONTEXT_LINE_SKIP = frozenset({"language", "glossary", "background"})
+
+
+def _background_text(context: dict[str, Any]) -> str | None:
+    raw = context.get("background")
+    if isinstance(raw, str) and raw.strip():
+        return raw.strip()
+    return None
+
+
+def _context_lines(context: dict[str, Any], *, shape_only: bool = False) -> list[str]:
     lines: list[str] = []
     for key, value in context.items():
-        if key in skip:
+        if key in _CONTEXT_LINE_SKIP:
+            continue
+        if shape_only and key not in _CONTEXT_SHAPE_KEYS:
             continue
         if value is None or value == "":
             continue
         if isinstance(value, (dict, list)):
             continue
         lines.append(f"- **{key}：** `{value}`")
+    return lines
+
+
+def _render_background_section(spec: PrdArtifact) -> list[str]:
+    """§3 背景与上下文：叙述为主，产品形态键为辅。"""
+    lines: list[str] = ["## 背景与上下文", ""]
+    narrative = _background_text(spec.context)
+    if narrative:
+        lines.append(narrative)
+        lines.append("")
+        shape_lines = _context_lines(spec.context, shape_only=True)
+        if shape_lines:
+            lines.extend(["### 产品形态", ""])
+            lines.extend(shape_lines)
+    else:
+        context_lines = _context_lines(spec.context)
+        if context_lines:
+            lines.extend(context_lines)
+        else:
+            lines.append("—")
+    lines.append("")
     return lines
 
 
@@ -119,13 +155,7 @@ def render_prd_md(spec: PrdArtifact) -> str:
         lines.append("无")
     lines.append("")
 
-    lines.extend(["## 背景与上下文", ""])
-    context_lines = _context_lines(spec.context)
-    if context_lines:
-        lines.extend(context_lines)
-    else:
-        lines.append("—")
-    lines.append("")
+    lines.extend(_render_background_section(spec))
 
     lines.extend(["## 业务指标", ""])
     if spec.success_metrics:

@@ -459,6 +459,7 @@ class DesignArtifact(BaseModel):
             "spec_ref": "<from spec.title>",
             "revision": 1,
             "summary": "无状态命令行工具示例（按实际 spec 替换）",
+            "background": "面向终端用户的本地 CLI；无持久化、无联网，单次求值交付。",
             "non_goals": ["Web UI", "持久化"],
             "design_goals": ["FEAT-1"],
             "context_view": {"actors": ["User", "CliEntry"]},

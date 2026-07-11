@@ -37,6 +37,8 @@ _ARCHITECT_SHAPE_NOTES = (
     "indexes require purpose. file_plan[].path must equal a dev_tasks[].path.\n"
     "cross_cutting.test_strategy when present: "
     '{"approach":"pytest","paths":["tests/..."]}.\n'
+    "design.background: 1–2 sentences for design.md §1 (how design meets spec; "
+    "not only interface/storage bullets).\n"
     "For stateless personal CLI with local_only and no custom performance tier: "
     "keep non_functional, transaction_constraints, data_model, and table_schemas "
     "as []."

@@ -69,6 +69,16 @@ def test_architect_instructions_include_persistence_supplement() -> None:
     assert "cross_cutting.test_strategy" in instructions
     assert "file_plan" in instructions
     assert "design_ref" in instructions
+    assert "design.background" in instructions
+    assert '"background":' in instructions
+
+
+def test_architect_design_prompt_shape_includes_background() -> None:
+    from multi_agent_code_factory.schemas.design import DesignArtifact
+
+    shape = DesignArtifact.LLM_PROMPT_SHAPE.json_shape
+    assert isinstance(shape.get("background"), str)
+    assert shape["background"].strip()
 
 
 def test_llm_prompt_shape_defined_on_domain_schemas() -> None:

@@ -6,6 +6,10 @@ Produce a complete PrdArtifact JSON that matches the pipeline schema:
 - context.storage: required — declare persistence medium explicitly:
   local_file | json_file | database | none | memory | stateless
   (drives downstream design table_schemas / diagrams obligations)
+- context.background: required — 1–3 sentences narrative for prd.md §3 背景与上下文
+  explain WHY, for WHOM, typical scenario, and domain context in natural language
+  (e.g. DeFi arbitrage monitoring on BSC); weave interface/storage/deployment facts into prose
+  do NOT substitute interface/storage key bullets for background — summary is goal-only (§1)
 - context.glossary: array of {term, definition} for domain terms and user personas
   — NOT plain strings; each entry needs non-empty term and definition
   (user_stories.as_a should reuse glossary role terms)
