@@ -20,7 +20,13 @@ from multi_agent_code_factory.checkpoint import (
 from multi_agent_code_factory.config import BudgetConfig, FactoryConfig, LoopLimits
 from multi_agent_code_factory.graph.graph_builder import build_graph
 from multi_agent_code_factory.graph.pipeline_run_context import PipelineRunContext
-from multi_agent_code_factory.log import get_logger
+from multi_agent_code_factory.log import (
+    ERROR_LOG_FILENAME,
+    RUN_LOG_FILENAME,
+    attach_run_file_logging,
+    detach_run_file_logging,
+    get_logger,
+)
 from multi_agent_code_factory.nodes.design_validate import run_design_validate
 from multi_agent_code_factory.nodes.prd_validate import run_prd_validate
 from multi_agent_code_factory.observability import build_run_config, is_tracing_enabled
@@ -181,36 +187,40 @@ def run_pipeline(
     )
 
     writer = RunArtifactWriter(task_id, base_dir=run_dir)
-    limits = factory_config.loop_limits
-    writer.init_run_meta(
-        profile, limits, factory_config=factory_config, user_request=user_request
-    )
+    attach_run_file_logging(writer.directory, append=False)
+    try:
+        limits = factory_config.loop_limits
+        writer.init_run_meta(
+            profile, limits, factory_config=factory_config, user_request=user_request
+        )
 
-    scenario = (
-        stub_scenario
-        if isinstance(stub_scenario, StubScenario)
-        else StubScenario(stub_scenario)
-    )
+        scenario = (
+            stub_scenario
+            if isinstance(stub_scenario, StubScenario)
+            else StubScenario(stub_scenario)
+        )
 
-    run_context = _build_run_context(
-        profile=profile,
-        factory_config=factory_config,
-        writer=writer,
-        stub=stub,
-        stub_scenario=scenario,
-    )
-    initial = PipelineState(
-        task_id=task_id,
-        user_request=user_request,
-    )
-    app = build_graph()
-    run_config = build_run_config(task_id=task_id, profile_id=profile.id)
-    if is_tracing_enabled():
-        logger.info("langsmith tracing enabled task_id=%s", task_id)
-    final_raw = app.invoke(initial, context=run_context, config=run_config)
-    result = _finalize_result(writer, final_raw)
-    _log_pipeline_finish(task_id, writer, result.status)
-    return result
+        run_context = _build_run_context(
+            profile=profile,
+            factory_config=factory_config,
+            writer=writer,
+            stub=stub,
+            stub_scenario=scenario,
+        )
+        initial = PipelineState(
+            task_id=task_id,
+            user_request=user_request,
+        )
+        app = build_graph()
+        run_config = build_run_config(task_id=task_id, profile_id=profile.id)
+        if is_tracing_enabled():
+            logger.info("langsmith tracing enabled task_id=%s", task_id)
+        final_raw = app.invoke(initial, context=run_context, config=run_config)
+        result = _finalize_result(writer, final_raw)
+        _log_pipeline_finish(task_id, writer, result.status)
+        return result
+    finally:
+        detach_run_file_logging()
 
 
 def continue_pipeline(
@@ -254,51 +264,55 @@ def continue_pipeline(
         stub_scenario=scenario,
     )
 
-    checkpointer_path = writer.directory / "checkpoint.db"
-    with sqlite_checkpointer(checkpointer_path) as checkpointer:
-        app = build_graph(checkpointer=checkpointer)
-        run_config = build_run_config(task_id=task_id, profile_id=profile.id)
-        langgraph_config = {
-            **run_config,
-            "configurable": {
-                **run_config.get("configurable", {}),
-                "thread_id": task_id,
-            },
-        }
+    attach_run_file_logging(writer.directory, append=True)
+    try:
+        checkpointer_path = writer.directory / "checkpoint.db"
+        with sqlite_checkpointer(checkpointer_path) as checkpointer:
+            app = build_graph(checkpointer=checkpointer)
+            run_config = build_run_config(task_id=task_id, profile_id=profile.id)
+            langgraph_config = {
+                **run_config,
+                "configurable": {
+                    **run_config.get("configurable", {}),
+                    "thread_id": task_id,
+                },
+            }
 
-        if reentry_node in GATE_REENTRY_NODES:
-            state = _execute_gate(reentry_node, state, run_context)
-            app.update_state(
-                langgraph_config,
-                state_to_graph_dict(state),
-                as_node=reentry_node.value,
+            if reentry_node in GATE_REENTRY_NODES:
+                state = _execute_gate(reentry_node, state, run_context)
+                app.update_state(
+                    langgraph_config,
+                    state_to_graph_dict(state),
+                    as_node=reentry_node.value,
+                )
+            elif reentry_node == PipelineNode.ARCHITECT:
+                state.pipeline_route = PipelineNode.ARCHITECT.value
+                app.update_state(
+                    langgraph_config,
+                    state_to_graph_dict(state),
+                    as_node=PipelineNode.ROUTE_AFTER_PRD_VALIDATE.value,
+                )
+            else:
+                msg = f"unsupported reentry node: {reentry_node.value}"
+                raise ContinueError(msg)
+
+            mode = "stub" if stub else "live"
+            logger.info(
+                "pipeline continue task_id=%s profile=%s mode=%s reentry=%s",
+                task_id,
+                profile.id,
+                mode,
+                reentry_node.value,
             )
-        elif reentry_node == PipelineNode.ARCHITECT:
-            state.pipeline_route = PipelineNode.ARCHITECT.value
-            app.update_state(
-                langgraph_config,
-                state_to_graph_dict(state),
-                as_node=PipelineNode.ROUTE_AFTER_PRD_VALIDATE.value,
-            )
-        else:
-            msg = f"unsupported reentry node: {reentry_node.value}"
-            raise ContinueError(msg)
+            if is_tracing_enabled():
+                logger.info("langsmith tracing enabled task_id=%s", task_id)
 
-        mode = "stub" if stub else "live"
-        logger.info(
-            "pipeline continue task_id=%s profile=%s mode=%s reentry=%s",
-            task_id,
-            profile.id,
-            mode,
-            reentry_node.value,
-        )
-        if is_tracing_enabled():
-            logger.info("langsmith tracing enabled task_id=%s", task_id)
-
-        final_raw = app.invoke(None, context=run_context, config=langgraph_config)
-        result = _finalize_result(writer, final_raw)
-        _log_pipeline_finish(task_id, writer, result.status)
-        return result
+            final_raw = app.invoke(None, context=run_context, config=langgraph_config)
+            result = _finalize_result(writer, final_raw)
+            _log_pipeline_finish(task_id, writer, result.status)
+            return result
+    finally:
+        detach_run_file_logging()
 
 
 def _log_pipeline_finish(
@@ -329,3 +343,9 @@ def _log_pipeline_finish(
             usage.totals.completion_tokens,
             usage.totals.total_tokens,
         )
+    run_log = writer.directory / RUN_LOG_FILENAME
+    error_log = writer.directory / ERROR_LOG_FILENAME
+    if run_log.is_file():
+        logger.info("run log file=%s", run_log)
+    if error_log.is_file():
+        logger.info("error log file=%s", error_log)
