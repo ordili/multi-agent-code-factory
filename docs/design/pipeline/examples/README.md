@@ -25,7 +25,7 @@
 | 路径 | 说明 |
 |------|------|
 | [snippets/prd-default.json](./snippets/prd-default.json) | Profile=`default` 的 `PrdArtifact` 节选 |
-| [snippets/spec-context-rust.json](./snippets/spec-context-rust.json) | Rust `spec.context` + AC 节选 |
+| [snippets/prd-context-rust.json](./snippets/prd-context-rust.json) | Rust `prd.context` + AC 节选 |
 | [snippets/spec-context-solidity.json](./snippets/spec-context-solidity.json) | Solidity `spec.context` + AC 节选 |
 | [snippets/design-todo-excerpt.json](./snippets/design-todo-excerpt.json) | Todo `DesignArtifact` 节选（完整见 [design-spec.md](../artifact-schemas/design-spec.md)） |
 | [snippets/flow-todo.mmd](./snippets/flow-todo.mmd) | Todo 时序图节选 |
