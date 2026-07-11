@@ -10,6 +10,13 @@ toolchain:
   test_artifacts: ["target/surefire-reports/TEST-*.xml"]
   lint_command: mvn -q checkstyle:check
   test_dir_glob: "src/test/**/*Test.java"
+coverage:
+  enabled: false
+  block_on: false
+  command: mvn -q test jacoco:report
+  parser: jacoco_xml
+  artifacts:
+    - target/site/jacoco/jacoco.xml
 context_schema:
   type: object
   properties:

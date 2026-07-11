@@ -197,6 +197,7 @@ def load_profile(
         "auto_generate_tests": bool(normalized.get("auto_generate_tests", False)),
         "tests_missing": normalized.get("tests_missing") or {},
         "coverage": normalized.get("coverage") or {},
+        "acceptance_traceability": normalized.get("acceptance_traceability") or {},
         "hitl": normalized.get("hitl") or {},
         "subscriptions": normalized.get("subscriptions"),
         "sandbox": normalized.get("sandbox"),

@@ -22,6 +22,11 @@ context_schema:
     test_framework:
       enum: [forge-std]
       default: forge-std
+coverage:
+  enabled: false
+  block_on: false
+  command: forge coverage --report summary
+  parser: forge_coverage
 hitl:
   sensitive_globs:
     - "**/script/**"

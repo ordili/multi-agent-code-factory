@@ -71,6 +71,15 @@ def test_python_profile_coverage_defaults_disabled() -> None:
     assert profile.coverage.enabled is False
     assert profile.coverage.parser == "pytest_cov_json"
     assert profile.coverage.thresholds.line_percent == 70
+    assert profile.acceptance_traceability.enabled is True
+    assert profile.acceptance_traceability.block_on is False
+
+
+def test_java_and_solidity_coverage_parsers() -> None:
+    java = load_profile("java")
+    assert java.coverage.parser == "jacoco_xml"
+    solidity = load_profile("solidity")
+    assert solidity.coverage.parser == "forge_coverage"
 
 
 @pytest.mark.parametrize("legacy_id", ["default", "go-cli", "java-maven", "rust-cli"])

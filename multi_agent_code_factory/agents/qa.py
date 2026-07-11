@@ -52,6 +52,7 @@ def run_qa(
                 profile,
                 dev_manifest=state.dev_manifest,
                 design=state.design,
+                prd=state.prd,
             )
 
         writer.write_model("test_report.json", report)
@@ -64,6 +65,18 @@ def run_qa(
             )
         if report.passed:
             logger.info("qa tests passed")
+            if report.acceptance_traceability:
+                unmet = [
+                    item.id
+                    for item in report.acceptance_traceability
+                    if item.designed and not item.met
+                ]
+                if unmet:
+                    logger.warning(
+                        "qa acceptance_traceability unmet ids=%s block_on=%s",
+                        unmet,
+                        profile.acceptance_traceability.block_on,
+                    )
             if report.tests_missing:
                 logger.warning(
                     "qa toolchain green with tests_missing count=%s paths=%s "

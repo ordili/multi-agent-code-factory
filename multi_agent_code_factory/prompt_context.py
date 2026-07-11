@@ -202,6 +202,11 @@ def build_prompt_context(
             context["tests_missing"] = list(state.test_report.tests_missing)
 
     if role_id == AgentRole.REVIEWER:
+        if state.test_report is not None and state.test_report.acceptance_traceability:
+            context["acceptance_traceability"] = [
+                item.model_dump(mode="json")
+                for item in state.test_report.acceptance_traceability
+            ]
         diff_paths: list[str] | None = None
         if state.dev_manifest is not None:
             diff_paths = [

@@ -183,6 +183,9 @@ def trim_test_report(payload: dict[str, Any]) -> dict[str, Any]:
             )
             if key in coverage
         }
+    trace = payload.get("acceptance_traceability")
+    if isinstance(trace, list):
+        result["acceptance_traceability"] = trace
     return result
 
 

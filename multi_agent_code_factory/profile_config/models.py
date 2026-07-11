@@ -69,6 +69,13 @@ class CoverageConfig(BaseModel):
     exclude_globs: list[str] = Field(default_factory=list)
 
 
+class AcceptanceTraceabilityConfig(BaseModel):
+    """design.test_cases.covers → PRD AC 与 QA 工具链结果的自动追溯。"""
+
+    enabled: bool = True
+    block_on: bool = False
+
+
 class ValidationGateConfig(BaseModel):
     enabled: bool = True
     block_on: ValidationBlockOn = ValidationBlockOn.ERROR
@@ -120,6 +127,9 @@ class ProfileConfig(BaseModel):
     auto_generate_tests: bool = False
     tests_missing: TestsMissingConfig = Field(default_factory=TestsMissingConfig)
     coverage: CoverageConfig = Field(default_factory=CoverageConfig)
+    acceptance_traceability: AcceptanceTraceabilityConfig = Field(
+        default_factory=AcceptanceTraceabilityConfig
+    )
     hitl: HitlConfig = Field(default_factory=HitlConfig)
     subscriptions: dict[str, list[str]] | None = None
     sandbox: str | None = None

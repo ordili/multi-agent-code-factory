@@ -49,7 +49,18 @@ Test 层 **语言无关**。pytest、`cargo test`、`go test`、`mvn test`、`fo
 | `language` | string? | Profile.`language` 快照 |
 | `tests_missing` | string[]? | 缺测的模块/路径（启发式；是否 block 见 Profile） |
 | `coverage` | CoverageReport? | 代码覆盖率（可选；见 §CoverageReport） |
+| `acceptance_traceability` | AcceptanceTraceItem[]? | AC 追溯（P4；见 [qa-gates-spec §8](../qa-gates-spec.md)） |
 | `raw_output_tail` | string? | 兜底调试输出 |
+
+### AcceptanceTraceItem
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `id` | string | PRD acceptance_criteria id |
+| `designed` | boolean | `test_cases.covers` 是否含该 AC |
+| `test_case_ids` | string[] | 关联 TC id |
+| `met` | boolean | designed 且工具链绿 |
+| `note` | string? | 缺口说明 |
 
 ### CoverageReport
 

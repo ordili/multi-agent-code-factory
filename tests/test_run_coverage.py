@@ -18,7 +18,41 @@ from multi_agent_code_factory.schemas.dev_manifest import (
     ChangeType,
     DevManifest,
 )
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from multi_agent_code_factory.tools.run_tests import run_tests
+
+
+def _prd() -> PrdArtifact:
+    return PrdArtifact.model_validate(
+        {
+            "version": "1",
+            "profile": "python",
+            "revision": 1,
+            "title": "t",
+            "summary": "demo",
+            "success_metrics": [],
+            "features": [],
+            "scope_in": ["x"],
+            "operational_profile": {
+                "user_scale": "personal",
+                "high_concurrency": False,
+                "performance": {"tier": "best_effort"},
+            },
+            "consistency_profile": {
+                "consistency_model": "local_only",
+                "delivery": "best_effort",
+                "multi_writer": False,
+                "idempotency_required": False,
+            },
+            "acceptance_criteria": [
+                {
+                    "id": "AC-1",
+                    "description": "works",
+                    "verifiable_by": "automated_test",
+                }
+            ],
+        }
+    )
 
 
 def _design(*paths: str) -> DesignArtifact:
@@ -30,6 +64,23 @@ def _design(*paths: str) -> DesignArtifact:
             "dev_tasks": [
                 {"id": f"T{i + 1}", "path": path, "description": "task"}
                 for i, path in enumerate(paths)
+            ],
+        }
+    )
+
+
+def _design_with_tc(*paths: str) -> DesignArtifact:
+    base = _design(*paths)
+    return DesignArtifact.model_validate(
+        {
+            **base.model_dump(mode="python"),
+            "test_cases": [
+                {
+                    "id": "TC-HAP-APP-001",
+                    "kind": "happy",
+                    "title": "app",
+                    "covers": ["AC-1"],
+                }
             ],
         }
     )
@@ -155,3 +206,28 @@ def test_run_tests_coverage_block_on_fails_passed(tmp_path: Path) -> None:
     assert report.coverage is not None
     assert report.coverage.passed is False
     assert report.passed is False
+
+
+def test_run_tests_populates_acceptance_traceability(tmp_path: Path) -> None:
+    code_root = tmp_path / "project"
+    _write_passing_pytest_project(code_root)
+    profile = _mini_profile(
+        code_root,
+        coverage=CoverageConfig(enabled=False),
+    )
+    manifest = DevManifest(
+        version="1",
+        changed_files=[
+            ChangedFile(path="src/app.py", change_type=ChangeType.CREATE),
+            ChangedFile(path="tests/test_app.py", change_type=ChangeType.CREATE),
+        ],
+    )
+    report = run_tests(
+        profile,
+        dev_manifest=manifest,
+        design=_design_with_tc("src/app.py"),
+        prd=_prd(),
+    )
+    assert report.acceptance_traceability is not None
+    assert report.acceptance_traceability[0].id == "AC-1"
+    assert report.acceptance_traceability[0].met is True

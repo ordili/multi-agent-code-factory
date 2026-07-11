@@ -168,6 +168,19 @@ def test_go_cover_parser_parses_total_line(tmp_path: Path) -> None:
 
 
 def test_coverage_parser_registry() -> None:
+    from multi_agent_code_factory.tools.coverage_parsers.forge_coverage import (
+        parse_forge_coverage,
+    )
+    from multi_agent_code_factory.tools.coverage_parsers.go_cover import parse_go_cover
+    from multi_agent_code_factory.tools.coverage_parsers.jacoco_xml import (
+        parse_jacoco_xml,
+    )
+    from multi_agent_code_factory.tools.coverage_parsers.llvm_cov_json import (
+        parse_llvm_cov_json,
+    )
+
     assert get_coverage_parser("pytest_cov_json") is parse_pytest_cov_json
     assert get_coverage_parser("go_cover") is parse_go_cover
     assert get_coverage_parser("llvm_cov_json") is parse_llvm_cov_json
+    assert get_coverage_parser("jacoco_xml") is parse_jacoco_xml
+    assert get_coverage_parser("forge_coverage") is parse_forge_coverage

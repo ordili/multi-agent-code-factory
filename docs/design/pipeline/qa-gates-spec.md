@@ -307,17 +307,60 @@ Coverage **不替代** test_command；先测后覆盖率（或 Profile 文档约
 | **PR2** | `rust` detector（inline + dev_tasks scope + 豁免）；单测 fixture | `src/calc.rs` + `#[cfg(test)]` 不再出现在 tests_missing |
 | **PR3a** | Python `coverage` + `pytest_cov_json` parser + schema | test_report 含 coverage 块 |
 | **PR3b** | Go `go_cover`；Rust `llvm_cov_json`（CI only） | 可选阈值 warn |
-| **P4** | Design `test_cases` 驱动 AC 覆盖（与 semantic 合并） | 超出本文 |
+| **P4** | Design `test_cases` → AC 追溯 + jacoco/forge coverage parsers | ✅ 已实现 |
 
 ---
 
-## 7. 相关文件（实现时）
+## 8. P4：`acceptance_traceability`（AC 追溯）
+
+### 8.1 语义
+
+在 QA 阶段，将 PRD `acceptance_criteria[]` 与 Design `test_cases[].covers` 及工具链结果对齐：
+
+| 字段 | 说明 |
+|------|------|
+| `id` | AC id（如 `AC-1`） |
+| `designed` | 是否存在 `test_cases.covers` 含该 AC |
+| `test_case_ids` | 覆盖该 AC 的 TC id 列表 |
+| `met` | `designed` 且工具链绿（`exit_code=0` 且 `summary.failed=0`） |
+| `note` | 未设计 / 工具链失败说明 |
+
+**与 Design 校验分工：**
+
+- `DES-101` / `DES-016`（design_validate）：设计阶段 AC 是否被 trace / test_cases 覆盖
+- P4（QA）：实现后工具链是否绿，并预填 `test_report.acceptance_traceability` 供 Reviewer 写 `acceptance_coverage`
+
+### 8.2 Profile
+
+```yaml
+acceptance_traceability:
+  enabled: true
+  block_on: false   # true 时 designed 但未 met 的 AC 可令 passed=false
+```
+
+默认继承 `_base/common.yaml`（`block_on: false`，仅 inform Reviewer）。
+
+### 8.3 执行
+
+`run_tests(..., prd=, design=)` 在 finalize 前调用 `compute_acceptance_traceability`；Reviewer prompt 注入 `acceptance_traceability` 作为 `acceptance_coverage` 基线。
+
+### 8.4 Coverage parsers（Java / Solidity）
+
+| Profile | `parser` | 输入 |
+|---------|----------|------|
+| `java` | `jacoco_xml` | `target/site/jacoco/jacoco.xml` |
+| `solidity` | `forge_coverage` | `forge coverage --report summary` stdout |
+
+---
+
+## 9. 相关文件（P4）
 
 | 用途 | 路径 |
 |------|------|
 | Schema | `schemas/test_report.py`、`profile_config/models.py` |
-| 检测 | `tools/tests_missing.py` |
-| 运行 | `tools/run_tests.py`、`tools/coverage/`（新建） |
+| 检测 | `tools/tests_missing.py`、`tools/ac_traceability.py` |
+| 运行 | `tools/run_tests.py`、`tools/run_coverage.py` |
+| Coverage | `tools/coverage_parsers/`（含 `jacoco_xml`、`forge_coverage`） |
 | 重试文案 | `agents/llm/prompt/validation_feedback.py` |
 | Profile | `profiles/_base/common.yaml`、`profiles/rust.yaml`、`profiles/python.yaml` |
 | 测试 | `tests/test_tests_missing.py`、`tests/test_coverage_parsers.py` |

@@ -51,6 +51,18 @@ class CoverageReport(BaseModel):
     raw_summary_path: str | None = None
 
 
+class AcceptanceTraceItem(BaseModel):
+    """PRD AC ↔ design.test_cases ↔ QA 执行结果（机器预填，Reviewer 可覆写）。"""
+
+    __test__ = False
+
+    id: str
+    designed: bool
+    test_case_ids: list[str] = Field(default_factory=list)
+    met: bool
+    note: str | None = None
+
+
 class TestReport(BaseModel):
     __test__ = False
 
@@ -65,4 +77,5 @@ class TestReport(BaseModel):
     language: str | None = None
     tests_missing: list[str] | None = None
     coverage: CoverageReport | None = None
+    acceptance_traceability: list[AcceptanceTraceItem] | None = None
     raw_output_tail: str | None = None

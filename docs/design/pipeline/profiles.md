@@ -139,6 +139,15 @@ run_tests Tool：setup（可选）→ build（可选）→ test_command → test
 
 详见 [qa-gates-spec.md §4](../qa-gates-spec.md)。
 
+### Profile：`acceptance_traceability`（P4，默认开启 warn-only）
+
+| 字段 | 说明 |
+|------|------|
+| `enabled` | QA 后写入 `test_report.acceptance_traceability` |
+| `block_on` | `true` 时 designed 但未 met 的 AC 可令 `passed=false` |
+
+详见 [qa-gates-spec.md §8](../qa-gates-spec.md)。
+
 ### Parser 插件
 
 实现：`multi_agent_code_factory/tools/test_parsers/`
@@ -150,6 +159,18 @@ run_tests Tool：setup（可选）→ build（可选）→ test_command → test
 | `cargo_json` | Rust | `cargo test --message-format=json` stdout |
 | `forge_json` | Solidity（Foundry） | `forge test --json` stdout |
 | `exit_code_only` | 兜底 | `exit_code` + stderr 尾部 |
+
+Coverage parsers：`multi_agent_code_factory/tools/coverage_parsers/`
+
+| `coverage_parser` | 适用 | 输入 |
+|-------------------|------|------|
+| `pytest_cov_json` | Python | `coverage.json` |
+| `go_cover` | Go | `coverage.out` + `go tool cover -func` |
+| `llvm_cov_json` | Rust | `cargo llvm-cov report --json` stdout |
+| `jacoco_xml` | Java | JaCoCo XML（如 `target/site/jacoco/jacoco.xml`） |
+| `forge_coverage` | Solidity | `forge coverage --report summary` stdout |
+
+**QA 门禁：** [qa-gates-spec.md §8](../qa-gates-spec.md) — `acceptance_traceability`（P4）。
 
 详见 [test-report.md](./artifact-schemas/test-report-spec.md)。
 

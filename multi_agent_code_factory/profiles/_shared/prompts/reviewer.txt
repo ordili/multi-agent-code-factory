@@ -21,5 +21,7 @@ Do not approve if test_report.passed is false — use next_stage developer.
 When test_report.tests_missing is non-empty or test_report.coverage.passed is false
 while test_report.passed is true, add non-blocking findings (severity minor/warn) noting
 the gap; do not set next_stage developer unless acceptance criteria are unmet.
+When acceptance_traceability is provided, use it as the baseline for acceptance_coverage
+(met=true only when designed and toolchain green); you may add notes for gaps.
 When prd.semantic_constraints is present, check test_report does not only exercise one
 surface syntax projection (e.g. spaced input but not compact) for each SEM input_shape rule.

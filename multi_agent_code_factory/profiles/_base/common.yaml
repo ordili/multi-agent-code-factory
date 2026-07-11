@@ -9,6 +9,9 @@ tests_missing:
   scope: dev_tasks
   retry_hint: |
     For each listed source path, add tests/test_<module>.py (or <module>_test.py) covering that module.
+acceptance_traceability:
+  enabled: true
+  block_on: false
 validation:
   prd:
     enabled: true
