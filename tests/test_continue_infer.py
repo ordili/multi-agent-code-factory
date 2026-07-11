@@ -92,12 +92,46 @@ def test_infer_review_escalation_developer(tmp_path: Path) -> None:
     assert infer_reentry_node(tmp_path, meta) == PipelineNode.QA
 
 
-def test_state_graph_dict_round_trip() -> None:
-    state = PipelineState(task_id="t", user_request="build", impl_retry_count=2)
+def test_state_graph_dict_round_trip(snippets_dir: Path) -> None:
+    spec = load_snippet_json(snippets_dir, "prd-default.json")
+    state = PipelineState(
+        task_id="t",
+        user_request="build",
+        impl_retry_count=2,
+        prd=spec,
+    )
     restored = normalize_pipeline_state(state_to_graph_dict(state))
     assert restored.task_id == "t"
     assert restored.user_request == "build"
     assert restored.impl_retry_count == 2
+    from multi_agent_code_factory.schemas.prd import PrdArtifact
+
+    assert isinstance(restored.prd, PrdArtifact)
+    assert restored.prd.title == "CLI Todo App"
+
+
+def test_normalize_pipeline_state_restores_prd_for_design_validate(
+    snippets_dir: Path,
+) -> None:
+    from multi_agent_code_factory.profile_config import load_profile
+    from multi_agent_code_factory.schemas.design import DesignArtifact
+    from multi_agent_code_factory.schemas.prd import PrdArtifact
+    from multi_agent_code_factory.validators.design_rules import validate_design_rules
+
+    spec_dict = load_snippet_json(snippets_dir, "prd-default.json")
+    design = DesignArtifact.model_validate(
+        load_snippet_json(snippets_dir, "design-todo-excerpt.json")
+    )
+    raw_state = state_to_graph_dict(
+        PipelineState(task_id="t", user_request="build", prd=spec_dict)
+    )
+    state = normalize_pipeline_state(raw_state)
+    profile = load_profile("python")
+
+    violations, _ = validate_design_rules(design, profile, state.prd)
+
+    assert isinstance(state.prd, PrdArtifact)
+    assert isinstance(violations, list)
 
 
 def test_infer_test_report_failed(tmp_path: Path) -> None:

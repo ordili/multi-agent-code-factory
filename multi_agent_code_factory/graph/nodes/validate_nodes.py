@@ -9,7 +9,11 @@ from langgraph.runtime import Runtime
 from multi_agent_code_factory.graph.pipeline_run_context import PipelineRunContext
 from multi_agent_code_factory.nodes.design_validate import run_design_validate
 from multi_agent_code_factory.nodes.prd_validate import run_prd_validate
-from multi_agent_code_factory.state import PipelineState
+from multi_agent_code_factory.state import PipelineState, normalize_pipeline_state
+
+
+def _state(state: PipelineState) -> PipelineState:
+    return normalize_pipeline_state(state)
 
 
 def node_prd_validate(
@@ -18,6 +22,7 @@ def node_prd_validate(
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
     """PRD 校验：对 ``state.prd`` 执行规则校验，写入 ``prd_validation``。"""
+    state = _state(state)
     ctx = runtime.context
     profile = ctx.profile
     if state.prd is None:
@@ -35,6 +40,7 @@ def node_design_validate(
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
     """设计校验：对 ``state.design`` 执行规则校验，写入 ``design_validation``。"""
+    state = _state(state)
     ctx = runtime.context
     profile = ctx.profile
     if state.design is None:

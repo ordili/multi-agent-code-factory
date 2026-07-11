@@ -7,8 +7,15 @@ from multi_agent_code_factory.agents.stub.fixtures import StubScenario
 from multi_agent_code_factory.config import FactoryConfig, LoopLimits
 from multi_agent_code_factory.graph import continue_pipeline, run_pipeline
 from multi_agent_code_factory.profile_config import load_profile
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from multi_agent_code_factory.schemas.run_meta import RunMeta, RunStatus
+from multi_agent_code_factory.schemas.validation_report import (
+    ValidationReport,
+    ValidationTarget,
+)
 from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
+
+from tests.conftest import load_snippet_json
 
 
 @pytest.fixture
@@ -91,3 +98,69 @@ def test_run_meta_stores_user_request(tmp_path: Path, default_profile) -> None:
         (run_dir / "run_meta.json").read_text(encoding="utf-8")
     )
     assert meta.user_request == "my custom request"
+
+
+def _seed_architect_continue_run(
+    run_dir: Path,
+    *,
+    task_id: str,
+    profile,
+    snippets_dir: Path,
+) -> None:
+    writer = RunArtifactWriter(task_id, base_dir=run_dir)
+    writer.init_run_meta(
+        profile,
+        LoopLimits(),
+        factory_config=FactoryConfig(),
+        user_request="todo",
+    )
+    writer.update_meta(status=RunStatus.FAILED)
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
+    )
+    writer.write_model("prd.json", spec)
+    writer.write_model(
+        "prd_validation.json",
+        ValidationReport(
+            version="1",
+            target=ValidationTarget.PRD,
+            passed=True,
+            error_count=0,
+            warn_count=0,
+            violations=[],
+        ),
+    )
+
+
+def test_continue_architect_reentry_passes_design_validate(
+    tmp_path: Path,
+    default_profile,
+    snippets_dir: Path,
+) -> None:
+    """Regression: checkpoint dict state must survive architect → design_validate."""
+    run_dir = tmp_path / "continue-architect"
+    task_id = "continue-architect"
+    _seed_architect_continue_run(
+        run_dir,
+        task_id=task_id,
+        profile=default_profile,
+        snippets_dir=snippets_dir,
+    )
+
+    result = continue_pipeline(
+        task_id=task_id,
+        run_dir=run_dir,
+        reenter="architect",
+        stub_scenario=StubScenario.HAPPY,
+    )
+
+    assert result.status == RunStatus.COMPLETED
+    assert result.state.design is not None
+    assert result.state.design_validation is not None
+    assert result.state.design_validation.passed is True
+    assert (run_dir / "design.json").is_file()
+    assert (run_dir / "design_validation.json").is_file()
+    meta = RunMeta.model_validate_json(
+        (run_dir / "run_meta.json").read_text(encoding="utf-8")
+    )
+    assert meta.last_reentry_node == "architect"
