@@ -438,7 +438,7 @@ def render_design_md(design: DesignArtifact) -> str:
     else:
         lines.append("—")
 
-    lines.extend(["", "## 附录 C. 开发任务分解", ""])
+    lines.extend(["", "## 附录 C. 执行计划", ""])
     if design.dev_tasks:
         lines.extend(
             [

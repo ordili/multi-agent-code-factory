@@ -33,11 +33,29 @@ def _manifest_from_output(
     )
 
 
+def merge_manifest(prev: DevManifest, batch: DevManifest) -> DevManifest:
+    """合并多批 dev_manifest（tasks_completed 并集，changed_files 按 path 覆盖）。"""
+    tasks = list(dict.fromkeys([*prev.tasks_completed, *batch.tasks_completed]))
+    by_path = {item.path: item for item in prev.changed_files}
+    for item in batch.changed_files:
+        by_path[item.path] = item
+    updates: dict[str, object] = {
+        "tasks_completed": tasks,
+        "changed_files": list(by_path.values()),
+    }
+    if batch.notes is not None:
+        updates["notes"] = batch.notes
+    if batch.lint_passed is not None:
+        updates["lint_passed"] = batch.lint_passed
+    return prev.model_copy(update=updates)
+
+
 def apply_developer_output(
     profile: ProfileConfig,
     output: DeveloperLLMOutput,
     *,
     patch_only: bool = False,
+    skip_lint: bool = False,
 ) -> DevManifest:
     """将 LLM 返回的源文件写入 code_root，可选跑 lint，返回 dev_manifest。"""
     code_root = profile.code_root
@@ -55,7 +73,7 @@ def apply_developer_output(
         patch_only=patch_only,
         change_types=change_types,
     )
-    if "linter" in profile.tools:
+    if not skip_lint and "linter" in profile.tools:
         manifest = manifest.model_copy(
             update={"lint_passed": run_linter(profile).passed}
         )

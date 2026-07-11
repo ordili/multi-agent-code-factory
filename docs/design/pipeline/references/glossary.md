@@ -1,4 +1,4 @@
-﻿# 术语表
+# 术语表
 
 ## 依赖上游文档（只读）
 
@@ -29,6 +29,7 @@
 | **Test Parser** | 将各语言测试输出归一化为 `TestReport` 的插件 |
 | **Watch** | 节点执行前注入上下文的 Artifact 列表 |
 | **RetryBundle** | Developer 重试时的 `test_report` + `failure_contexts` + `dev_manifest`（顶层 `prd`/`design` 由 `watch` 单独注入） |
+| **Task-Batch** | 大项目首轮按 `dev_tasks` 分批实现；累积 `tasks_completed` / `changed_files` |
 | **Reflexion** | 失败后结构化反思条目，纳入 RetryBundle |
 | **ACI** | Agent-Computer Interface；Developer 侧窄 Tool 集（SWE-agent） |
 | **ValidationReport** | `prd_validate` / `design_validate` 程序校验输出 |

@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 from multi_agent_code_factory.agents.llm.budget.errors import LlmBudgetExceededError
 from multi_agent_code_factory.config import FactoryConfig
-from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
 
 def check_llm_budget(
-    writer: RunArtifactWriter,
+    writer: Any,
     factory_config: FactoryConfig | None,
 ) -> None:
     """调用前检查 run_meta 中的 LLM 次数/token 预算。"""

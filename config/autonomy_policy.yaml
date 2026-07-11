@@ -8,3 +8,6 @@ multi_agent_code_factory:
     max_prd_revisions: 1
   max_hitl_rounds: 5
   on_limit_exceeded: fail          # fail | escalation_hitl（deploy_hitl 已废弃，见 multi-agent-pipeline-design.md §4.4）
+  # task_batch:
+  #   enabled: false
+  #   threshold: 5

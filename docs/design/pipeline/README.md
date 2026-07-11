@@ -36,6 +36,7 @@
 | [implementation-plan.md](./implementation-plan.md) | V1 **编码计划** | 阶段、PR 拆分、与 §10 验收对照 | `multi_agent_code_factory/` |
 | [artifact-continue-design.md](./artifact-continue-design.md) | **产物续跑** 设计 | `continue` CLI、水合、再入推断、门禁先跑 | `artifact_loader.py`、`checkpoint.py`、`graph/runner.py` |
 | [developer-retry-context-spec.md](./developer-retry-context-spec.md) | **Developer 重试**（已实现） | 瘦身 RetryBundle、`failure_contexts`、patch-only | `retry_context.py`、`prompt_context.py` |
+| [developer-task-batch-spec.md](./developer-task-batch-spec.md) | **Developer 分步实现**（已实现） | 大项目按 `dev_tasks` 分批 LLM、`impl_mode=task_batch` | `dev_task_scheduler.py`、`batch_closure.py` |
 | [P1-backlog.md](./P1-backlog.md) | P1 待办清单 | 可勾选 backlog，与验收对齐 | — |
 | [python-style.md](./python-style.md) | Python 工程规范 | PEP 8 / Ruff / pytest（工厂自身代码） | `pyproject.toml` |
 

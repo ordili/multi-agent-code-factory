@@ -7,7 +7,7 @@ from typing import Any
 
 from pydantic import BaseModel
 
-from multi_agent_code_factory.agents.llm.usage import LlmCallUsage, LlmUsageLog
+from multi_agent_code_factory.agents.llm.usage.models import LlmCallUsage, LlmUsageLog
 from multi_agent_code_factory.config import FactoryConfig, LoopLimits
 from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.run_meta import RunMeta

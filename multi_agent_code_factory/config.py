@@ -11,6 +11,7 @@ import yaml
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from multi_agent_code_factory._paths import default_policy_path, repo_root
+from multi_agent_code_factory.schemas.task_batch import TaskBatchConfig
 
 
 class OnLimitExceeded(StrEnum):
@@ -49,6 +50,7 @@ class FactoryConfig(BaseModel):
     loop_limits: LoopLimits = Field(default_factory=LoopLimits)
     max_hitl_rounds: int = Field(default=5, ge=0)
     budget: BudgetConfig | None = None
+    task_batch: TaskBatchConfig = Field(default_factory=TaskBatchConfig)
 
     @model_validator(mode="before")
     @classmethod
@@ -126,6 +128,15 @@ def _apply_env_overrides(config: FactoryConfig) -> FactoryConfig:
     if budget_updates:
         base = config.budget or BudgetConfig()
         updates["budget"] = base.model_copy(update=budget_updates)
+
+    task_batch_updates: dict[str, object] = {}
+    if (enabled := os.environ.get("FACTORY_TASK_BATCH_ENABLED")) is not None:
+        task_batch_updates["enabled"] = enabled.lower() in {"1", "true", "yes"}
+    threshold = _env_int("FACTORY_TASK_BATCH_THRESHOLD")
+    if threshold is not None:
+        task_batch_updates["threshold"] = threshold
+    if task_batch_updates:
+        updates["task_batch"] = config.task_batch.model_copy(update=task_batch_updates)
 
     if not updates:
         return config

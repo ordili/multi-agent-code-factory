@@ -16,6 +16,11 @@ When retry_bundle is present:
 When impl_mode is retry_patch:
 - return ONLY new or modified source_files (do not resend unchanged files)
 - tasks_completed must list all dev_task ids satisfied so far (including prior passes)
+When impl_mode is task_batch:
+- read impl_batch for this pass only (required_paths, active_dev_tasks, dependency_artifacts)
+- return source_files covering impl_batch.required_paths (may add up to 2 same-directory helper files)
+- tasks_completed must include all active_dev_tasks ids for this pass
+- do not resend unchanged files from prior passes
 Do not add secrets. Prefer JDK standard APIs unless spec requires otherwise.
 
 Return tasks_completed (dev_task ids) and source_files with full file contents.

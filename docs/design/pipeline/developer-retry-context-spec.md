@@ -45,9 +45,9 @@
 
 **目标：** 重试输出与输入对称——**只提交需要变更的文件**（patch），引擎 merge 写盘。
 
-### 1.4 非目标
+### 1.4 非目标（本 spec 范围）
 
-- 按 `dev_tasks` 多轮 Developer LLM（分片生成）
+- 按 `dev_tasks` 多轮 Developer LLM（分片生成）→ 见 [developer-task-batch-spec.md](./developer-task-batch-spec.md)
 - LLM 主动 `read_file` Tool 拉取代码库
 - 首期五语言均达到与 Python 相同的 **AST 级**函数定界精度（见 §6.4 分级）
 

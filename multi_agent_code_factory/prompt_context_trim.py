@@ -2,9 +2,14 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import PurePosixPath
 from typing import Any
 
 from multi_agent_code_factory.agent_roles import AgentRole
+from multi_agent_code_factory.dev_task_scheduler import file_plan_aux_paths
+from multi_agent_code_factory.schemas.design import DevTask, FilePlanItem
+from multi_agent_code_factory.schemas.task_batch import TaskBatch
 
 MAX_SNIPPET_LINES = 500
 MAX_SNIPPET_FILES = 3
@@ -270,6 +275,133 @@ def trim_retry_bundle(payload: dict[str, Any]) -> dict[str, Any]:
                 review_feedback["summary"] = _truncate_text(summary, MAX_TEXT_CHARS)
             result["review_feedback"] = review_feedback
     return result
+
+
+def _module_prefix(path: str) -> str:
+    normalized = path.replace("\\", "/")
+    parent = PurePosixPath(normalized).parent
+    if str(parent) == ".":
+        return normalized
+    return str(parent)
+
+
+def _task_mentioned(text: str, needle: str) -> bool:
+    return needle.lower() in text.lower()
+
+
+def trim_design_for_task_batch(
+    payload: dict[str, Any],
+    batch: TaskBatch,
+    active_tasks: list[DevTask],
+    *,
+    completed_task_ids: list[str] | None = None,
+) -> dict[str, Any]:
+    """按批过滤 design（§9.1.1）。"""
+    base = trim_design(payload, compact=True)
+    active_ids = {task.id for task in active_tasks}
+    completed_ids = set(completed_task_ids or [])
+
+    dev_tasks_raw = base.get("dev_tasks")
+    if isinstance(dev_tasks_raw, list):
+        kept: list[Any] = []
+        for item in dev_tasks_raw:
+            if not isinstance(item, dict):
+                continue
+            task_id = item.get("id")
+            if task_id in active_ids or task_id in completed_ids:
+                kept.append(
+                    {
+                        key: item[key]
+                        for key in (
+                            "id",
+                            "path",
+                            "description",
+                            "depends_on",
+                            "covers",
+                        )
+                        if key in item
+                    }
+                )
+        base["dev_tasks"] = kept
+
+    active_paths = [task.path for task in active_tasks]
+    prefixes = {_module_prefix(path) for path in active_paths}
+
+    modules = base.get("modules")
+    if isinstance(modules, list):
+        filtered_modules: list[Any] = []
+        for item in modules:
+            if not isinstance(item, dict):
+                continue
+            mod_path = str(item.get("path", ""))
+            if any(
+                mod_path == prefix or mod_path.startswith(f"{prefix}/")
+                for prefix in prefixes
+            ):
+                filtered_modules.append(item)
+        base["modules"] = filtered_modules
+
+    case_ids = set(batch.relevant_test_case_ids)
+    test_cases = base.get("test_cases")
+    if isinstance(test_cases, list):
+        filtered_cases = [
+            _trim_test_case_item(item)
+            for item in test_cases
+            if isinstance(item, dict) and item.get("id") in case_ids
+        ]
+        capped, extra = _cap_test_cases(filtered_cases)
+        base["test_cases"] = capped
+        if extra:
+            base["test_cases_truncated_count"] = extra
+
+    aux_paths: set[str] = set()
+    file_plan_raw = base.get("file_plan")
+    file_plan_items: list[FilePlanItem] = []
+    if isinstance(file_plan_raw, list):
+        for item in file_plan_raw:
+            if isinstance(item, dict) and item.get("path"):
+                file_plan_items.append(FilePlanItem.model_validate(item))
+    for task in active_tasks:
+        aux_paths.update(file_plan_aux_paths(task, file_plan_items))
+    required = set(batch.required_paths)
+
+    if isinstance(file_plan_raw, list):
+        base["file_plan"] = [
+            item
+            for item in file_plan_raw
+            if isinstance(item, dict)
+            and (item.get("path") in required or item.get("path") in aux_paths)
+        ]
+
+    interfaces = base.get("interfaces")
+    if isinstance(interfaces, list):
+        filtered_ifaces: list[Any] = []
+        for item in interfaces:
+            if not isinstance(item, dict):
+                continue
+            blob = json.dumps(item, ensure_ascii=False)
+            if any(_task_mentioned(blob, task.id) for task in active_tasks):
+                filtered_ifaces.append(item)
+                continue
+            mod_path = str(item.get("file", ""))
+            if any(
+                mod_path == prefix or mod_path.startswith(f"{prefix}/")
+                for prefix in prefixes
+            ):
+                filtered_ifaces.append(item)
+        base["interfaces"] = filtered_ifaces
+
+    return base
+
+
+def trim_dev_manifest_for_batch(payload: dict[str, Any]) -> dict[str, Any]:
+    """task-batch 仅注入 tasks_completed + changed_files 摘要。"""
+    return {
+        "version": payload.get("version"),
+        "tasks_completed": payload.get("tasks_completed", []),
+        "changed_files": payload.get("changed_files", []),
+        "notes": payload.get("notes"),
+    }
 
 
 def trim_context_for_role(

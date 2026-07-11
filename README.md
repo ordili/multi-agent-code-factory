@@ -1,4 +1,4 @@
-﻿# multi-agent-code-factory
+# multi-agent-code-factory
 
 A **LangGraph** pipeline (PM → Architect → Developer → QA → Reviewer) that turns natural-language requirements into **testable code**, with a full audit trail under `docs/runs/<task-id>/` (PRD, design, test report, review, and more).
 
@@ -188,6 +188,7 @@ Python style guide: [docs/design/pipeline/python-style.md](docs/design/pipeline/
 | [docs/design/pipeline/multi-agent-pipeline-design.md](docs/design/pipeline/multi-agent-pipeline-design.md) | Pipeline architecture, routing, artifacts |
 | [docs/design/pipeline/artifact-continue-design.md](docs/design/pipeline/artifact-continue-design.md) | Artifact-based `continue` resume |
 | [docs/design/pipeline/developer-retry-context-spec.md](docs/design/pipeline/developer-retry-context-spec.md) | Developer retry: `failure_contexts`, patch-only, slim RetryBundle |
+| [docs/design/pipeline/developer-task-batch-spec.md](docs/design/pipeline/developer-task-batch-spec.md) | Developer task-batch: large projects, multi-pass LLM by `dev_tasks` |
 | [multi_agent_code_factory/profiles/README.md](multi_agent_code_factory/profiles/README.md) | Profile fields and built-in language stacks |
 | [docs/design/pipeline/P1-backlog.md](docs/design/pipeline/P1-backlog.md) | Maintainers: P1 backlog checklist |
 

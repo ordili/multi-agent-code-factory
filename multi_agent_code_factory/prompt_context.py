@@ -5,8 +5,15 @@ from __future__ import annotations
 from typing import Any
 
 from multi_agent_code_factory.agent_roles import AgentRole
+from multi_agent_code_factory.config import FactoryConfig
+from multi_agent_code_factory.dependency_extract import extract_dependency_artifacts
 from multi_agent_code_factory.profile_config import ProfileConfig
-from multi_agent_code_factory.prompt_context_trim import trim_context_for_role
+from multi_agent_code_factory.prompt_context_trim import (
+    trim_context_for_role,
+    trim_design_for_task_batch,
+    trim_dev_manifest_for_batch,
+    trim_prd,
+)
 from multi_agent_code_factory.retry_context import build_failure_contexts
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.dev_manifest import DevManifest
@@ -17,9 +24,17 @@ from multi_agent_code_factory.schemas.retry_context import (
     ReviewFeedback,
 )
 from multi_agent_code_factory.schemas.review import ReviewNextStage, ReviewReport
+from multi_agent_code_factory.schemas.task_batch import (
+    ImplBatch,
+    TaskBatch,
+    TaskBatchConfig,
+)
 from multi_agent_code_factory.schemas.test_report import TestReport
 from multi_agent_code_factory.schemas.validation_report import ValidationReport
 from multi_agent_code_factory.state import PipelineState
+from multi_agent_code_factory.task_batch_context import (
+    fit_task_batch_context_to_input_budget,
+)
 
 DEFAULT_WATCH: dict[AgentRole, list[str]] = {
     AgentRole.PM: ["user_request", "profile", "prd_validation", "review"],
@@ -121,6 +136,126 @@ def build_retry_bundle(
     )
 
 
+def task_batch_config(factory_config: FactoryConfig | None) -> TaskBatchConfig:
+    if factory_config is None:
+        return TaskBatchConfig()
+    return factory_config.task_batch
+
+
+def should_task_batch(
+    design: DesignArtifact,
+    factory_config: FactoryConfig | None,
+) -> bool:
+    """判定首轮是否走 task_batch。"""
+    config = task_batch_config(factory_config)
+    if config.enabled:
+        return True
+    return len(design.dev_tasks) > config.threshold
+
+
+def resolve_impl_mode(
+    state: PipelineState,
+    design: DesignArtifact | None,
+    factory_config: FactoryConfig | None,
+) -> str:
+    if state.impl_retry_count > 0:
+        return "retry_patch"
+    if design is not None and should_task_batch(design, factory_config):
+        return "task_batch"
+    return "initial"
+
+
+def build_task_batch_context(
+    state: PipelineState,
+    profile: ProfileConfig,
+    batch: TaskBatch,
+    manifest: DevManifest,
+    *,
+    pass_total: int,
+    factory_config: FactoryConfig | None = None,
+) -> dict[str, Any]:
+    """组装单批 Developer prompt 上下文。"""
+    if state.prd is None or state.design is None:
+        msg = "task_batch requires prd and design"
+        raise ValueError(msg)
+
+    config = task_batch_config(factory_config)
+    by_id = {task.id: task for task in state.design.dev_tasks}
+    active_tasks = [by_id[task_id] for task_id in batch.task_ids if task_id in by_id]
+
+    dep_artifacts, omitted = extract_dependency_artifacts(
+        batch.dependency_paths,
+        profile,
+        max_lines=config.dep_snippet_lines,
+    )
+    relevant_cases = [
+        case
+        for case in state.design.test_cases
+        if case.id in batch.relevant_test_case_ids
+    ]
+
+    impl_batch = ImplBatch(
+        pass_index=batch.index + 1,
+        pass_total=pass_total,
+        active_dev_tasks=active_tasks,
+        completed_dev_tasks=list(manifest.tasks_completed),
+        required_paths=batch.required_paths,
+        dependency_artifacts=dep_artifacts,
+        relevant_test_cases=relevant_cases,
+        omitted_dependencies=omitted,
+    )
+
+    context: dict[str, Any] = {
+        "profile": {
+            "id": profile.id,
+            "language": profile.language,
+            "code_root": str(profile.code_root),
+        },
+        "prd": trim_prd(state.prd.model_dump(mode="json")),
+        "design": trim_design_for_task_batch(
+            state.design.model_dump(mode="json"),
+            batch,
+            active_tasks,
+            completed_task_ids=manifest.tasks_completed,
+        ),
+        "impl_mode": "task_batch",
+        "impl_batch": impl_batch.model_dump(mode="json"),
+        "dev_manifest": trim_dev_manifest_for_batch(manifest.model_dump(mode="json")),
+    }
+
+    from multi_agent_code_factory.agents.llm.prompt.validation_feedback import (
+        format_semantic_advisories,
+    )
+
+    prd_advisories = format_semantic_advisories(
+        state.prd_validation,
+        headline=(
+            "PRD semantic validation advisories "
+            "(address before downstream work when possible):"
+        ),
+    )
+    if prd_advisories:
+        context["semantic_advisories_prd"] = prd_advisories
+
+    design_advisories = format_semantic_advisories(
+        state.design_validation,
+        headline=(
+            "Design semantic validation advisories "
+            "(address before implementation when possible):"
+        ),
+    )
+    if design_advisories:
+        context["semantic_advisories_design"] = design_advisories
+
+    if profile.auto_generate_tests:
+        context["auto_generate_tests"] = True
+
+    return fit_task_batch_context_to_input_budget(
+        context,
+        config.max_input_lines_per_batch,
+    )
+
+
 def build_prompt_context(
     role_id: AgentRole,
     state: PipelineState,
@@ -194,10 +329,11 @@ def build_prompt_context(
             context["semantic_advisories_design"] = design_advisories
 
     if role_id == AgentRole.DEVELOPER:
-        if state.impl_retry_count > 0:
-            context["impl_mode"] = "retry_patch"
-        else:
-            context["impl_mode"] = "initial"
+        context["impl_mode"] = resolve_impl_mode(
+            state,
+            state.design,
+            None,
+        )
         bundle = build_retry_bundle(state, profile)
         if bundle is not None:
             context["retry_bundle"] = bundle.model_dump(mode="json")

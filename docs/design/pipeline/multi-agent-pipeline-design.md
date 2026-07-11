@@ -1,4 +1,4 @@
-﻿# 多 Agent 研发流水线 — 设计
+# 多 Agent 研发流水线 — 设计
 
 ## 依赖上游文档（只读）
 
@@ -538,6 +538,8 @@ python -m multi_agent_code_factory run --profile default --task-id todo-cli --ma
 | `code_snippets_omitted_paths` | 预算触顶时省略的文件 |
 
 重试输出：`apply_developer_output(..., patch_only=True)` 仅 merge 写盘 LLM 返回的变更文件。
+
+**大项目首轮分步：** 当 `design.dev_tasks` 超过阈值时，Developer 节点内按 task 分批调用 LLM（`impl_mode=task_batch`），详见 [developer-task-batch-spec.md](./developer-task-batch-spec.md)。重试仍用 `retry_patch`。
 
 ### 4.6 断点恢复与产物续跑
 

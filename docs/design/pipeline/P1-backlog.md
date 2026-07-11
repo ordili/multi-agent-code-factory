@@ -125,6 +125,7 @@
 | [ ] | Go / Rust / Solidity **live e2e** 各一例 | — | `tests/integration/` |
 | [x] | 多语言 **Developer prompt** + **style snippet** | go/java/rust/solidity/python | `profiles/*/prompts/developer.txt`、`{language}-style-snippet.txt` |
 | [x] | **Developer 重试上下文**（RetryBundle 瘦身 + `failure_contexts` + patch-only） | 全部 V1 Profile | [developer-retry-context-spec.md](./developer-retry-context-spec.md) · `retry_context.py` · `prompt_context.py` |
+| [ ] | **Developer 分步实现**（`dev_tasks` task-batch） | 大项目 / 多 task design | [developer-task-batch-spec.md](./developer-task-batch-spec.md) |
 
 ---
 

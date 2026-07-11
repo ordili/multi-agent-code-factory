@@ -48,7 +48,7 @@
 | `file_plan`                            | 是           | **DES-104**（仅当非空）       | 空 `[]` 不触发 path 一致性                                                            |
 | `architecture.code_delta`              | 是           | **DES-036**              | `summary` 非空；greenfield 可 `{ "summary": "空仓库" }`                              |
 | `interfaces`                           | 是           | **DES-032**、**DES-033** | 顶层 `interfaces[]`；每模块（`code_domain=SYS` 豁免，见 §1.6 脚注）至少一条                      |
-| `modules`、`dev_tasks`、`traceability` 等 | 是           | **DES-001～009** 等       | 见 [§1](#1-designjsonerror--warn)                                               |
+| `modules`、`dev_tasks`、`traceability` 等 | 是           | **DES-001～009** 等       | `dev_tasks` = 附录 C 执行计划；见 [§1.1](#11-任务与模块) · [schemas §dev_tasks[]](../artifact-schemas/design-spec.md#dev_tasks执行计划) |
 
 
 ---
@@ -68,8 +68,32 @@
 | `DES-006` | error | 是   | —              | `modules`                             | 非空                                              |
 | `DES-007` | error | 是   | —              | `modules[]`                           | `name`、`path`、`responsibility`、`code_domain` 必填 |
 | `DES-103` | error | 是   | —              | `dev_tasks[].path`、`modules[].path`   | 不得路径逃逸（`..` / 绝对路径）                             |
-| `DES-104` | error | 条件  | `file_plan` 非空 | `file_plan[].path`                    | 须在 `dev_tasks[].path` 中                         |
+| `DES-104` | error | 条件  | `file_plan` 非空 | `file_plan[].path`                    | 须 **等于** 某 `dev_tasks[].path`（精确匹配，非目录闭包）                         |
 
+
+> **执行计划（`dev_tasks[]`）：** 附录 C 语义见 [artifact-schemas §dev_tasks[]](../artifact-schemas/design-spec.md#dev_tasks执行计划)。**已 enforce：** 非空、id/path 唯一、必填、`depends_on` 引用与无环（DES-001～005）、`file_plan` 对齐（DES-104）、路径安全（DES-103）、`covers` 追溯（DES-009/101）。**warn（DES-105～107）：** 根步/模块 path/Profile 清单对齐，见 [§1.1.1](#111-执行计划warn)。**不纳入 JSON error：** 单步体积预算、多微服务拆步——由 templates 与 task-batch 调度承担。
+
+### 1.1.1 执行计划（warn）
+
+下列规则与新版附录 C **写作原则** 对齐；均为 **warn** 且默认不阻断（`validation.design.block_on: error` 时 `passed` 仍为 true）。
+
+
+| rule_id | 严重度 | 触发条件 | 判定 |
+| ------- | ------ | -------- | ---- |
+| `DES-105` | warn | `dev_tasks` 非空 | 宜存在 **唯一** `depends_on=[]` 的根步；其它步宜**传递**依赖该根步 |
+| `DES-106` | warn | `modules` 与 `dev_tasks` 均非空 | 每个 `dev_tasks[].path` 宜出现在 `modules[].path` 中 |
+| `DES-107` | warn | Run 带 Profile 上下文 | 根步 `path` 宜为当前 Profile 依赖清单（`pyproject.toml` / `go.mod` / `pom.xml` 等） |
+
+**实现：** `validators/design_execution_plan_rules.py`
+
+**不纳入 design_validate 的理由（保持现状）：**
+
+
+| 能力 | 承担方 |
+|------|--------|
+| 单步 ≤8 文件 / 行数预算 | [developer-task-batch-spec §5.4](../developer-task-batch-spec.md#54-体积预算常量与估算)（调度时 fail） |
+| 多微服务每服务框架步、跨服务 `depends_on` 写步骤 id | templates 附录 C · 多微服务专节（人工/Reviewer） |
+| `file_plan` 同目录辅助文件闭包 | task-batch `expand_task_closure`（**非** DES-104 精确匹配） |
 
 ### 1.2 架构骨架与追溯
 
@@ -177,7 +201,7 @@ Run `design.md` 须 **中文固定章节**（**§1–§6 + 附录 A–D**）；*
 
 **DES-201 章节（Markdown 二级标题，字面须含 `##` 前缀）：** 1. 背景与上下文 · 2. 设计目标 · 3. 非目标 · 4. 方案设计 · 6. 测试用例列表
 
-**DES-202 附录（Markdown 二级标题，字面须含 `## 附录 X.` 前缀）：** A 需求追溯 · B 文件变更 · C 任务分解
+**DES-202 附录（Markdown 二级标题，字面须含 `## 附录 X.` 前缀）：** A 需求追溯 · B 文件变更 · **C 执行计划**（`dev_tasks[]`；写作见 [artifact-templates §附录 C](../artifact-templates/design-spec.md#附录-c-执行计划)）
 
 **DES-207 附录 D（Markdown 二级标题，字面须含 `## 附录 D.` 前缀）：** 与现有代码对照
 

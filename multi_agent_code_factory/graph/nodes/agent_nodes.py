@@ -69,6 +69,7 @@ def node_developer(
         ctx.writer,
         stub=ctx.stub,
         llm_runner=ctx.llm_runner,
+        factory_config=ctx.llm_runner.factory_config if ctx.llm_runner else None,
     )
 
 
