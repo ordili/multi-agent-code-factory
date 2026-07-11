@@ -12,6 +12,7 @@ from multi_agent_code_factory.log import (
     ERROR_LOG_FILENAME,
     RUN_LOG_FILENAME,
     WARNING_LOG_FILENAME,
+    run_log_dir,
 )
 from multi_agent_code_factory.schemas.run_meta import RunMeta
 
@@ -167,8 +168,9 @@ def print_run_outcome(run_dir: Path, *, stub: bool) -> None:
             f"total_tokens={totals.total_tokens}"
         )
 
-    run_log = run_dir / RUN_LOG_FILENAME
-    warning_log = run_dir / WARNING_LOG_FILENAME
-    error_log = run_dir / ERROR_LOG_FILENAME
+    log_dir = run_log_dir(run_dir)
+    run_log = log_dir / RUN_LOG_FILENAME
+    warning_log = log_dir / WARNING_LOG_FILENAME
+    error_log = log_dir / ERROR_LOG_FILENAME
     if run_log.is_file():
         print(f"log_files: run={run_log} warn={warning_log} error={error_log}")

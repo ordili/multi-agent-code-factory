@@ -27,6 +27,7 @@ from multi_agent_code_factory.log import (
     attach_run_file_logging,
     detach_run_file_logging,
     get_logger,
+    run_log_dir,
 )
 from multi_agent_code_factory.nodes.design_validate import run_design_validate
 from multi_agent_code_factory.nodes.prd_validate import run_prd_validate
@@ -344,9 +345,10 @@ def _log_pipeline_finish(
             usage.totals.completion_tokens,
             usage.totals.total_tokens,
         )
-    run_log = writer.directory / RUN_LOG_FILENAME
-    warning_log = writer.directory / WARNING_LOG_FILENAME
-    error_log = writer.directory / ERROR_LOG_FILENAME
+    log_dir = run_log_dir(writer.directory)
+    run_log = log_dir / RUN_LOG_FILENAME
+    warning_log = log_dir / WARNING_LOG_FILENAME
+    error_log = log_dir / ERROR_LOG_FILENAME
     if run_log.is_file():
         logger.info("run log file=%s", run_log)
     if warning_log.is_file():

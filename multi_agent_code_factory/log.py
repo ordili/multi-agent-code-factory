@@ -19,9 +19,15 @@ _LOGGER_NAMESPACE = "multi_agent_code_factory"
 _CONFIGURED = False
 _RUN_FILE_HANDLERS: list[logging.Handler] = []
 
+RUN_LOG_DIRNAME = "log"
 RUN_LOG_FILENAME = "run.log"
 WARNING_LOG_FILENAME = "warn.log"
 ERROR_LOG_FILENAME = "error.log"
+
+
+def run_log_dir(run_dir: Path) -> Path:
+    """Run 级文件日志目录：``<run_dir>/log/``。"""
+    return run_dir.resolve() / RUN_LOG_DIRNAME
 
 
 class _ExactLevelFilter(logging.Filter):
@@ -81,10 +87,10 @@ def configure_logging(*, level: str | int | None = None, force: bool = False) ->
 def attach_run_file_logging(
     run_dir: Path, *, append: bool = False
 ) -> tuple[Path, Path, Path]:
-    """将日志写入 run 目录下的 ``run.log``、``warn.log`` 与 ``error.log``。"""
+    """将日志写入 ``<run_dir>/log/`` 下的 run/warn/error 日志文件。"""
     detach_run_file_logging()
 
-    directory = run_dir.resolve()
+    directory = run_log_dir(run_dir)
     directory.mkdir(parents=True, exist_ok=True)
     mode = "a" if append else "w"
 

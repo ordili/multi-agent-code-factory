@@ -8,6 +8,7 @@ import pytest
 from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.log import (
     ERROR_LOG_FILENAME,
+    RUN_LOG_DIRNAME,
     RUN_LOG_FILENAME,
     WARNING_LOG_FILENAME,
     agent_run,
@@ -16,6 +17,7 @@ from multi_agent_code_factory.log import (
     detach_run_file_logging,
     get_logger,
     reset_logging_for_tests,
+    run_log_dir,
 )
 
 
@@ -64,6 +66,7 @@ def test_attach_run_file_logging_writes_run_and_error_logs(
     configure_logging(level="INFO", force=True)
     logger = get_logger("test.files")
     run_log, warning_log, error_log = attach_run_file_logging(tmp_path, append=False)
+    assert run_log.parent.name == RUN_LOG_DIRNAME
     assert run_log.name == RUN_LOG_FILENAME
     assert warning_log.name == WARNING_LOG_FILENAME
     assert error_log.name == ERROR_LOG_FILENAME
@@ -102,6 +105,6 @@ def test_attach_run_file_logging_append_mode(tmp_path: Path) -> None:
     logger.info("second")
     detach_run_file_logging()
 
-    run_text = (tmp_path / RUN_LOG_FILENAME).read_text(encoding="utf-8")
+    run_text = (run_log_dir(tmp_path) / RUN_LOG_FILENAME).read_text(encoding="utf-8")
     assert "first" in run_text
     assert "second" in run_text

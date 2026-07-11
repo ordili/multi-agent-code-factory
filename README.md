@@ -1,6 +1,6 @@
 ﻿# multi-agent-code-factory
 
-A **LangGraph** pipeline (PM, Architect, Developer, QA, Reviewer) that turns natural-language requirements into **testable code**, with a full audit trail under `docs/runs/<task-id>/` (spec, design, test_report, review, and more).
+A **LangGraph** pipeline (PM → Architect → Developer → QA → Reviewer) that turns natural-language requirements into **testable code**, with a full audit trail under `docs/runs/<task-id>/` (PRD, design, test report, review, and more).
 
 **V1** is a domain-agnostic engine: language and toolchain come from a **Profile** (`python`, `go`, `java`, `rust`, `solidity`). Domain packs are planned for **V2** in [`domains/`](domains/README.md) (out of V1 scope).
 
@@ -40,19 +40,72 @@ python -m multi_agent_code_factory run \
   "Build a calculator with add, subtract, multiply, and divide"
 ```
 
-Success when the terminal prints `status=completed`.
+- **`--live`** — real LLM agents (requires API key). Default is **`--stub`** (fixture JSON, no API key).
+- Success when the terminal prints `status=completed`.
+- After the run, the CLI prints **`stage_llm_summary`** (LLM calls and loop retries per stage) and log file paths.
 
-### 3. Continue from existing artifacts
+### 3. Resume or re-run a failed task
 
-If a run failed or stopped, resume from `docs/runs/<task-id>/` without re-running PM/Architect:
+If a run **failed** or stopped with artifacts already on disk, use **`continue`** — do **not** call `run` again with the same `task-id` (it is rejected unless you pass `--force-new`).
 
 ```bash
 python -m multi_agent_code_factory continue \
-  --task-id calculator \
+  --task-id calculator-rust-2 \
   --live
 ```
 
-The pipeline re-runs the gate for the inferred stage first (e.g. QA re-tests code), then calls LLM agents only if needed. Re-running the same `task-id` with `run` is rejected unless you pass `--force-new`.
+**What `continue` does**
+
+1. Loads existing artifacts from `docs/runs/<task-id>/` and the profile recorded in `run_meta.json`.
+2. **Infers the re-entry stage** (gate first, then LLM only if needed):
+
+   | Situation | Re-entry | Next step if gate still fails |
+   |-----------|----------|-------------------------------|
+   | PRD validation failed | `prd_validate` | PM |
+   | Design validation failed | `design_validate` | Architect |
+   | Tests failed / impl retry limit hit | `qa` | Developer |
+   | Reviewer escalated to PM / Architect / Developer | matching gate above | corresponding agent |
+   | PRD passed, no `design.json` yet | `architect` | — |
+
+3. **Resets** LLM budget counters and loop counters that hit limits on a failed run (unless `--no-reset-loops`).
+4. Re-runs the gate for that stage (e.g. `cargo test` at QA), then proceeds through the graph.
+
+**Important flags**
+
+| Flag | Purpose |
+|------|---------|
+| `--live` | Use real LLM agents. **Match the original run** — a live run continued with `--stub` will not call Reviewer/PM with a real model. |
+| `--reenter qa` | Force re-entry at a stage (`prd_validate`, `design_validate`, `qa`, `architect`) when auto-inference is wrong. |
+| `--code-root <path>` | Override generated code location (default comes from `run_meta.json`). |
+| `--no-reset-loops` | Keep `impl_retry_count` / revision counters at their failed-run values. |
+
+**Example — continue after QA false failure (Rust `tests_missing`)**
+
+A live Rust run may fail even when `cargo test` passes (old `tests_missing` policy). After upgrading the factory, resume from QA without re-running PM/Architect:
+
+```bash
+# Optional: only if continue infers the wrong stage — remove dev_manifest.json
+# from stale_artifacts in docs/runs/<task-id>/run_meta.json first.
+python -m multi_agent_code_factory continue \
+  --task-id calculator-rust-2 \
+  --live
+```
+
+Generated code stays at the profile `code_root` recorded in `run_meta.json` (e.g. `D:\code\agent-out-code\calculator-rust-2`).
+
+**Start completely over**
+
+To discard progress and re-run PM from scratch for the same `task-id`:
+
+```bash
+python -m multi_agent_code_factory run \
+  --profile rust \
+  --task-id calculator-rust-2 \
+  --force-new \
+  --live \
+  --code-root "../generated/calculator-rust-2" \
+  "Build a calculator with + - * / and operator precedence"
+```
 
 Design spec: [docs/design/pipeline/artifact-continue-design.md](docs/design/pipeline/artifact-continue-design.md).
 
@@ -62,6 +115,9 @@ Design spec: [docs/design/pipeline/artifact-continue-design.md](docs/design/pipe
 |------|------|
 | Audit artifacts (JSON + human-readable MD) | `docs/runs/<task-id>/` |
 | Generated code | Profile `code_root` (default outside repo: `../generated/<profile-id>/`) |
+| Run logs (append on continue) | `docs/runs/<task-id>/log/run.log`, `warn.log`, `error.log` |
+
+Key artifacts per run: `prd.json` / `prd.md`, `design.json` / `design.md`, `dev_manifest.json`, `test_report.json`, `review.json`, `run_meta.json`, `llm_usage.json`.
 
 Override the code directory with `--code-root`, e.g. `--code-root ../generated/calculator`.
 
@@ -72,24 +128,26 @@ Override the code directory with `--code-root`, e.g. `--code-root ../generated/c
 | LLM provider, API keys | [`.env`](.env.example) (CLI loads it; shell env wins) |
 | Language stack, test commands, validation rules | [`multi_agent_code_factory/profiles/`](multi_agent_code_factory/profiles/) → [profiles/README.md](multi_agent_code_factory/profiles/README.md) |
 | Loop limits and factory defaults | [`config/autonomy_policy.yaml`](config/autonomy_policy.yaml); override with `FACTORY_*` or CLI |
+| QA gates (`tests_missing`, coverage, acceptance traceability) | Profile YAML + [qa-gates-spec.md](docs/design/pipeline/qa-gates-spec.md) |
 | This run’s task | `--task-id` + natural-language request in quotes |
 
 ### Profile and language selection
 
-`--profile` is **required**. It selects the **language stack** (test commands, prompts, etc.; in V1, profile id matches the language name). Use **`python`** for your first run. Separate projects with `--task-id` + `--code-root`. Details: [profiles/README.md](multi_agent_code_factory/profiles/README.md).
+`--profile` is **required** on `run`. It selects the **language stack** (test commands, prompts, QA policy). Use **`python`** for your first run. Separate projects with `--task-id` + `--code-root`. Details: [profiles/README.md](multi_agent_code_factory/profiles/README.md).
 
 | Profile | Toolchain (local QA) |
 |---------|----------------------|
 | `python` | Python 3 + `pytest` |
-| `rust` | Rust toolchain (`cargo test --message-format=json`) |
+| `rust` | Rust toolchain (`cargo test --message-format=json`; inline `#[cfg(test)]` supported) |
 | `solidity` | Foundry (`forge test --json`) |
 | `java` | JDK + Maven or Gradle |
 | `go` | Go + `go test` (parser `go_json` still P1) |
 
-Common CLI flags: `--live`, `--log-level`, `--code-root`, `--max-impl-retries`, etc.
+Common CLI flags: `--live`, `--log-level`, `--code-root`, `--max-impl-retries`, `--max-design-revisions`, `--max-prd-revisions`.
 
 ```bash
 python -m multi_agent_code_factory run --help
+python -m multi_agent_code_factory continue --help
 ```
 
 Ollama tuning, GCP VM scripts, and troubleshooting: [docs/operations.md](docs/operations.md).
@@ -129,6 +187,7 @@ Python style guide: [docs/design/pipeline/python-style.md](docs/design/pipeline/
 | [docs/README.md](docs/README.md) | Doc index and run artifact map |
 | [docs/design/pipeline/multi-agent-pipeline-design.md](docs/design/pipeline/multi-agent-pipeline-design.md) | Pipeline architecture, routing, artifacts |
 | [docs/design/pipeline/artifact-continue-design.md](docs/design/pipeline/artifact-continue-design.md) | Artifact-based `continue` resume |
+| [docs/design/pipeline/qa-gates-spec.md](docs/design/pipeline/qa-gates-spec.md) | QA layers: toolchain, `tests_missing`, coverage |
 | [multi_agent_code_factory/profiles/README.md](multi_agent_code_factory/profiles/README.md) | Profile fields and built-in language stacks |
 | [docs/design/pipeline/P1-backlog.md](docs/design/pipeline/P1-backlog.md) | Maintainers: P1 backlog checklist |
 

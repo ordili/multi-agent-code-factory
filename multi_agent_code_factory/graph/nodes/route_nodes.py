@@ -49,7 +49,7 @@ def node_route_after_qa(
     """QA 测试后路由。"""
     state = normalize_pipeline_state(state)
     ctx = runtime.context
-    decision = decide_after_test(state, ctx.loop_limits)
+    decision = decide_after_test(state, ctx.loop_limits, ctx.profile)
     return apply_route(decision, state, ctx)
 
 

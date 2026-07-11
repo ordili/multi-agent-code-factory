@@ -12,6 +12,10 @@ from multi_agent_code_factory.log import agent_run, get_logger
 from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.test_report import TestReport
 from multi_agent_code_factory.state import PipelineState
+from multi_agent_code_factory.tools.qa_diagnostics import (
+    log_qa_outcome,
+    qa_failure_snapshot_name,
+)
 from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 from multi_agent_code_factory.tools.run_tests import run_tests
 
@@ -55,55 +59,17 @@ def run_qa(
                 prd=state.prd,
             )
 
+        snapshot: str | None = None
+        if not report.passed:
+            snapshot = qa_failure_snapshot_name(state.impl_retry_count)
+            writer.write_model(snapshot, report)
+
         writer.write_model("test_report.json", report)
-        if report.tests_missing:
-            logger.warning(
-                "qa tests_missing count=%s paths=%s auto_generate=%s",
-                len(report.tests_missing),
-                report.tests_missing,
-                profile.auto_generate_tests,
-            )
-        if report.passed:
-            logger.info("qa tests passed")
-            if report.acceptance_traceability:
-                unmet = [
-                    item.id
-                    for item in report.acceptance_traceability
-                    if item.designed and not item.met
-                ]
-                if unmet:
-                    logger.warning(
-                        "qa acceptance_traceability unmet ids=%s block_on=%s",
-                        unmet,
-                        profile.acceptance_traceability.block_on,
-                    )
-            if report.tests_missing:
-                logger.warning(
-                    "qa toolchain green with tests_missing count=%s paths=%s "
-                    "block_on=%s",
-                    len(report.tests_missing),
-                    report.tests_missing,
-                    profile.tests_missing.block_on,
-                )
-            if report.coverage is not None and not report.coverage.passed:
-                logger.warning(
-                    "qa toolchain green with coverage violations "
-                    "block_on=%s violations=%s",
-                    profile.coverage.block_on,
-                    report.coverage.violations,
-                )
-        elif report.tests_missing and report.summary.failed == 0:
-            logger.warning(
-                "qa blocked by tests_missing count=%s paths=%s "
-                "(toolchain green: passed=%s)",
-                len(report.tests_missing),
-                report.tests_missing,
-                report.summary.passed,
-            )
-        else:
-            logger.warning(
-                "qa tests failed passed=%s failed=%s",
-                report.summary.passed,
-                report.summary.failed,
-            )
+        log_qa_outcome(
+            logger,
+            report,
+            profile,
+            impl_retry_count=state.impl_retry_count,
+            snapshot=snapshot,
+        )
     return {"test_report": report}

@@ -11,6 +11,7 @@ from multi_agent_code_factory.pipeline_nodes import PipelineNode
 from multi_agent_code_factory.profile_config import ProfileConfig, ValidationBlockOn
 from multi_agent_code_factory.schemas.review import ReviewNextStage
 from multi_agent_code_factory.state import PipelineState
+from multi_agent_code_factory.tools.qa_diagnostics import classify_qa_block_reason
 
 IMPL_STALE_FILES = ["test_report.json", "review.json"]
 DESIGN_ESCALATION_STALE_FILES = [*IMPL_STALE_FILES, "dev_manifest.json"]
@@ -133,21 +134,35 @@ def decide_after_design_validate(
     return RouteDecision(N.DEVELOPER)
 
 
-def decide_after_test(state: PipelineState, limits: LoopLimits) -> RouteDecision:
+def decide_after_test(
+    state: PipelineState,
+    limits: LoopLimits,
+    profile: ProfileConfig | None = None,
+) -> RouteDecision:
     """QA 测试后路由：通过则 Reviewer，失败则重试 Developer 或升环。"""
     report = state.test_report
     if report is not None and report.passed:
         logger.info("qa passed; route reviewer")
         return RouteDecision(N.REVIEWER)
     if state.impl_retry_count >= limits.max_impl_retries:
+        reason = (
+            classify_qa_block_reason(report, profile)
+            if report is not None
+            else "unknown"
+        )
         logger.error(
-            "implementation loop limit reached retries=%s max=%s",
+            "implementation loop limit reached reason=%s retries=%s max=%s",
+            reason,
             state.impl_retry_count,
             limits.max_impl_retries,
         )
         return RouteDecision(_limit_route(limits))
+    reason = (
+        classify_qa_block_reason(report, profile) if report is not None else "unknown"
+    )
     logger.warning(
-        "qa failed; retry developer attempt=%s/%s",
+        "qa failed reason=%s; retry developer attempt=%s/%s",
+        reason,
         state.impl_retry_count + 1,
         limits.max_impl_retries,
     )
@@ -262,8 +277,12 @@ def route_after_design_validate(
     return decision.next_node
 
 
-def route_after_test(state: PipelineState, limits: LoopLimits) -> str:
-    decision = decide_after_test(state, limits)
+def route_after_test(
+    state: PipelineState,
+    limits: LoopLimits,
+    profile: ProfileConfig | None = None,
+) -> str:
+    decision = decide_after_test(state, limits, profile)
     decision.apply(state)
     return decision.next_node
 
