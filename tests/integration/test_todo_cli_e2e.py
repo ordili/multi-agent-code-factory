@@ -57,7 +57,7 @@ def test_todo_cli_live_e2e(tmp_path: Path, live_profile) -> None:
             loop_limits=LoopLimits(
                 max_impl_retries=2,
                 max_design_revisions=2,
-                max_spec_revisions=1,
+                max_prd_revisions=1,
             )
         ),
         run_dir=run_dir,
@@ -67,7 +67,7 @@ def test_todo_cli_live_e2e(tmp_path: Path, live_profile) -> None:
     assert result.status == RunStatus.COMPLETED, (
         f"pipeline failed; see {run_dir / 'run_meta.json'}"
     )
-    assert (run_dir / "spec.json").is_file()
+    assert (run_dir / "prd.json").is_file()
     assert (run_dir / "design.json").is_file()
     assert (run_dir / "dev_manifest.json").is_file()
     assert (run_dir / "test_report.json").is_file()

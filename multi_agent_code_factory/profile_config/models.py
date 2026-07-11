@@ -6,7 +6,7 @@ from enum import StrEnum
 from pathlib import Path
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 V1_PROFILE_IDS = frozenset(
     {
@@ -57,8 +57,20 @@ class ValidationGateConfig(BaseModel):
 
 
 class ValidationConfig(BaseModel):
-    spec: ValidationGateConfig = Field(default_factory=ValidationGateConfig)
+    prd: ValidationGateConfig = Field(default_factory=ValidationGateConfig)
     design: ValidationGateConfig = Field(default_factory=ValidationGateConfig)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_legacy_spec_key(cls, data: object) -> object:
+        if isinstance(data, dict):
+            payload = dict(data)
+            if "spec" in payload and "prd" not in payload:
+                payload["prd"] = payload.pop("spec")
+            else:
+                payload.pop("spec", None)
+            return payload
+        return data
 
 
 class HitlConfig(BaseModel):

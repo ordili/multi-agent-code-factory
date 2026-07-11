@@ -3,12 +3,12 @@
 flowchart TB
     U(["用户需求 / HITL 审批人"]) --> PM
 
-    PM --> P_OUT[["spec.json<br/>spec.md"]]
-    P_OUT --> SV[spec_validate]
-    SV -->|"violations<br/>再入→spec_validate"| PM
-    SV -->|pass| SV_OUT[["spec_validation.json"]]
-    SV_OUT --> SH{spec_hitl?}
-    SH -->|require_hitl| H1[[spec_hitl]]
+    PM --> P_OUT[["prd.json<br/>prd.md"]]
+    P_OUT --> SV[prd_validate]
+    SV -->|"violations<br/>再入→prd_validate"| PM
+    SV -->|pass| SV_OUT[["prd_validation.json"]]
+    SV_OUT --> SH{prd_hitl?}
+    SH -->|require_hitl| H1[[prd_hitl]]
     H1 -->|驳回| PM
     H1 -->|批准| A
     SH -->|skip| A
@@ -32,7 +32,7 @@ flowchart TB
     R_OUT --> ROUTE{route_after_review?}
     ROUTE -->|"next_stage=developer<br/>再入→QA"| D
     ROUTE -->|"next_stage=architect<br/>再入→design_validate"| A
-    ROUTE -->|"next_stage=pm<br/>再入→spec_validate"| PM
+    ROUTE -->|"next_stage=pm<br/>再入→prd_validate"| PM
     ROUTE -->|"deploy · approved"| DH2{deploy_hitl?}
     ROUTE -->|"deploy · not approved<br/>再入→QA"| D
     DH2 -->|require_hitl| H3[[deploy_hitl]]

@@ -18,9 +18,9 @@ def run_fail(
 ) -> dict[str, object]:
     """记录失败日志并将 run_meta.status 设为 FAILED。"""
     logger.error(
-        "pipeline failed loop_limits spec_revisions=%s "
+        "pipeline failed loop_limits prd_revisions=%s "
         "design_revisions=%s impl_retries=%s",
-        state.spec_revision_count,
+        state.prd_revision_count,
         state.design_revision_count,
         state.impl_retry_count,
     )
@@ -28,7 +28,7 @@ def run_fail(
         status=RunStatus.FAILED,
         impl_retry_count=state.impl_retry_count,
         design_revision_count=state.design_revision_count,
-        spec_revision_count=state.spec_revision_count,
+        prd_revision_count=state.prd_revision_count,
         finished_at=datetime.now(tz=UTC).isoformat(),
     )
     return {}

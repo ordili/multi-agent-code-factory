@@ -3,23 +3,23 @@
 from __future__ import annotations
 
 from multi_agent_code_factory.profile_config import ProfileConfig
-from multi_agent_code_factory.schemas.spec import SpecArtifact
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from multi_agent_code_factory.state import PipelineState
 
 
-def normalize_spec(
-    spec: SpecArtifact,
+def normalize_prd(
+    prd: PrdArtifact,
     profile: ProfileConfig,
     state: PipelineState,
-) -> SpecArtifact:
+) -> PrdArtifact:
     """补全 spec 的 profile、revision 与 language 等元数据。"""
-    revision = state.spec.revision + 1 if state.spec is not None else 1
-    if state.spec_revision_count > 0:
-        revision = max(revision, state.spec_revision_count + 1)
-    context = dict(spec.context)
+    revision = state.prd.revision + 1 if state.prd is not None else 1
+    if state.prd_revision_count > 0:
+        revision = max(revision, state.prd_revision_count + 1)
+    context = dict(prd.context)
     if profile.language:
         context["language"] = profile.language
-    return spec.model_copy(
+    return prd.model_copy(
         update={
             "profile": profile.id,
             "revision": revision,

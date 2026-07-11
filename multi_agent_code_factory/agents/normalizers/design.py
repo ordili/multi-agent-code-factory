@@ -14,11 +14,11 @@ def normalize_design(
     state: PipelineState,
 ) -> DesignArtifact:
     """规范化 design 的 revision、spec_ref，并补全校验缺口。"""
-    spec_title = state.spec.title if state.spec is not None else design.spec_ref
+    spec_title = state.prd.title if state.prd is not None else design.spec_ref
     revision = state.design.revision + 1 if state.design is not None else 1
     if state.design_revision_count > 0:
         revision = max(revision, state.design_revision_count + 1)
-    enriched = enrich_design_for_validation(design, spec=state.spec)
+    enriched = enrich_design_for_validation(design, spec=state.prd)
     return enriched.model_copy(
         update={
             "spec_ref": spec_title,

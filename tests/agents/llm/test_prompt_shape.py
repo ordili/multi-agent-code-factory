@@ -6,11 +6,11 @@ from multi_agent_code_factory.schemas.llm_prompt_shape import (
     LlmPromptShape,
     prompt_shape_for_schema,
 )
-from multi_agent_code_factory.schemas.spec import SpecArtifact
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 
 
 def test_prompt_shape_for_schema_returns_llm_prompt_shape() -> None:
-    shape = prompt_shape_for_schema(SpecArtifact)
+    shape = prompt_shape_for_schema(PrdArtifact)
     assert shape is not None
     assert shape.json_shape["title"] == "CLI Todo App"
     assert shape.notes is None

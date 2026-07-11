@@ -14,7 +14,7 @@ from multi_agent_code_factory.state import PipelineState
 
 IMPL_STALE_FILES = ["test_report.json", "review.json"]
 DESIGN_ESCALATION_STALE_FILES = [*IMPL_STALE_FILES, "dev_manifest.json"]
-SPEC_ESCALATION_STALE_FILES = [
+PRD_ESCALATION_STALE_FILES = [
     *DESIGN_ESCALATION_STALE_FILES,
     "design.json",
     "design_validation.json",
@@ -47,46 +47,46 @@ def _limit_route(limits: LoopLimits) -> PipelineNode:
     return PipelineNode(limits.on_limit_exceeded.value)
 
 
-def decide_after_spec_validate(
+def decide_after_prd_validate(
     state: PipelineState,
     profile: ProfileConfig,
     limits: LoopLimits,
 ) -> RouteDecision:
-    """规格校验后路由：重试 PM、进入 spec HITL 或 Architect。"""
-    validation = state.spec_validation
+    """PRD 校验后路由：重试 PM、进入 prd HITL 或 Architect。"""
+    validation = state.prd_validation
     if (
         validation is not None
         and not validation.passed
-        and profile.validation.spec.block_on == ValidationBlockOn.ERROR
+        and profile.validation.prd.block_on == ValidationBlockOn.ERROR
     ):
-        if state.spec_revision_count >= limits.max_spec_revisions:
+        if state.prd_revision_count >= limits.max_prd_revisions:
             logger.error(
-                "spec validation loop limit reached revisions=%s max=%s",
-                state.spec_revision_count,
-                limits.max_spec_revisions,
+                "prd validation loop limit reached revisions=%s max=%s",
+                state.prd_revision_count,
+                limits.max_prd_revisions,
             )
             return RouteDecision(_limit_route(limits))
         logger.warning(
-            "spec validation failed; retry pm revision=%s/%s",
-            state.spec_revision_count + 1,
-            limits.max_spec_revisions,
+            "prd validation failed; retry pm revision=%s/%s",
+            state.prd_revision_count + 1,
+            limits.max_prd_revisions,
         )
         return RouteDecision(
             N.PM,
             state_updates={
-                "spec_revision_count": state.spec_revision_count + 1,
+                "prd_revision_count": state.prd_revision_count + 1,
                 "design": None,
                 "design_validation": None,
                 "dev_manifest": None,
                 "test_report": None,
                 "review": None,
             },
-            stale_artifacts=SPEC_ESCALATION_STALE_FILES,
+            stale_artifacts=PRD_ESCALATION_STALE_FILES,
         )
-    if profile.validation.spec.require_hitl:
-        logger.info("spec validation passed; route spec_hitl")
-        return RouteDecision(N.SPEC_HITL)
-    logger.info("spec validation passed; route architect")
+    if profile.validation.prd.require_hitl:
+        logger.info("prd validation passed; route prd_hitl")
+        return RouteDecision(N.PRD_HITL)
+    logger.info("prd validation passed; route architect")
     return RouteDecision(N.ARCHITECT)
 
 
@@ -218,36 +218,36 @@ def decide_after_review(state: PipelineState, limits: LoopLimits) -> RouteDecisi
         )
 
     if stage == ReviewNextStage.PM:
-        if state.spec_revision_count >= limits.max_spec_revisions:
+        if state.prd_revision_count >= limits.max_prd_revisions:
             logger.error(
                 "review escalated pm; spec loop limit reached revisions=%s max=%s",
-                state.spec_revision_count,
-                limits.max_spec_revisions,
+                state.prd_revision_count,
+                limits.max_prd_revisions,
             )
             return RouteDecision(_limit_route(limits))
         logger.warning("review escalated pm; retry pm")
         return RouteDecision(
             N.PM,
             state_updates={
-                "spec_revision_count": state.spec_revision_count + 1,
+                "prd_revision_count": state.prd_revision_count + 1,
                 "design": None,
                 "design_validation": None,
                 "dev_manifest": None,
                 "test_report": None,
                 "review": None,
             },
-            stale_artifacts=SPEC_ESCALATION_STALE_FILES,
+            stale_artifacts=PRD_ESCALATION_STALE_FILES,
         )
 
     return RouteDecision(PipelineNode(stage.value))
 
 
-def route_after_spec_validate(
+def route_after_prd_validate(
     state: PipelineState,
     profile: ProfileConfig,
     limits: LoopLimits,
 ) -> str:
-    decision = decide_after_spec_validate(state, profile, limits)
+    decision = decide_after_prd_validate(state, profile, limits)
     decision.apply(state)
     return decision.next_node
 

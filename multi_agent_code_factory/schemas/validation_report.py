@@ -10,7 +10,7 @@ from multi_agent_code_factory.schemas._base import ARTIFACT_VERSION
 
 
 class ValidationTarget(StrEnum):
-    SPEC = "spec"
+    PRD = "prd"
     DESIGN = "design"
 
 

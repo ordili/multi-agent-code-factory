@@ -7,7 +7,7 @@ from pathlib import Path
 
 from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.schemas.design import DesignArtifact
-from multi_agent_code_factory.schemas.spec import SpecArtifact
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from multi_agent_code_factory.validators.design_rules import validate_design_rules
 from multi_agent_code_factory.validators.design_triggers import (
     design_has_cross_module_collaboration,
@@ -29,7 +29,7 @@ def _load_design(name: str) -> DesignArtifact:
 
 
 def test_stateless_calculator_skips_des_013_014(snippets_dir: Path) -> None:
-    spec = SpecArtifact.model_validate(
+    spec = PrdArtifact.model_validate(
         load_snippet_json(snippets_dir, "spec-calculator-stateless.json")
     )
     design = _load_design("design-calculator-stateless-min.json")
@@ -45,8 +45,8 @@ def test_stateless_calculator_skips_des_013_014(snippets_dir: Path) -> None:
 
 
 def test_todo_fixture_still_requires_table_schemas(snippets_dir: Path) -> None:
-    spec = SpecArtifact.model_validate(
-        load_snippet_json(snippets_dir, "spec-default.json")
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
     )
     design = _load_design("design-todo-valid.json")
     assert requires_table_schemas(design, spec) is True
@@ -58,7 +58,7 @@ def test_todo_fixture_still_requires_table_schemas(snippets_dir: Path) -> None:
 def test_filesystem_dep_does_not_require_transaction_constraints(
     snippets_dir: Path,
 ) -> None:
-    spec = SpecArtifact.model_validate(
+    spec = PrdArtifact.model_validate(
         load_snippet_json(snippets_dir, "spec-calculator-stateless.json")
     )
     payload = json.loads(
@@ -79,7 +79,7 @@ def test_filesystem_dep_does_not_require_transaction_constraints(
 
 
 def test_stateless_calculator_skips_flow_section(snippets_dir: Path) -> None:
-    spec = SpecArtifact.model_validate(
+    spec = PrdArtifact.model_validate(
         load_snippet_json(snippets_dir, "spec-calculator-stateless.json")
     )
     design = _load_design("design-calculator-stateless-min.json")
@@ -88,16 +88,16 @@ def test_stateless_calculator_skips_flow_section(snippets_dir: Path) -> None:
 
 
 def test_todo_requires_flow_section(snippets_dir: Path) -> None:
-    spec = SpecArtifact.model_validate(
-        load_snippet_json(snippets_dir, "spec-default.json")
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
     )
     design = _load_design("design-todo-valid.json")
     assert design_has_cross_module_collaboration(design, spec) is True
     assert requires_flow_section(design, spec) is True
 
 
-def test_spec_multi_writer_triggers_nonlinear_us(snippets_dir: Path) -> None:
-    raw = load_snippet_json(snippets_dir, "spec-default.json")
+def test_prd_multi_writer_triggers_nonlinear_us(snippets_dir: Path) -> None:
+    raw = load_snippet_json(snippets_dir, "prd-default.json")
     raw["consistency_profile"]["multi_writer"] = True
-    spec = SpecArtifact.model_validate(raw)
+    spec = PrdArtifact.model_validate(raw)
     assert spec_has_nonlinear_us(spec) is True

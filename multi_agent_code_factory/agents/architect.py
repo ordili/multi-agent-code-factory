@@ -74,8 +74,8 @@ def run_architect(
             flow_text = fixtures.flow_mmd.read_text(encoding="utf-8")
         else:
             runner = require_llm_runner(llm_runner)
-            if state.spec is None:
-                msg = "architect requires spec in live mode"
+            if state.prd is None:
+                msg = "architect requires prd in live mode"
                 raise ValueError(msg)
             output = runner.invoke_structured(
                 role_id=AgentRole.ARCHITECT,

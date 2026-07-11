@@ -8,7 +8,7 @@
 | 分类             | 上游文档                                                                      | 定位                                      |
 | -------------- | ------------------------------------------------------------------------- | --------------------------------------- |
 | **总设计**        | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md)       | 系统的总体设计书                                |
-| **上游 JSON 契约** | [prd-spec.md](./prd-spec.md)                                              | 上游 JSON 契约 prd-spec.md（Run `spec.json`） |
+| **上游 JSON 契约** | [prd-spec.md](./prd-spec.md)                                              | 上游 JSON 契约 prd-spec.md（Run `prd.json`） |
 | **人读模板**       | [artifact-templates/design-spec.md](../artifact-templates/design-spec.md) | 上游人读 design-spec.md                     |
 | **运行配置**       | [profiles.md](../profiles.md)                                             | Profile 注入相关字段语境                        |
 
@@ -17,7 +17,7 @@
 
 > **实现：** `multi_agent_code_factory/schemas/design.py`  
 > **Run 落盘：** `docs/runs/<task_id>/design.json`  
-> **上游 Run：** 同目录 `spec.json`（字段定义见 [prd-spec.md](./prd-spec.md)）
+> **上游 Run：** 同目录 `prd.json`（字段定义见 [prd-spec.md](./prd-spec.md)）
 
 机器可读契约以 **本文 + Pydantic** 为准。
 
@@ -36,7 +36,7 @@
 | **不定义**  | Run `design.md` 章节、写作篇幅、Profile 选用（姊妹目录 `artifact-templates/` 规定） |
 
 
-**数据流：** PM 产出 `spec.json` → Architect 读 `spec.json` 产出 `design.json` → 渲染 `design.md` / 登记 `*.mmd`。下游 Developer / QA **以 JSON 为准**。
+**数据流：** PM 产出 `prd.json` → Architect 读 `prd.json` 产出 `design.json` → 渲染 `design.md` / 登记 `*.mmd`。下游 Developer / QA **以 JSON 为准**。
 
 ---
 
@@ -126,7 +126,7 @@
 | 字段                    | 是否必填 | 类型       | 说明 · 如何填                               |
 | --------------------- | ---- | -------- | -------------------------------------- |
 | `version`             | 是    | `"1"`    | 固定 `"1"`                               |
-| `spec_ref`            | 是    | string   | 与上游 `spec.json` **的** `title`（或任务标识）一致 |
+| `spec_ref`            | 是    | string   | 与上游 `prd.json` **的** `title`（或任务标识）一致 |
 | `revision`            | 是    | integer  | 设计环修订，从 1 起；重出设计时递增                    |
 | `supersedes_revision` | 否    | integer? | 上一轮 `revision`                         |
 | `status`              | 否    | enum?    | `draft`                                |
@@ -139,11 +139,11 @@
 
 | 字段                        | 是否必填 | 类型                      | 说明 · 如何填                                                                                                                 |
 | ------------------------- | ---- | ----------------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `summary`                 | 是    | string?                 | 一两句设计摘要；宜呼应 `spec.json` 的 `summary`（见上表：JSON 暂未 enforce）                                                                 |
+| `summary`                 | 是    | string?                 | 一两句设计摘要；宜呼应 `prd.json` 的 `summary`（见上表：JSON 暂未 enforce）                                                                 |
 | `background`              | 否    | string?                 | 相对 spec 的额外背景；无则省略                                                                                                       |
 | `context_view`            | 是    | ContextView             | 参与者/边界；至少 `actors[]`                                                                                                     |
 | `design_goals`            | 是    | string[]                | 可验证目标；引用上游 `FEAT-*` / `US-*` / `REQ-*` id（见上表：JSON 暂未 enforce）                                                           |
-| `non_goals`               | 是    | string[]                | 与 `spec.json` 的 `scope_out[]` 对齐                                                                                         |
+| `non_goals`               | 是    | string[]                | 与 `prd.json` 的 `scope_out[]` 对齐                                                                                         |
 | `architecture`            | 是    | ArchitectureOverview    | 至少 `solution_strategy`                                                                                                   |
 | `modules`                 | 是    | ModuleSpec[]            | 每模块含 `name`、`path`、`responsibility`、`code_domain`                                                                        |
 | `external_dependencies`   | 是    | ExternalDependency[]    | 无中间件时显式 `kind=none` 或 `filesystem`                                                                                       |
@@ -152,7 +152,7 @@
 | `table_schemas`           | 否    | TableSchema[]           | 有表/文件项/Redis/MQ schema 时**须填**；无持久化 CLI 可为 `[]`                                                                          |
 | `transaction_constraints` | 否    | TransactionConstraint[] | 多写者/跨存储、spec 一致性非 trivial 时**须填**                                                                                        |
 | `error_catalog`           | 是    | ErrorCatalogItem[]      | 全局 `ERR-*`；与接口/用例联动                                                                                                      |
-| `non_functional`          | 否    | NfrSpec[]?              | `spec.json` 的 `operational_profile` 有设计侧量化增量时**须填**                                                                      |
+| `non_functional`          | 否    | NfrSpec[]?              | `prd.json` 的 `operational_profile` 有设计侧量化增量时**须填**                                                                      |
 | `test_cases`              | 是    | TestCase[]              | 含 `happy` / `negative` / `boundary`；`covers` 宜含 `AC-*`                                                                   |
 
 

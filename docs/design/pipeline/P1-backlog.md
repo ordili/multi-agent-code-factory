@@ -36,11 +36,11 @@
 以下已在 Python live 路径验证（如 `calculator` task），**不计入 P1**，仅作基线：
 
 - [x] 五 Agent + validate + QA + Reviewer 图跑通
-- [x] `spec_validate` / `design_validate` MVP 白名单规则
+- [x] `prd_validate` / `design_validate` MVP 白名单规则
 - [x] `run_tests` + `junit_xml` Parser
 - [x] Live LLM（DeepSeek / Ollama `prompted_json`；OpenAI / Anthropic `native_structured`）
 - [x] LLM 调用分层（`agents/llm/`：pipeline、strategies、retry、budget、usage）
-- [x] `spec.md` 渲染（`renderers/spec_md.py`）
+- [x] `prd.md` 渲染（`renderers/prd_md.py`）
 - [x] `design.json` + `flow.mmd` 落盘
 - [x] `run_meta.budget.used_llm_calls` + `llm_usage.json` + 用量日志（2026-07 补充）
 
@@ -51,7 +51,7 @@
 | 状态 | 项 | 落点 | 参考 |
 |------|-----|------|------|
 | [x] | **`design.md` 渲染** | `renderers/design_md.py`；`architect.py` 写入 | [artifact-templates/design-spec.md](./artifact-templates/design-spec.md)（定稿 §1–§6 + 附录 A–D） |
-| [x] | **`spec.md` 渲染** | `renderers/spec_md.py` | [artifact-templates/prd-spec.md](./artifact-templates/prd-spec.md)（中文 §1–§12） |
+| [x] | **`prd.md` 渲染** | `renderers/prd_md.py` | [artifact-templates/prd-spec.md](./artifact-templates/prd-spec.md)（中文 §1–§12） |
 | [x] | `flow.mmd` / 多 `*.mmd` 写出 | `architect.py`（`mmd_files[]`） | [artifact-templates/flow-spec.md](./artifact-templates/flow-spec.md) |
 
 ---
@@ -64,8 +64,8 @@
 
 | 状态 | 项 | 落点 |
 |------|-----|------|
-| [x] | SPEC-101–114、201–202、017（可测性 / storage，多为 warn） | `validators/spec_rules.py` + `spec_rules_extended.py` |
-| [x] | SPEC-301–316（`spec.md` 格式） | `validators/spec_md_rules.py` |
+| [x] | PRD-101–114、201–202、017（可测性 / storage，多为 warn） | `validators/prd_rules.py` + `spec_rules_extended.py` |
+| [x] | PRD-301–316（`prd.md` 格式） | `validators/prd_md_rules.py` |
 
 ### 2.2 Design
 
@@ -87,7 +87,7 @@
 
 | 状态 | 项 | 落点 | 说明 |
 |------|-----|------|------|
-| [~] | `spec_hitl` 节点 | `nodes/spec_hitl.py` | 存在；MVP **自动 approved**，无 interrupt |
+| [~] | `prd_hitl` 节点 | `nodes/prd_hitl.py` | 存在；MVP **自动 approved**，无 interrupt |
 | [~] | `design_hitl` 节点 | `nodes/design_hitl.py` | 同上 |
 | [ ] | LangGraph **强制 interrupt** + CLI/UI **resume** | `graph.py`、CLI | 生产级 `require_hitl: true` |
 | [~] | `escalation_hitl` | `nodes/escalation_hitl.py` | 占位 → fail |
@@ -175,7 +175,7 @@
 
 ## 10. 建议实施顺序（团队可调整）
 
-1. **`design.md` 渲染** — 开发评审缺口（与 `spec.md` 对称）
+1. **`design.md` 渲染** — 开发评审缺口（与 `prd.md` 对称）
 2. **Mermaid + design 格式校验** — 设计质量门槛
 3. **多语言 Parser + e2e** — 若下一目标是 Go/Rust
 4. **HITL interrupt + checkpoint/resume** — 若下一目标是生产部署
@@ -187,13 +187,13 @@
 
 复制自 [multi-agent-pipeline-design.md §10](./multi-agent-pipeline-design.md#10-验收)：
 
-- [ ] `spec_hitl` / `design_hitl` interrupt 可暂停与恢复
+- [ ] `prd_hitl` / `design_hitl` interrupt 可暂停与恢复
 - [x] `docs/runs/<task_id>/` 含 **`design.md`**
 - [ ] `go_json` / `cargo_json` / `forge_json` Parser + Profile 各跑通一例
 - [ ] `resume --task-id` 从 checkpoint 续跑
 - [x] `design.md` 符合 [artifact-templates/design-spec.md](./artifact-templates/design-spec.md)
-- [x] `spec.md` 符合 [artifact-templates/prd-spec.md](./artifact-templates/prd-spec.md)
+- [x] `prd.md` 符合 [artifact-templates/prd-spec.md](./artifact-templates/prd-spec.md)
 
 ---
 
-*最后更新：2026-07-10（spec.md prd-spec 对齐；`design_triggers` 重命名；SPEC-017/314–316）*
+*最后更新：2026-07-10（prd.md prd-spec 对齐；`design_triggers` 重命名；PRD-017/314–316）*

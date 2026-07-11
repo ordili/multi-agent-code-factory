@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 
 from multi_agent_code_factory.schemas.design import DesignArtifact
-from multi_agent_code_factory.schemas.spec import SpecArtifact
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 
 _NONLINEAR_US_RE = re.compile(
     r"如果|否则|当.+时|异常|失败|重试|补偿|并发|异步|回调|超时|回滚|"
@@ -18,7 +18,7 @@ _NON_PERSISTENT_STORAGE = frozenset(
 )
 
 
-def spec_requires_non_functional(spec: SpecArtifact) -> bool:
+def spec_requires_non_functional(spec: PrdArtifact) -> bool:
     """spec 是否触发 DES-011（传导表：operational_profile 含非 trivial NFR 信号）。"""
     op = spec.operational_profile
     perf = op.performance
@@ -35,7 +35,7 @@ def spec_requires_non_functional(spec: SpecArtifact) -> bool:
     return perf.tier.value != "best_effort"
 
 
-def _spec_context_storage(spec: SpecArtifact) -> str | None:
+def _spec_context_storage(spec: PrdArtifact) -> str | None:
     storage = spec.context.get("storage")
     return (
         storage.strip().lower()
@@ -44,7 +44,7 @@ def _spec_context_storage(spec: SpecArtifact) -> str | None:
     )
 
 
-def spec_implies_persistence(spec: SpecArtifact | None) -> bool:
+def spec_implies_persistence(spec: PrdArtifact | None) -> bool:
     """spec 是否暗示需要持久化或表结构（DES-013 传导信号）。"""
     if spec is None:
         return False
@@ -71,7 +71,7 @@ def design_has_table_columns(design: DesignArtifact) -> bool:
 
 def requires_table_schemas(
     design: DesignArtifact,
-    spec: SpecArtifact | None = None,
+    spec: PrdArtifact | None = None,
 ) -> bool:
     """是否要求 ``table_schemas`` 非空（DES-013）。"""
     if design_has_table_columns(design):
@@ -85,7 +85,7 @@ def requires_table_schemas(
 
 def requires_transaction_constraints(
     design: DesignArtifact,
-    spec: SpecArtifact | None = None,
+    spec: PrdArtifact | None = None,
 ) -> bool:
     """是否要求 ``transaction_constraints`` 非空（DES-014）。"""
     _ = design
@@ -94,7 +94,7 @@ def requires_transaction_constraints(
 
 def requires_diagram_pair(
     design: DesignArtifact,
-    spec: SpecArtifact | None = None,
+    spec: PrdArtifact | None = None,
 ) -> bool:
     """是否要求 diagrams 含 sequence + flowchart（DES-017）。"""
     if design.diagrams:
@@ -104,7 +104,7 @@ def requires_diagram_pair(
 
 def is_stateless_design(
     design: DesignArtifact,
-    spec: SpecArtifact | None = None,
+    spec: PrdArtifact | None = None,
 ) -> bool:
     """无持久化、无中间件、无表结构的小任务（如纯内存 CLI）。"""
     if design_has_table_columns(design):
@@ -114,7 +114,7 @@ def is_stateless_design(
     return not spec_implies_persistence(spec)
 
 
-def spec_has_nonlinear_us(spec: SpecArtifact) -> bool:
+def spec_has_nonlinear_us(spec: PrdArtifact) -> bool:
     """spec 是否含非线性 / 多步业务 US 信号（DES-206 传导）。"""
     cp = spec.consistency_profile
     if cp.multi_writer:
@@ -133,7 +133,7 @@ def spec_has_nonlinear_us(spec: SpecArtifact) -> bool:
 
 def design_has_cross_module_collaboration(
     design: DesignArtifact,
-    spec: SpecArtifact | None = None,
+    spec: PrdArtifact | None = None,
 ) -> bool:
     """多模块协作（非线性分层 CLI 如计算器不计入）。"""
     if len(design.modules) < 2:
@@ -146,7 +146,7 @@ def design_has_cross_module_collaboration(
 
 def requires_flow_section(
     design: DesignArtifact,
-    spec: SpecArtifact | None = None,
+    spec: PrdArtifact | None = None,
 ) -> bool:
     """是否宜写 design.md §4.7 流程与时序（DES-206 / DES-217）。"""
     if spec is not None and spec_has_nonlinear_us(spec):

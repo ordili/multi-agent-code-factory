@@ -51,7 +51,7 @@ def test_merge_usage_totals_accumulates_calls() -> None:
         LlmUsageTotals(),
         LlmCallUsage(
             role_id=AgentRole.PM,
-            schema_name="SpecArtifact",
+            schema_name="PrdArtifact",
             prompt_tokens=100,
             completion_tokens=50,
             total_tokens=150,
@@ -67,7 +67,7 @@ def test_record_llm_usage_writes_artifact(tmp_path: Path) -> None:
     writer = RunArtifactWriter("usage-test", base_dir=tmp_path)
     call = LlmCallUsage(
         role_id=AgentRole.PM,
-        schema_name="SpecArtifact",
+        schema_name="PrdArtifact",
         duration_ms=1200,
         prompt_tokens=10,
         completion_tokens=20,

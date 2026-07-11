@@ -8,7 +8,7 @@
 | 分类            | 上游文档                                                                          | 定位                              |
 | ------------- | ----------------------------------------------------------------------------- | ------------------------------- |
 | **总设计**       | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
-| **上游 JSON 契约** | [prd-spec.md](./prd-spec.md)                                                  | 上游 JSON 契约 prd-spec.md（Run `spec.json`） |
+| **上游 JSON 契约** | [prd-spec.md](./prd-spec.md)                                                  | 上游 JSON 契约 prd-spec.md（Run `prd.json`） |
 | **上游 JSON 契约** | [design-spec.md](./design-spec.md)                                            | 上游 JSON 契约 design-spec.md（Run `design.json`） |
 | **人读模板**      | [artifact-templates/review-spec.md](../artifact-templates/review-spec.md)     | 上游人读 review-spec.md             |
 

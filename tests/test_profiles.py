@@ -33,7 +33,7 @@ def test_python_profile_extends_common() -> None:
     assert profile.toolchain.test_parser == "junit_xml"
     assert "junit.xml" in profile.toolchain.test_artifacts[0]
     assert profile.validation.design.validate_mermaid is False
-    assert profile.validation.spec.enabled is True
+    assert profile.validation.prd.enabled is True
     assert "read_file" in profile.tools
 
 
@@ -165,7 +165,7 @@ def test_extends_merge_in_custom_profile(tmp_path: Path) -> None:
         "child", profiles_root=profiles_root, factory_repo=repo_root()
     )
     assert profile.tools == ["write_file"]
-    assert profile.validation.spec.enabled is True
+    assert profile.validation.prd.enabled is True
 
 
 def test_profiles_dir_points_at_package() -> None:

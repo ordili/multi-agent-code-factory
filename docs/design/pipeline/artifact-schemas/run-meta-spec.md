@@ -28,7 +28,7 @@
 | `loop_limits` | object | 本次 run 生效的上限 |
 | `impl_retry_count` | integer | 实现环计数 |
 | `design_revision_count` | integer | 设计环计数 |
-| `spec_revision_count` | integer | 需求环计数 |
+| `prd_revision_count` | integer | 需求环计数 |
 | `budget` | object? | `{ max_llm_calls, max_tokens, used_* }` |
 | `checkpoint_id` | string? | LangGraph checkpoint（P1） |
 | `deploy_status` | string | `skipped` \| `success` \| `failed` |
@@ -52,11 +52,11 @@
   "loop_limits": {
     "max_impl_retries": 3,
     "max_design_revisions": 2,
-    "max_spec_revisions": 1
+    "max_prd_revisions": 1
   },
   "impl_retry_count": 1,
   "design_revision_count": 0,
-  "spec_revision_count": 0,
+  "prd_revision_count": 0,
   "deploy_status": "skipped"
 }
 ```

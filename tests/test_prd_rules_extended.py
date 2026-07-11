@@ -2,15 +2,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from multi_agent_code_factory.schemas.spec import SpecArtifact
-from multi_agent_code_factory.validators.spec_rules_extended import (
-    validate_spec_extended_rules,
+from multi_agent_code_factory.schemas.prd import PrdArtifact
+from multi_agent_code_factory.validators.prd_rules_extended import (
+    validate_prd_extended_rules,
 )
 
 from tests.conftest import load_snippet_json
 
 
-def _minimal_spec(**overrides: object) -> SpecArtifact:
+def _minimal_spec(**overrides: object) -> PrdArtifact:
     base = {
         "version": "1",
         "profile": "python",
@@ -55,22 +55,22 @@ def _minimal_spec(**overrides: object) -> SpecArtifact:
         "constraints": [],
     }
     base.update(overrides)
-    return SpecArtifact.model_validate(base)
+    return PrdArtifact.model_validate(base)
 
 
-def test_spec_101_empty_ac_description_is_error() -> None:
+def test_prd_101_empty_ac_description_is_error() -> None:
     spec = _minimal_spec(
         acceptance_criteria=[
             {"id": "AC-1", "description": "  ", "verifiable_by": "automated_test"}
         ]
     )
-    violations = validate_spec_extended_rules(spec)
+    violations = validate_prd_extended_rules(spec)
     assert any(
-        v.rule_id == "SPEC-101" and v.severity.value == "error" for v in violations
+        v.rule_id == "PRD-101" and v.severity.value == "error" for v in violations
     )
 
 
-def test_spec_102_warns_when_p0_us_not_covered() -> None:
+def test_prd_102_warns_when_p0_us_not_covered() -> None:
     spec = _minimal_spec(
         acceptance_criteria=[
             {
@@ -80,11 +80,11 @@ def test_spec_102_warns_when_p0_us_not_covered() -> None:
             }
         ]
     )
-    violations = validate_spec_extended_rules(spec)
-    assert any(v.rule_id == "SPEC-102" for v in violations)
+    violations = validate_prd_extended_rules(spec)
+    assert any(v.rule_id == "PRD-102" for v in violations)
 
 
-def test_spec_111_custom_consistency_requires_notes() -> None:
+def test_prd_111_custom_consistency_requires_notes() -> None:
     spec = _minimal_spec(
         consistency_profile={
             "consistency_model": "custom",
@@ -94,31 +94,31 @@ def test_spec_111_custom_consistency_requires_notes() -> None:
             "notes": "",
         }
     )
-    violations = validate_spec_extended_rules(spec)
+    violations = validate_prd_extended_rules(spec)
     assert any(
-        v.rule_id == "SPEC-111" and v.severity.value == "error" for v in violations
+        v.rule_id == "PRD-111" and v.severity.value == "error" for v in violations
     )
 
 
-def test_spec_017_requires_context_storage(snippets_dir: Path) -> None:
-    data = load_snippet_json(snippets_dir, "spec-default.json")
+def test_prd_017_requires_context_storage(snippets_dir: Path) -> None:
+    data = load_snippet_json(snippets_dir, "prd-default.json")
     data["context"].pop("storage")
-    spec = SpecArtifact.model_validate(data)
-    violations = validate_spec_extended_rules(spec)
+    spec = PrdArtifact.model_validate(data)
+    violations = validate_prd_extended_rules(spec)
     assert any(
-        v.rule_id == "SPEC-017" and v.severity.value == "error" for v in violations
+        v.rule_id == "PRD-017" and v.severity.value == "error" for v in violations
     )
 
 
-def test_spec_default_passes_spec_102(snippets_dir: Path) -> None:
-    spec = SpecArtifact.model_validate(
-        load_snippet_json(snippets_dir, "spec-default.json")
+def test_prd_default_passes_spec_102(snippets_dir: Path) -> None:
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
     )
-    violations = validate_spec_extended_rules(spec)
-    assert not [v for v in violations if v.rule_id == "SPEC-102"]
+    violations = validate_prd_extended_rules(spec)
+    assert not [v for v in violations if v.rule_id == "PRD-102"]
 
 
-def test_spec_118_warns_on_empty_glossary_term() -> None:
+def test_prd_118_warns_on_empty_glossary_term() -> None:
     spec = _minimal_spec(
         context={
             "language": "python",
@@ -126,5 +126,5 @@ def test_spec_118_warns_on_empty_glossary_term() -> None:
             "glossary": [{"term": "  ", "definition": "ok"}],
         }
     )
-    violations = validate_spec_extended_rules(spec)
-    assert any(v.rule_id == "SPEC-118" for v in violations)
+    violations = validate_prd_extended_rules(spec)
+    assert any(v.rule_id == "PRD-118" for v in violations)

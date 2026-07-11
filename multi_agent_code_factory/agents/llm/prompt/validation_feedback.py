@@ -59,13 +59,13 @@ def format_llm_parse_retry_feedback(exc: LlmParseError) -> str:
     )
 
 
-def format_spec_validation_feedback(state: PipelineState) -> str | None:
+def format_prd_validation_feedback(state: PipelineState) -> str | None:
     """将上次 spec 校验失败项格式化为 PM 重试时的 extra_system 提示。"""
     footer = None
-    if state.spec is not None:
+    if state.prd is not None:
         footer = "Keep valid spec fields; only patch items listed above."
     return _format_validation_failure_feedback(
-        state.spec_validation,
+        state.prd_validation,
         headline="Previous spec failed validation. Fix every item before resubmitting:",
         footer=footer,
     )

@@ -41,8 +41,8 @@ def run_developer(
             )
         else:
             runner = require_llm_runner(llm_runner)
-            if state.spec is None or state.design is None:
-                msg = "developer requires spec and design in live mode"
+            if state.prd is None or state.design is None:
+                msg = "developer requires prd and design in live mode"
                 raise ValueError(msg)
             output = runner.invoke_structured(
                 role_id=AgentRole.DEVELOPER,

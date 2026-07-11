@@ -55,7 +55,7 @@
 | `toolchain` | 构建与测试命令集（§2） |
 | `test_command` | **简写**：等价于 `toolchain.test_command` |
 | `validation` | PM/Architect **规则校验**与可选 HITL（见 [quality-gates/README.md §2](./quality-gates/README.md#2-profile-配置validation)） |
-| `context_schema` | 可选 JSON Schema，校验 `SpecArtifact.context` |
+| `context_schema` | 可选 JSON Schema，校验 `PrdArtifact.context` |
 | `auto_generate_tests` | 缺测试时是否委托生成骨架（默认 false） |
 | `hitl` | `sensitive_globs`、`flags`（deploy 阶段） |
 | `subscriptions` | 可选；覆盖角色 `watch` 列表 |
@@ -64,7 +64,7 @@
 
 **兼容：** 仅配置顶层 `test_command` → 等价于 `toolchain.test_command`；未指定 `test_parser` → 默认 `exit_code_only`。
 
-**与 Spec 对齐：** PM 在 `spec.context.language` 声明语言；`spec_validate` 规则 `SPEC-006` 校验与 Profile.`language` 一致。
+**与 Spec 对齐：** PM 在 `spec.context.language` 声明语言；`prd_validate` 规则 `PRD-006` 校验与 Profile.`language` 一致。
 
 ### 1.1 `code_root`（生成代码目录）
 

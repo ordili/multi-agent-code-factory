@@ -6,8 +6,8 @@ from multi_agent_code_factory.nodes.design_hitl import run_design_hitl
 from multi_agent_code_factory.nodes.design_validate import run_design_validate
 from multi_agent_code_factory.nodes.escalation_hitl import run_escalation_hitl
 from multi_agent_code_factory.nodes.fail import run_fail
-from multi_agent_code_factory.nodes.spec_hitl import run_spec_hitl
-from multi_agent_code_factory.nodes.spec_validate import run_spec_validate
+from multi_agent_code_factory.nodes.prd_hitl import run_prd_hitl
+from multi_agent_code_factory.nodes.prd_validate import run_prd_validate
 
 __all__ = [
     "run_deploy",
@@ -16,6 +16,6 @@ __all__ = [
     "run_design_validate",
     "run_escalation_hitl",
     "run_fail",
-    "run_spec_hitl",
-    "run_spec_validate",
+    "run_prd_hitl",
+    "run_prd_validate",
 ]

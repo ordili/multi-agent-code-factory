@@ -12,7 +12,7 @@ from multi_agent_code_factory.nodes.deploy_hitl import run_deploy_hitl
 from multi_agent_code_factory.nodes.design_hitl import run_design_hitl
 from multi_agent_code_factory.nodes.escalation_hitl import run_escalation_hitl
 from multi_agent_code_factory.nodes.fail import run_fail
-from multi_agent_code_factory.nodes.spec_hitl import run_spec_hitl
+from multi_agent_code_factory.nodes.prd_hitl import run_prd_hitl
 from multi_agent_code_factory.state import PipelineState, normalize_pipeline_state
 
 
@@ -20,7 +20,7 @@ def _state(state: PipelineState) -> PipelineState:
     return normalize_pipeline_state(state)
 
 
-def node_spec_hitl(
+def node_prd_hitl(
     state: PipelineState,
     *,
     runtime: Runtime[PipelineRunContext],
@@ -28,7 +28,7 @@ def node_spec_hitl(
     """Spec 阶段人机协作占位。"""
     state = _state(state)
     ctx = runtime.context
-    return run_spec_hitl(state, ctx.profile, ctx.writer)
+    return run_prd_hitl(state, ctx.profile, ctx.writer)
 
 
 def node_design_hitl(

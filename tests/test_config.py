@@ -14,7 +14,7 @@ def test_load_factory_config_defaults() -> None:
     config = load_factory_config()
     assert config.loop_limits.max_impl_retries == 3
     assert config.loop_limits.max_design_revisions == 2
-    assert config.loop_limits.max_spec_revisions == 1
+    assert config.loop_limits.max_prd_revisions == 1
     assert config.max_hitl_rounds == 5
     assert config.on_limit_exceeded == OnLimitExceeded.FAIL
 
@@ -53,7 +53,7 @@ def test_factory_config_round_trip() -> None:
             "loop_limits": {
                 "max_impl_retries": 1,
                 "max_design_revisions": 2,
-                "max_spec_revisions": 3,
+                "max_prd_revisions": 3,
             },
             "budget": {"max_llm_calls": 10},
         }

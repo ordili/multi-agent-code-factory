@@ -28,9 +28,9 @@
 |-------------|--------|------|------------------------|
 | [multi-agent-pipeline-design.md](./multi-agent-pipeline-design.md) | 流水线 **总设计** | 角色、图路由、Run 目录、验收；其它细目 **索引入口** | `graph.py`、`graph_routing.py`、`state.py` |
 | [profiles.md](./profiles.md) | **Profile** 字段说明 | 语言、toolchain、`validation` / `hitl`、prompt 路径；与业务无关的配置注入 | `profiles/*.yaml`、`profiles.py` |
-| [artifact-schemas/](./artifact-schemas/README.md) | **JSON 契约** `*-spec.md` | 定义 Run `*.json` 的字段、类型、枚举、示例；机器读 **唯一字段基线** | `schemas/*.py` |
-| [artifact-templates/](./artifact-templates/README.md) | **人读格式** `*-spec.md` | 定义 Run `*.md` / `*.mmd` 怎么写、章节结构、写作约束 | `renderers/*.py` |
-| [quality-gates/](./quality-gates/README.md) | **校验与 HITL** | `SPEC-*` / `DES-*` 规则、`validation` 配置、人工 interrupt 约定 | `validators/`、`nodes/*_validate.py` |
+| [artifact-schemas/](./artifact-schemas/README.md) | **JSON 契约** `*-prd.md` | 定义 Run `*.json` 的字段、类型、枚举、示例；机器读 **唯一字段基线** | `schemas/*.py` |
+| [artifact-templates/](./artifact-templates/README.md) | **人读格式** `*-prd.md` | 定义 Run `*.md` / `*.mmd` 怎么写、章节结构、写作约束 | `renderers/*.py` |
+| [quality-gates/](./quality-gates/README.md) | **校验与 HITL** | `PRD-*` / `DES-*` 规则、`validation` 配置、人工 interrupt 约定 | `validators/`、`nodes/*_validate.py` |
 | [examples/](./examples/README.md) | JSON / Mermaid **片段** | 可拷贝示例；**非规范**，以 schemas 为准 | — |
 | [references/](./references/README.md) | 术语、MetaGPT、调研 | **非规范性**参考；不参与校验 | — |
 | [implementation-plan.md](./implementation-plan.md) | V1 **编码计划** | 阶段、PR 拆分、与 §10 验收对照 | `multi_agent_code_factory/` |
@@ -45,9 +45,9 @@
 流水线每个阶段产出 **JSON（机器）+ 人读视图（可选）**。设计文档也分三层，**职责不重叠**：
 
 ```text
-artifact-schemas/*-spec.md     JSON 字段、类型、标识符、嵌套结构
+artifact-schemas/*-prd.md     JSON 字段、类型、标识符、嵌套结构
         ↓  （templates 引用 schemas）
-artifact-templates/*-spec.md   人读章节、表格写法、Profile 选用、样例叙事
+artifact-templates/*-prd.md   人读章节、表格写法、Profile 选用、样例叙事
         ↓  （quality-gates 引用 schemas + templates）
 quality-gates/*.md             校验规则规格（rule_id + 触发条件 + 判定）
         ↓  （validators 实现规则；引用 schemas + templates）
@@ -56,15 +56,15 @@ multi_agent_code_factory/      Pydantic、renderers、validators、nodes
 
 | 层 | 回答的问题 | 典型读者 |
 |----|------------|----------|
-| **schemas** | `spec.json` / `design.json` **有哪些键、什么类型** | Agent prompt 作者、Pydantic 维护者 |
-| **templates** | Run `spec.md` / `design.md` **长什么样、写哪些 §** | Architect / PM 文档作者、HITL 评审 |
+| **schemas** | `prd.json` / `design.json` **有哪些键、什么类型** | Agent prompt 作者、Pydantic 维护者 |
+| **templates** | Run `prd.md` / `design.md` **长什么样、写哪些 §** | Architect / PM 文档作者、HITL 评审 |
 | **quality-gates** | 产物 **怎样算过门禁**（**规则正文**：`rule_id`、严重度、触发条件、判定） | 校验器实现、Profile 配置 |
 
 **成对文档**（同名 `-spec`，不同目录）：
 
 | Schema | JSON 契约（schemas） | 人读格式（templates） | Run JSON | Run 人读 |
 |--------|----------------------|----------------------|----------|----------|
-| `SpecArtifact` | [prd-spec.md](./artifact-schemas/prd-spec.md) | [prd-spec.md](./artifact-templates/prd-spec.md) | `spec.json` | `spec.md` |
+| `PrdArtifact`（PRD） | [prd-spec.md](./artifact-schemas/prd-spec.md) | [prd-spec.md](./artifact-templates/prd-spec.md) | `prd.json` | `prd.md` |
 | `DesignArtifact` | [design-spec.md](./artifact-schemas/design-spec.md) | [design-spec.md](./artifact-templates/design-spec.md) + [flow-spec.md](./artifact-templates/flow-spec.md) | `design.json` | `design.md` + `*.mmd` |
 | `ReviewReport` | [review-spec.md](./artifact-schemas/review-spec.md) | [review-spec.md](./artifact-templates/review-spec.md) | `review.json` | `review.md` |
 
@@ -80,9 +80,9 @@ multi_agent_code_factory/      Pydantic、renderers、validators、nodes
 multi-agent-pipeline-design.md
 profiles.md
     ↓
-artifact-schemas/prd-spec.md          → spec.json
-artifact-templates/prd-spec.md        → spec.md
-quality-gates/spec-validate.md
+artifact-schemas/prd-spec.md          → prd.json
+artifact-templates/prd-spec.md        → prd.md
+quality-gates/prd-validate.md
     ↓
 artifact-schemas/design-spec.md       → design.json
 artifact-templates/design-spec.md     → design.md
@@ -110,7 +110,7 @@ artifact-templates/review-spec.md           → review.md
 
 | 文档层 | 可引用 | 不可引用 / 不可展开 |
 |--------|--------|---------------------|
-| **artifact-schemas** | 上游 schema（如 design 引用 prd-spec）、**人读模板**（同名 `artifact-templates/*-spec.md`）、Pydantic 路径、本文字段 | quality-gates rule_id、renderers |
+| **artifact-schemas** | 上游 schema（如 design 引用 prd-spec）、**人读模板**（同名 `artifact-templates/*-prd.md`）、Pydantic 路径、本文字段 | quality-gates rule_id、renderers |
 | **artifact-templates** | 总设计、**上游模板**（如 design-spec → prd-spec）、姊妹 templates（如 design-spec → flow-spec）、artifact-schemas 字段（正文引用，不进依赖表）、本文 | quality-gates 具体规则、实现类名（除必要一行落点） |
 | **quality-gates** | schemas + templates（校验基线） | 实现细节、下游 run 样例目录 |
 | **examples** | schemas（字段为准） | 自造与 schema 冲突的字段 |
@@ -132,21 +132,23 @@ artifact-templates/review-spec.md           → review.md
 
 ### 3. 文首依赖表
 
-每个 `pipeline/**/*.md` 在 **H1 下** 须有 **`## 依赖上游文档（只读）`**（分类 · 上游文档 · 定位）；**只列独立上游文档**（**一行一文件**，不用 `·` 合并），章节不算单独一行；细则约定写在表前引导语并链到 [README.md §单向依赖](#1-单向依赖)。**推荐排序：** **总设计** → 流水线更早产物（**上游 JSON 契约** / **上游模板** / **spec 基线**）→ **人读模板** → **姊妹模板** → **校验产出** → **运行配置** → 索引 / 参考。**`artifact-schemas/`** 不得把 `quality-gates/` 列入上游表，**同名** `artifact-templates/*-spec.md`（人读格式）**须**列入上游表（分类 **人读模板**，定位 **上游人读 {name}-spec.md**）；**`artifact-templates/`** 不得把 `artifact-schemas/`、`quality-gates/` 列入上游表。**`artifact-templates/`** 下各 `*-spec.md` **一般**须在表中列出流水线更早阶段的**上游人读模板**（分类 **上游模板**）；同层配套（如 `flow-spec` 对 `design-spec`）在**下游**模板记 **姊妹模板**，在**本模板**记 **上游模板**。范例：[prd-spec.md（schemas）](./artifact-schemas/prd-spec.md#依赖上游文档只读) · [prd-spec.md（templates）](./artifact-templates/prd-spec.md#依赖上游文档只读) · [design-validate.md](./quality-gates/design-validate.md#依赖上游文档只读)（gates 层）。
+每个 `pipeline/**/*.md` 在 **H1 下** 须有 **`## 依赖上游文档（只读）`**（分类 · 上游文档 · 定位）；**只列独立上游文档**（**一行一文件**，不用 `·` 合并），章节不算单独一行；细则约定写在表前引导语并链到 [README.md §单向依赖](#1-单向依赖)。**推荐排序：** **总设计** → 流水线更早产物（**上游 JSON 契约** / **上游模板** / **prd 基线**）→ **人读模板** → **姊妹模板** → **校验产出** → **运行配置** → 索引 / 参考。**`artifact-schemas/`** 不得把 `quality-gates/` 列入上游表，**同名** `artifact-templates/*-prd.md`（人读格式）**须**列入上游表（分类 **人读模板**，定位 **上游人读 {name}-prd.md**）；**`artifact-templates/`** 不得把 `artifact-schemas/`、`quality-gates/` 列入上游表。**`artifact-templates/`** 下各 `*-prd.md` **一般**须在表中列出流水线更早阶段的**上游人读模板**（分类 **上游模板**）；同层配套（如 `flow-spec` 对 `design-spec`）在**下游**模板记 **姊妹模板**，在**本模板**记 **上游模板**。范例：[prd-spec.md（schemas）](./artifact-schemas/prd-spec.md#依赖上游文档只读) · [prd-spec.md（templates）](./artifact-templates/prd-spec.md#依赖上游文档只读) · [design-validate.md](./quality-gates/design-validate.md#依赖上游文档只读)（gates 层）。
 
 ### 4. 命名约定
 
 ```text
-artifact-schemas/{name}-spec.md   →  JSON 契约说明（设计文档，非 run 文件）
-artifact-templates/{name}-spec.md →  人读格式规范（设计文档，非 run 文件）
-docs/runs/<task_id>/{basename}    →  单次 run 落盘（spec.json、design.md 等）
+artifact-schemas/{name}-prd.md   →  JSON 契约说明（设计文档，非 run 文件）
+artifact-templates/{name}-prd.md →  人读格式规范（设计文档，非 run 文件）
+docs/runs/<task_id>/{basename}    →  单次 run 落盘（prd.json、design.md 等）
 ```
 
-后缀 **`-spec`** 表示 **格式/契约规范**；Run 落盘用 **短 basename**（`spec.json`、`design.md`）。
+后缀 **`-spec`** 表示 **格式/契约规范**；Run 落盘用 **短 basename**（`prd.json`、`prd.md`、`design.md`）。
+
+> **更名说明（v4 全栈）：** 需求环统一为 **PRD** — Run：`prd.json` / `prd.md` / `prd_validation.json`；代码：`PrdArtifact`、`prd_validate`、`PRD-*` rule_id。定稿见 [`docs/superpowers/specs/2026-07-10-prd-artifact-rename-design.md`](../../superpowers/specs/2026-07-10-prd-artifact-rename-design.md)。实现完成前旧 run 与旧 rule_id 可经双读/迁移脚本兼容。
 
 ### 5. 定稿与实现
 
-- **定稿层：** `artifact-schemas/`、`artifact-templates/`、`quality-gates/` 下的 `*-spec.md` 为规格基线。
+- **定稿层：** `artifact-schemas/`、`artifact-templates/`、`quality-gates/` 下的 `*-prd.md` 为规格基线。
 - **实现层：** `schemas/`、`renderers/`、`validators/` 须与规格一致；滞后项记在 templates 页眉「待同步」或 [P1-backlog.md](./P1-backlog.md)，**不在 schemas 里写实现 TODO**。
 
 ---
@@ -158,7 +160,7 @@ docs/runs/<task_id>/{basename}    →  单次 run 落盘（spec.json、design.md
 | 理解整条流水线 | [multi-agent-pipeline-design.md](./multi-agent-pipeline-design.md) §1–§4、§6 |
 | 配 Profile / 多语言 | [profiles.md](./profiles.md) |
 | 查 JSON 字段 | [artifact-schemas/README.md](./artifact-schemas/README.md) |
-| 写 / 审 spec.md、design.md | [artifact-templates/README.md](./artifact-templates/README.md) |
+| 写 / 审 prd.md、design.md | [artifact-templates/README.md](./artifact-templates/README.md) |
 | 查校验规则 | [quality-gates/README.md](./quality-gates/README.md) |
 | 抄 JSON / 图片段 | [examples/README.md](./examples/README.md) |
 | 开始编码 | [implementation-plan.md](./implementation-plan.md) |

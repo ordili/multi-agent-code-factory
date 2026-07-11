@@ -7,7 +7,7 @@ from pathlib import Path
 from multi_agent_code_factory.log import get_logger, log_validation_result
 from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.design import DesignArtifact
-from multi_agent_code_factory.schemas.spec import SpecArtifact
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from multi_agent_code_factory.schemas.validation_report import (
     ValidationReport,
     ValidationTarget,
@@ -25,7 +25,7 @@ def run_design_validate(
     design: DesignArtifact,
     profile: ProfileConfig,
     *,
-    spec: SpecArtifact | None = None,
+    spec: PrdArtifact | None = None,
     writer: RunArtifactWriter | None = None,
     run_dir: Path | None = None,
 ) -> ValidationReport:

@@ -3,9 +3,9 @@
 流水线拓扑（主路径 + 常见分支）::
 
     flowchart TD
-        START --> pm --> spec_validate --> route_spec
+        START --> pm --> prd_validate --> route_spec
         route_spec -->|pass| architect
-        route_spec -->|hitl| spec_hitl --> architect
+        route_spec -->|hitl| prd_hitl --> architect
         route_spec -->|retry| pm
         architect --> design_validate --> route_design
         route_design -->|pass| developer
@@ -41,14 +41,14 @@ from multi_agent_code_factory.graph.nodes import (
     node_escalation_hitl,
     node_fail,
     node_pm,
+    node_prd_hitl,
+    node_prd_validate,
     node_qa,
     node_reviewer,
     node_route_after_design_validate,
+    node_route_after_prd_validate,
     node_route_after_qa,
     node_route_after_reviewer,
-    node_route_after_spec_validate,
-    node_spec_hitl,
-    node_spec_validate,
 )
 from multi_agent_code_factory.graph.pipeline_run_context import PipelineRunContext
 from multi_agent_code_factory.pipeline_nodes import (
@@ -70,14 +70,14 @@ def build_graph(*, checkpointer: Any | None = None) -> Any:
     graph = StateGraph(PipelineState, context_schema=PipelineRunContext)
     route_map = conditional_route_map()
 
-    # --- Spec 阶段 ---
-    # START → pm → spec_validate → route_after_spec_validate
-    # route_after_spec_validate →? pm | spec_hitl | architect | fail | escalation_hitl
-    # spec_hitl → architect（固定边）
+    # --- PRD 阶段 ---
+    # START → pm → prd_validate → route_after_prd_validate
+    # route_after_prd_validate →? pm | prd_hitl | architect | fail | escalation_hitl
+    # prd_hitl → architect（固定边）
     graph.add_node(N.PM, node_pm)
-    graph.add_node(N.SPEC_VALIDATE, node_spec_validate)
-    graph.add_node(N.ROUTE_AFTER_SPEC_VALIDATE, node_route_after_spec_validate)
-    graph.add_node(N.SPEC_HITL, node_spec_hitl)
+    graph.add_node(N.PRD_VALIDATE, node_prd_validate)
+    graph.add_node(N.ROUTE_AFTER_PRD_VALIDATE, node_route_after_prd_validate)
+    graph.add_node(N.PRD_HITL, node_prd_hitl)
 
     # --- Design 阶段 ---
     # architect → design_validate → route_after_design_validate
@@ -107,14 +107,14 @@ def build_graph(*, checkpointer: Any | None = None) -> Any:
     graph.add_node(N.ESCALATION_HITL, node_escalation_hitl)
 
     graph.add_edge(START, N.PM)
-    graph.add_edge(N.PM, N.SPEC_VALIDATE)
-    graph.add_edge(N.SPEC_VALIDATE, N.ROUTE_AFTER_SPEC_VALIDATE)
+    graph.add_edge(N.PM, N.PRD_VALIDATE)
+    graph.add_edge(N.PRD_VALIDATE, N.ROUTE_AFTER_PRD_VALIDATE)
     graph.add_conditional_edges(
-        N.ROUTE_AFTER_SPEC_VALIDATE,
+        N.ROUTE_AFTER_PRD_VALIDATE,
         _pick_pipeline_route,
         route_map,
     )
-    graph.add_edge(N.SPEC_HITL, N.ARCHITECT)
+    graph.add_edge(N.PRD_HITL, N.ARCHITECT)
 
     graph.add_edge(N.ARCHITECT, N.DESIGN_VALIDATE)
     graph.add_edge(N.DESIGN_VALIDATE, N.ROUTE_AFTER_DESIGN_VALIDATE)

@@ -19,7 +19,7 @@ from multi_agent_code_factory.schemas.dev_manifest import (
     ChangeType,
     DevManifest,
 )
-from multi_agent_code_factory.schemas.spec import SpecArtifact
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from multi_agent_code_factory.schemas.test_report import (
     TestFailure as TestCaseFailure,
 )
@@ -91,7 +91,7 @@ def test_trim_test_report_keeps_tests_missing() -> None:
 
 def test_trim_retry_bundle_truncates_code_snippets() -> None:
     payload = {
-        "spec": SpecArtifact.model_validate(
+        "prd": PrdArtifact.model_validate(
             {
                 "version": "1",
                 "profile": "python",
@@ -151,8 +151,8 @@ def test_build_prompt_context_is_trimmed(
     default_profile,
     snippets_dir: Path,
 ) -> None:
-    spec = SpecArtifact.model_validate(
-        load_snippet_json(snippets_dir, "spec-default.json")
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
     )
     design = DesignArtifact.model_validate(
         load_snippet_json(Path(__file__).parent / "fixtures", "design-todo-valid.json")
@@ -180,7 +180,7 @@ def test_build_prompt_context_is_trimmed(
     state = PipelineState(
         task_id="t",
         user_request="todo",
-        spec=spec,
+        prd=spec,
         design=design,
         test_report=report,
         dev_manifest=manifest,

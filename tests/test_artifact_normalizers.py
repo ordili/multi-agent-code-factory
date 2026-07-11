@@ -4,7 +4,7 @@ from pathlib import Path
 
 from multi_agent_code_factory.agents.llm.prompt.validation_feedback import (
     format_design_validation_feedback,
-    format_spec_validation_feedback,
+    format_prd_validation_feedback,
 )
 from multi_agent_code_factory.agents.normalizers.design_enrichment import (
     enrich_design_for_validation,
@@ -15,7 +15,7 @@ from multi_agent_code_factory.schemas.design import (
     DevTask,
     ModuleSpec,
 )
-from multi_agent_code_factory.schemas.spec import SpecArtifact
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from multi_agent_code_factory.schemas.validation_report import (
     ValidationReport,
     ValidationTarget,
@@ -59,9 +59,9 @@ def test_enrich_design_fills_required_mvp_fields(snippets_dir: Path) -> None:
         architecture=None,
         cross_cutting=None,
     )
-    raw = load_snippet_json(snippets_dir, "spec-default.json")
+    raw = load_snippet_json(snippets_dir, "prd-default.json")
     raw["scope_out"] = ["web ui"]
-    spec = SpecArtifact.model_validate(raw)
+    spec = PrdArtifact.model_validate(raw)
 
     enriched = enrich_design_for_validation(design, spec=spec)
 
@@ -127,23 +127,23 @@ def test_format_design_validation_feedback_lists_violations() -> None:
     assert "non_goals must not be empty" in feedback
 
 
-def test_format_spec_validation_feedback_lists_violations_with_path() -> None:
+def test_format_prd_validation_feedback_lists_violations_with_path() -> None:
     report = ValidationReport(
         version="1",
-        target=ValidationTarget.SPEC,
+        target=ValidationTarget.PRD,
         passed=False,
         error_count=1,
         warn_count=1,
         violations=[
             Violation(
-                rule_id="SPEC-017",
+                rule_id="PRD-017",
                 severity="error",
                 message="context.storage is required",
                 field="storage",
                 path="/context/storage",
             ),
             Violation(
-                rule_id="SPEC-102",
+                rule_id="PRD-102",
                 severity="warn",
                 message="P0 user story US-1 not traced",
                 field="user_stories",
@@ -152,16 +152,16 @@ def test_format_spec_validation_feedback_lists_violations_with_path() -> None:
     )
     state = PipelineState(
         user_request="calc",
-        spec_validation=report,
+        prd_validation=report,
     )
 
-    feedback = format_spec_validation_feedback(state)
+    feedback = format_prd_validation_feedback(state)
 
     assert feedback is not None
     assert "Previous spec failed validation" in feedback
-    assert "SPEC-017" in feedback
+    assert "PRD-017" in feedback
     assert "(error)" in feedback
     assert "path=/context/storage" in feedback
-    assert "SPEC-102" in feedback
+    assert "PRD-102" in feedback
     assert "(warn)" in feedback
-    assert feedback.index("SPEC-017") < feedback.index("SPEC-102")
+    assert feedback.index("PRD-017") < feedback.index("PRD-102")

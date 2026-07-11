@@ -5,9 +5,9 @@ from pathlib import Path
 
 from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.renderers.design_md import render_design_md
-from multi_agent_code_factory.renderers.spec_md import render_spec_md
+from multi_agent_code_factory.renderers.prd_md import render_prd_md
 from multi_agent_code_factory.schemas.design import DesignArtifact
-from multi_agent_code_factory.schemas.spec import SpecArtifact
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from multi_agent_code_factory.schemas.validation_report import ValidationTarget
 from multi_agent_code_factory.validators._report import build_validation_report
 from multi_agent_code_factory.validators.design_md_rules import validate_design_md_rules
@@ -16,8 +16,8 @@ from multi_agent_code_factory.validators.mermaid import (
     detect_mermaid_kinds,
     validate_mermaid_files,
 )
-from multi_agent_code_factory.validators.spec_md_rules import validate_spec_md_rules
-from multi_agent_code_factory.validators.spec_rules import validate_spec_rules
+from multi_agent_code_factory.validators.prd_md_rules import validate_prd_md_rules
+from multi_agent_code_factory.validators.prd_rules import validate_prd_rules
 
 from tests.conftest import load_snippet_json
 
@@ -29,12 +29,12 @@ def test_detect_mermaid_kinds_flow_todo(snippets_dir: Path) -> None:
     assert "flowchart" in kinds
 
 
-def test_validate_spec_md_rules_passes_renderer_output(snippets_dir: Path) -> None:
-    spec = SpecArtifact.model_validate(
-        load_snippet_json(snippets_dir, "spec-default.json")
+def test_validate_prd_md_rules_passes_renderer_output(snippets_dir: Path) -> None:
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
     )
-    md = render_spec_md(spec)
-    violations = validate_spec_md_rules(spec, md)
+    md = render_prd_md(spec)
+    violations = validate_prd_md_rules(spec, md)
     assert not violations
 
 
@@ -66,10 +66,10 @@ def test_validate_mermaid_files_with_fixture(
 def test_des_224_warns_when_spec_nfr_signal_without_md_section(
     snippets_dir: Path,
 ) -> None:
-    raw = load_snippet_json(snippets_dir, "spec-default.json")
+    raw = load_snippet_json(snippets_dir, "prd-default.json")
     raw["operational_profile"]["performance"]["tier"] = "custom"
     raw["operational_profile"]["performance"]["notes"] = "p99 < 100ms"
-    spec = SpecArtifact.model_validate(raw)
+    spec = PrdArtifact.model_validate(raw)
     design = DesignArtifact.model_validate(
         json.loads(
             (Path(__file__).parent / "fixtures" / "design-todo-valid.json").read_text(
@@ -88,8 +88,8 @@ def test_design_todo_valid_passes_extended_rules(
     snippets_dir: Path,
 ) -> None:
     profile = load_profile("python")
-    spec = SpecArtifact.model_validate(
-        load_snippet_json(snippets_dir, "spec-default.json")
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
     )
     design = DesignArtifact.model_validate(
         json.loads(
@@ -103,11 +103,11 @@ def test_design_todo_valid_passes_extended_rules(
     assert report.passed is True
 
 
-def test_spec_default_passes_extended_rules(snippets_dir: Path) -> None:
+def test_prd_default_passes_extended_rules(snippets_dir: Path) -> None:
     profile = load_profile("python")
-    spec = SpecArtifact.model_validate(
-        load_snippet_json(snippets_dir, "spec-default.json")
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
     )
-    violations = validate_spec_rules(spec, profile)
-    report = build_validation_report(ValidationTarget.SPEC, violations)
+    violations = validate_prd_rules(spec, profile)
+    report = build_validation_report(ValidationTarget.PRD, violations)
     assert report.passed is True

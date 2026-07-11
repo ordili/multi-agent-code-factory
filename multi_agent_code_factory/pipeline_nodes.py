@@ -9,9 +9,9 @@ class PipelineNode(StrEnum):
     """LangGraph 图中各节点的唯一标识。"""
 
     PM = "pm"
-    SPEC_VALIDATE = "spec_validate"
-    ROUTE_AFTER_SPEC_VALIDATE = "route_after_spec_validate"
-    SPEC_HITL = "spec_hitl"
+    PRD_VALIDATE = "prd_validate"
+    ROUTE_AFTER_PRD_VALIDATE = "route_after_prd_validate"
+    PRD_HITL = "prd_hitl"
 
     ARCHITECT = "architect"
     DESIGN_VALIDATE = "design_validate"
@@ -33,11 +33,10 @@ class PipelineNode(StrEnum):
     ESCALATION_HITL = "escalation_hitl"
 
 
-# ``route_after_*`` 条件边可能跳转的目标（键与值相同，供 LangGraph 条件边映射）。
 CONDITIONAL_ROUTE_TARGETS: frozenset[PipelineNode] = frozenset(
     {
         PipelineNode.PM,
-        PipelineNode.SPEC_HITL,
+        PipelineNode.PRD_HITL,
         PipelineNode.ARCHITECT,
         PipelineNode.DESIGN_HITL,
         PipelineNode.DEVELOPER,

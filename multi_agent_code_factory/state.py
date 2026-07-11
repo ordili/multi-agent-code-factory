@@ -9,8 +9,8 @@ from typing import Any
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.dev_manifest import DevManifest
 from multi_agent_code_factory.schemas.hitl import HitlDecision
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from multi_agent_code_factory.schemas.review import ReviewReport
-from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.schemas.test_report import TestReport
 from multi_agent_code_factory.schemas.validation_report import ValidationReport
 
@@ -21,8 +21,8 @@ class PipelineState:
 
     task_id: str = ""
     user_request: str = ""
-    spec: SpecArtifact | None = None
-    spec_validation: ValidationReport | None = None
+    prd: PrdArtifact | None = None
+    prd_validation: ValidationReport | None = None
     design: DesignArtifact | None = None
     design_validation: ValidationReport | None = None
     dev_manifest: DevManifest | None = None
@@ -31,7 +31,7 @@ class PipelineState:
     hitl: HitlDecision | None = None
     impl_retry_count: int = 0
     design_revision_count: int = 0
-    spec_revision_count: int = 0
+    prd_revision_count: int = 0
     pipeline_route: str = ""
 
     def copy_with_counters(
@@ -39,14 +39,14 @@ class PipelineState:
         *,
         impl_retry_count: int | None = None,
         design_revision_count: int | None = None,
-        spec_revision_count: int | None = None,
+        prd_revision_count: int | None = None,
     ) -> PipelineState:
         """升环重试时复制 state 并更新计数器。"""
         return PipelineState(
             task_id=self.task_id,
             user_request=self.user_request,
-            spec=self.spec,
-            spec_validation=self.spec_validation,
+            prd=self.prd,
+            prd_validation=self.prd_validation,
             design=self.design,
             design_validation=self.design_validation,
             dev_manifest=self.dev_manifest,
@@ -61,10 +61,10 @@ class PipelineState:
                 if design_revision_count is None
                 else design_revision_count
             ),
-            spec_revision_count=(
-                self.spec_revision_count
-                if spec_revision_count is None
-                else spec_revision_count
+            prd_revision_count=(
+                self.prd_revision_count
+                if prd_revision_count is None
+                else prd_revision_count
             ),
             pipeline_route=self.pipeline_route,
         )

@@ -10,7 +10,7 @@ from multi_agent_code_factory.schemas.design import (
     DevTask,
     TraceRow,
 )
-from multi_agent_code_factory.schemas.spec import FeaturePriority, SpecArtifact
+from multi_agent_code_factory.schemas.prd import FeaturePriority, PrdArtifact
 
 
 def _dedupe_dev_tasks_by_path(tasks: list[DevTask]) -> list[DevTask]:
@@ -54,7 +54,7 @@ def _normalize_traceability_rows(rows: list[TraceRow]) -> list[TraceRow]:
     return normalized
 
 
-def _default_non_goals(spec: SpecArtifact | None) -> list[str]:
+def _default_non_goals(spec: PrdArtifact | None) -> list[str]:
     if spec is not None and spec.scope_out:
         return list(spec.scope_out)
     return [
@@ -71,7 +71,7 @@ def _default_context_view(design: DesignArtifact) -> ContextView:
     return ContextView(actors=actors)
 
 
-def _default_design_goals(spec: SpecArtifact | None) -> list[str]:
+def _default_design_goals(spec: PrdArtifact | None) -> list[str]:
     if spec is None:
         return ["Deliver scoped features with automated test coverage"]
     goals: list[str] = []
@@ -85,7 +85,7 @@ def _default_design_goals(spec: SpecArtifact | None) -> list[str]:
 
 def _default_architecture(
     design: DesignArtifact,
-    spec: SpecArtifact | None,
+    spec: PrdArtifact | None,
 ) -> ArchitectureOverview:
     strategy = design.summary
     if not strategy and spec is not None:
@@ -110,7 +110,7 @@ def _ensure_code_delta(design: DesignArtifact) -> ArchitectureOverview | None:
 def enrich_design_for_validation(
     design: DesignArtifact,
     *,
-    spec: SpecArtifact | None,
+    spec: PrdArtifact | None,
 ) -> DesignArtifact:
     """在 LLM 遗漏可选字段时补全 MVP 校验所需的设计字段。"""
     updates: dict[str, object] = {}

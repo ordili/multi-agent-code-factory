@@ -2,7 +2,7 @@
 tools: [read_file, write_file, run_tests, linter]
 auto_generate_tests: false
 validation:
-  spec:
+  prd:
     enabled: true
     block_on: error
     require_hitl: false

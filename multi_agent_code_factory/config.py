@@ -25,7 +25,7 @@ class LoopLimits(BaseModel):
 
     max_impl_retries: int = Field(default=3, ge=0)
     max_design_revisions: int = Field(default=2, ge=0)
-    max_spec_revisions: int = Field(default=1, ge=0)
+    max_prd_revisions: int = Field(default=1, ge=0)
     on_limit_exceeded: OnLimitExceeded = OnLimitExceeded.FAIL
 
     @field_validator("on_limit_exceeded", mode="before")
@@ -94,7 +94,7 @@ def _apply_env_overrides(config: FactoryConfig) -> FactoryConfig:
     for field_name, env_name in (
         ("max_impl_retries", "FACTORY_MAX_IMPL_RETRIES"),
         ("max_design_revisions", "FACTORY_MAX_DESIGN_REVISIONS"),
-        ("max_spec_revisions", "FACTORY_MAX_SPEC_REVISIONS"),
+        ("max_prd_revisions", "FACTORY_MAX_PRD_REVISIONS"),
     ):
         value = _env_int(env_name)
         if value is not None:
@@ -137,7 +137,7 @@ def _apply_cli_overrides(
     *,
     max_impl_retries: int | None = None,
     max_design_revisions: int | None = None,
-    max_spec_revisions: int | None = None,
+    max_prd_revisions: int | None = None,
     max_hitl_rounds: int | None = None,
     on_limit_exceeded: str | None = None,
 ) -> FactoryConfig:
@@ -147,8 +147,8 @@ def _apply_cli_overrides(
         loop_updates["max_impl_retries"] = max_impl_retries
     if max_design_revisions is not None:
         loop_updates["max_design_revisions"] = max_design_revisions
-    if max_spec_revisions is not None:
-        loop_updates["max_spec_revisions"] = max_spec_revisions
+    if max_prd_revisions is not None:
+        loop_updates["max_prd_revisions"] = max_prd_revisions
     if loop_updates:
         updates["loop_limits"] = config.loop_limits.model_copy(update=loop_updates)
     if max_hitl_rounds is not None:
@@ -170,7 +170,7 @@ def load_factory_config(
     policy_path: Path | None = None,
     max_impl_retries: int | None = None,
     max_design_revisions: int | None = None,
-    max_spec_revisions: int | None = None,
+    max_prd_revisions: int | None = None,
     max_hitl_rounds: int | None = None,
     on_limit_exceeded: str | None = None,
 ) -> FactoryConfig:
@@ -183,7 +183,7 @@ def load_factory_config(
         config,
         max_impl_retries=max_impl_retries,
         max_design_revisions=max_design_revisions,
-        max_spec_revisions=max_spec_revisions,
+        max_prd_revisions=max_prd_revisions,
         max_hitl_rounds=max_hitl_rounds,
         on_limit_exceeded=on_limit_exceeded,
     )

@@ -19,7 +19,7 @@ context_schema:
       const: defi_arbitrage
 auto_generate_tests: false
 validation:
-  spec:
+  prd:
     enabled: true
     block_on: error
     require_hitl: true

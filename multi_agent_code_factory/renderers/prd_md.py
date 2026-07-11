@@ -1,13 +1,13 @@
-"""spec.json → spec.md 渲染器（中文固定章节，对齐 prd-spec 模板）。"""
+"""prd.json → prd.md 渲染器（中文固定章节，对齐 prd-spec 模板）。"""
 
 from __future__ import annotations
 
 from typing import Any
 
-from multi_agent_code_factory.schemas.spec import (
+from multi_agent_code_factory.schemas.prd import (
     ConsistencyModel,
     PerformanceTier,
-    SpecArtifact,
+    PrdArtifact,
     UserScale,
     VerifiableBy,
 )
@@ -74,14 +74,14 @@ def _context_lines(context: dict[str, Any]) -> list[str]:
     return lines
 
 
-def _storage_kind(spec: SpecArtifact) -> str | None:
+def _storage_kind(spec: PrdArtifact) -> str | None:
     storage = spec.context.get("storage")
     if isinstance(storage, str) and storage.strip():
         return storage.strip().lower()
     return None
 
 
-def _consistency_nfr_trivial(spec: SpecArtifact) -> bool:
+def _consistency_nfr_trivial(spec: PrdArtifact) -> bool:
     storage = _storage_kind(spec)
     if storage and storage not in _NON_PERSISTENT_STORAGE:
         return False
@@ -93,8 +93,8 @@ def _consistency_nfr_trivial(spec: SpecArtifact) -> bool:
     )
 
 
-def render_spec_md(spec: SpecArtifact) -> str:
-    """将 SpecArtifact 渲染为人类可读的 Markdown 文档。"""
+def render_prd_md(spec: PrdArtifact) -> str:
+    """将 PrdArtifact 渲染为人类可读的 Markdown 文档。"""
     lines: list[str] = [
         f"# {spec.title}",
         "",

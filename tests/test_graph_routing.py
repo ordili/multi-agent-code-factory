@@ -4,8 +4,8 @@ import pytest
 from multi_agent_code_factory.config import LoopLimits, OnLimitExceeded
 from multi_agent_code_factory.graph_routing import (
     route_after_design_validate,
+    route_after_prd_validate,
     route_after_review,
-    route_after_spec_validate,
     route_after_test,
 )
 from multi_agent_code_factory.profile_config import (
@@ -33,7 +33,7 @@ def limits() -> LoopLimits:
     return LoopLimits(
         max_impl_retries=3,
         max_design_revisions=2,
-        max_spec_revisions=1,
+        max_prd_revisions=1,
     )
 
 
@@ -76,43 +76,43 @@ def _failed_test_report() -> TestReportArtifact:
     )
 
 
-def test_route_after_spec_validate_passes_to_architect(
+def test_route_after_prd_validate_passes_to_architect(
     default_profile: ProfileConfig,
     limits: LoopLimits,
 ) -> None:
     state = PipelineState(
-        spec_validation=ValidationReport(
+        prd_validation=ValidationReport(
             version="1",
-            target=ValidationTarget.SPEC,
+            target=ValidationTarget.PRD,
             passed=True,
             error_count=0,
             warn_count=0,
         )
     )
-    assert route_after_spec_validate(state, default_profile, limits) == "architect"
+    assert route_after_prd_validate(state, default_profile, limits) == "architect"
 
 
-def test_route_after_spec_validate_failure_returns_pm(
+def test_route_after_prd_validate_failure_returns_pm(
     default_profile: ProfileConfig,
     limits: LoopLimits,
 ) -> None:
-    state = PipelineState(spec_validation=_failed_validation(ValidationTarget.SPEC))
-    assert route_after_spec_validate(state, default_profile, limits) == "pm"
-    assert state.spec_revision_count == 1
+    state = PipelineState(prd_validation=_failed_validation(ValidationTarget.PRD))
+    assert route_after_prd_validate(state, default_profile, limits) == "pm"
+    assert state.prd_revision_count == 1
 
 
-def test_route_after_spec_validate_limit_exceeded(
+def test_route_after_prd_validate_limit_exceeded(
     default_profile: ProfileConfig,
     limits: LoopLimits,
 ) -> None:
     state = PipelineState(
-        spec_validation=_failed_validation(ValidationTarget.SPEC),
-        spec_revision_count=limits.max_spec_revisions,
+        prd_validation=_failed_validation(ValidationTarget.PRD),
+        prd_revision_count=limits.max_prd_revisions,
     )
-    assert route_after_spec_validate(state, default_profile, limits) == "fail"
+    assert route_after_prd_validate(state, default_profile, limits) == "fail"
 
 
-def test_route_after_spec_validate_require_hitl(
+def test_route_after_prd_validate_require_hitl(
     limits: LoopLimits,
 ) -> None:
     profile = load_profile("python")
@@ -125,15 +125,15 @@ def test_route_after_spec_validate_require_hitl(
         }
     )
     state = PipelineState(
-        spec_validation=ValidationReport(
+        prd_validation=ValidationReport(
             version="1",
-            target=ValidationTarget.SPEC,
+            target=ValidationTarget.PRD,
             passed=True,
             error_count=0,
             warn_count=0,
         )
     )
-    assert route_after_spec_validate(state, profile, limits) == "spec_hitl"
+    assert route_after_prd_validate(state, profile, limits) == "prd_hitl"
 
 
 def test_route_after_design_validate_failure_returns_architect(
@@ -246,14 +246,14 @@ def test_route_after_review_pm_stage(limits: LoopLimits) -> None:
         )
     )
     assert route_after_review(state, limits) == "pm"
-    assert state.spec_revision_count == 1
+    assert state.prd_revision_count == 1
 
 
 def test_route_after_review_escalation_on_limit() -> None:
     limits = LoopLimits(
         max_impl_retries=0,
         max_design_revisions=0,
-        max_spec_revisions=0,
+        max_prd_revisions=0,
         on_limit_exceeded=OnLimitExceeded.ESCALATION_HITL,
     )
     state = PipelineState(

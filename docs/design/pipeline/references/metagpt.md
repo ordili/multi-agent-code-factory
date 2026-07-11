@@ -63,8 +63,8 @@ Code = SOP(Team)
 | Developer Tool 收敛（SWE-agent ACI，[open-source-survey.md](./open-source-survey.md)） | 主线 §4.2 | P0 |
 | `DevManifest.reflection`（Reflexion） | [dev-manifest-spec.md](../artifact-schemas/dev-manifest-spec.md) | P0 schema · P1 Live 填充 |
 | 各角色 prompt 显式列出 `watch` 字段 | 主线 §4.5 | P0 |
-| `spec_validate` / `design_validate` + `validators/` | [quality-gates/](../quality-gates/README.md) | P0 |
-| `spec_hitl` / `design_hitl` | 主线 §4.1.2 | P1 |
+| `prd_validate` / `design_validate` + `validators/` | [quality-gates/](../quality-gates/README.md) | P0 |
+| `prd_hitl` / `design_hitl` | 主线 §4.1.2 | P1 |
 | `toolchain` 配置与 Profile 快照 | [profiles.md](../profiles.md) | P0 |
 | `go_json` / `cargo_json` / `forge_json` Parser | [profiles.md §3](../profiles.md#3-profile-矩阵) | P1 |
 | LangGraph checkpointer + `resume` CLI | 主线 §4.6 | P1 |

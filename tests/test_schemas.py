@@ -8,9 +8,9 @@ from multi_agent_code_factory.schemas import (
     DesignArtifact,
     DevManifest,
     HitlDecision,
+    PrdArtifact,
     ReviewReport,
     RunMeta,
-    SpecArtifact,
     ValidationReport,
 )
 from multi_agent_code_factory.schemas.dev_manifest import ChangeType
@@ -28,23 +28,23 @@ from pydantic import ValidationError
 from tests.conftest import load_snippet_json
 
 
-def test_spec_default_fixture(snippets_dir: Path) -> None:
-    data = load_snippet_json(snippets_dir, "spec-default.json")
-    spec = SpecArtifact.model_validate(data)
+def test_prd_default_fixture(snippets_dir: Path) -> None:
+    data = load_snippet_json(snippets_dir, "prd-default.json")
+    spec = PrdArtifact.model_validate(data)
     assert spec.profile == "python"
     assert spec.context["language"] == "python"
 
 
-def test_spec_rejects_missing_title(snippets_dir: Path) -> None:
-    data = load_snippet_json(snippets_dir, "spec-default.json")
+def test_prd_rejects_missing_title(snippets_dir: Path) -> None:
+    data = load_snippet_json(snippets_dir, "prd-default.json")
     data.pop("title")
     with pytest.raises(ValidationError):
-        SpecArtifact.model_validate(data)
+        PrdArtifact.model_validate(data)
 
 
-def test_spec_coerces_llm_simplified_shapes() -> None:
+def test_prd_coerces_llm_simplified_shapes() -> None:
     """LLM often returns strings/dicts that differ from the strict schema."""
-    spec = SpecArtifact.model_validate(
+    spec = PrdArtifact.model_validate(
         {
             "version": "1",
             "title": "Calculator CLI",
@@ -301,7 +301,7 @@ def test_run_meta_example() -> None:
             "loop_limits": {
                 "max_impl_retries": 3,
                 "max_design_revisions": 2,
-                "max_spec_revisions": 1,
+                "max_prd_revisions": 1,
             },
             "deploy_status": "skipped",
         }

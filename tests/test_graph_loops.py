@@ -77,22 +77,22 @@ def test_reviewer_escalate_pm_completes(tmp_path: Path, default_profile) -> None
         stub_scenario=StubScenario.REVIEWER_ESCALATE_PM,
     )
     assert result.status == RunStatus.COMPLETED
-    assert result.state.spec_revision_count == 1
+    assert result.state.prd_revision_count == 1
     meta = _read_meta(result.run_dir)
     assert "design.json" in (meta.stale_artifacts or [])
 
 
-def test_spec_validate_retry_completes(tmp_path: Path, default_profile) -> None:
+def test_prd_validate_retry_completes(tmp_path: Path, default_profile) -> None:
     result = run_pipeline(
         task_id="loop-spec-validate",
         user_request="todo",
         profile=default_profile,
         factory_config=FactoryConfig(),
         run_dir=tmp_path / "loop-spec-validate",
-        stub_scenario=StubScenario.SPEC_VALIDATE_RETRY,
+        stub_scenario=StubScenario.PRD_VALIDATE_RETRY,
     )
     assert result.status == RunStatus.COMPLETED
-    assert result.state.spec_revision_count == 1
+    assert result.state.prd_revision_count == 1
 
 
 def test_design_validate_retry_completes(tmp_path: Path, default_profile) -> None:

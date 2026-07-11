@@ -6,7 +6,7 @@ from pathlib import PurePosixPath
 
 from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.design import DesignArtifact, DevTask
-from multi_agent_code_factory.schemas.spec import FeaturePriority, SpecArtifact
+from multi_agent_code_factory.schemas.prd import FeaturePriority, PrdArtifact
 from multi_agent_code_factory.schemas.validation_report import Violation
 from multi_agent_code_factory.validators._report import error
 from multi_agent_code_factory.validators.design_rules_extended import (
@@ -56,7 +56,7 @@ def _hitl_required(design: DesignArtifact, profile: ProfileConfig) -> bool:
 def validate_design_rules(
     design: DesignArtifact,
     profile: ProfileConfig,
-    spec: SpecArtifact | None = None,
+    spec: PrdArtifact | None = None,
 ) -> tuple[list[Violation], bool]:
     """对 DesignArtifact 执行设计规则校验，返回 (违规列表, 是否需 HITL)。"""
     violations: list[Violation] = []

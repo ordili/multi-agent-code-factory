@@ -19,7 +19,7 @@ class StubScenario(StrEnum):
     QA_ALWAYS_FAIL = "qa_always_fail"
     REVIEWER_ESCALATE_ARCHITECT = "reviewer_escalate_architect"
     REVIEWER_ESCALATE_PM = "reviewer_escalate_pm"
-    SPEC_VALIDATE_RETRY = "spec_validate_retry"
+    PRD_VALIDATE_RETRY = "prd_validate_retry"
     DESIGN_VALIDATE_RETRY = "design_validate_retry"
 
 
@@ -27,7 +27,7 @@ class StubScenario(StrEnum):
 class StubFixturePaths:
     """各 Agent stub 产物对应的 fixture 文件路径。"""
 
-    spec: Path
+    prd: Path
     design: Path
     design_invalid: Path
     dev_manifest: Path
@@ -45,7 +45,7 @@ def default_stub_fixtures() -> StubFixturePaths:
     snippets = root / "docs" / "design" / "pipeline" / "examples" / "snippets"
     fixtures = root / "tests" / "fixtures"
     return StubFixturePaths(
-        spec=snippets / "spec-default.json",
+        prd=snippets / "prd-default.json",
         design=fixtures / "design-todo-valid.json",
         design_invalid=snippets / "design-todo-excerpt.json",
         dev_manifest=fixtures / "dev-manifest-todo.json",

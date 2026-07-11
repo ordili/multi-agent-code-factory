@@ -34,7 +34,7 @@
 | ---- | ------------------------------------- | ---------------------------- |
 | 时机   | QA `test_report` **之后**               | Reviewer 路由到 `deploy` **之后** |
 | 产物   | `review.json` + `review.md`           | `HitlDecision`（人工）           |
-| 作用   | LLM 对照 spec / design / 测试结论，**决定下一环** | 人工审批 diff、敏感变更               |
+| 作用   | LLM 对照 prd / design / 测试结论，**决定下一环** | 人工审批 diff、敏感变更               |
 | 路由依据 | `review.json` **的** `next_stage`      | HITL 续跑 / 终止                 |
 
 

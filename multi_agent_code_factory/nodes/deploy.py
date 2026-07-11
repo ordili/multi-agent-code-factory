@@ -27,7 +27,7 @@ def run_deploy(
         status=RunStatus.COMPLETED,
         impl_retry_count=state.impl_retry_count,
         design_revision_count=state.design_revision_count,
-        spec_revision_count=state.spec_revision_count,
+        prd_revision_count=state.prd_revision_count,
         finished_at=datetime.now(tz=UTC).isoformat(),
     )
     return {}

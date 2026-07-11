@@ -22,7 +22,7 @@ from multi_agent_code_factory.graph.graph_builder import build_graph
 from multi_agent_code_factory.graph.pipeline_run_context import PipelineRunContext
 from multi_agent_code_factory.log import get_logger
 from multi_agent_code_factory.nodes.design_validate import run_design_validate
-from multi_agent_code_factory.nodes.spec_validate import run_spec_validate
+from multi_agent_code_factory.nodes.prd_validate import run_prd_validate
 from multi_agent_code_factory.observability import build_run_config, is_tracing_enabled
 from multi_agent_code_factory.pipeline_nodes import PipelineNode
 from multi_agent_code_factory.profile_config import ProfileConfig, load_profile
@@ -121,17 +121,17 @@ def _execute_gate(
     state: PipelineState,
     ctx: PipelineRunContext,
 ) -> PipelineState:
-    if reentry == PipelineNode.SPEC_VALIDATE:
-        if state.spec is None:
-            msg = "spec_validate requires spec"
+    if reentry == PipelineNode.PRD_VALIDATE:
+        if state.prd is None:
+            msg = "prd_validate requires prd"
             raise ValueError(msg)
-        report = run_spec_validate(
-            state.spec,
+        report = run_prd_validate(
+            state.prd,
             ctx.profile,
             writer=ctx.writer,
             run_dir=ctx.writer.directory,
         )
-        return replace(state, spec_validation=report)
+        return replace(state, prd_validation=report)
     if reentry == PipelineNode.DESIGN_VALIDATE:
         if state.design is None:
             msg = "design_validate requires design"
@@ -139,7 +139,7 @@ def _execute_gate(
         report = run_design_validate(
             state.design,
             ctx.profile,
-            spec=state.spec,
+            spec=state.prd,
             writer=ctx.writer,
             run_dir=ctx.writer.directory,
         )
@@ -278,7 +278,7 @@ def continue_pipeline(
             app.update_state(
                 langgraph_config,
                 state_to_graph_dict(state),
-                as_node=PipelineNode.ROUTE_AFTER_SPEC_VALIDATE.value,
+                as_node=PipelineNode.ROUTE_AFTER_PRD_VALIDATE.value,
             )
         else:
             msg = f"unsupported reentry node: {reentry_node.value}"

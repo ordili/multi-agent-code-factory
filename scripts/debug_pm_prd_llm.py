@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-PM — SpecArtifact LLM 调试（独立运行）
+PM — PrdArtifact LLM 调试（独立运行）
 
 改本文件里的常量即可调试，无需走 pipeline：
   - SYSTEM_PROMPT — 内联 system（与 pm.txt + 语言 snippet 对齐）
@@ -11,8 +11,8 @@ PM — SpecArtifact LLM 调试（独立运行）
 
 运行（请在仓库根目录，或用下方 .bat）::
 
-    python scripts/debug_pm_spec_llm.py --dry-run
-    python scripts/debug_pm_spec_llm.py --show-prompts
+    python scripts/debug_pm_prd_llm.py --dry-run
+    python scripts/debug_pm_prd_llm.py --show-prompts
     scripts\\run_debug_pm_spec_llm.bat --dry-run
 
 Code Runner 若报「系统找不到指定的路径」，是扩展未找到 python 可执行文件；
@@ -44,11 +44,11 @@ from multi_agent_code_factory.llm import (
     create_chat_model,
     resolve_llm_runtime_config,
 )
-from multi_agent_code_factory.schemas.spec import SpecArtifact
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from pydantic import ValidationError
 
 # ---------------------------------------------------------------------------
-# 我们要求的 SpecArtifact 输出格式（= system 末尾 Example JSON shape）
+# 我们要求的 PrdArtifact 输出格式（= system 末尾 Example JSON shape）
 # ---------------------------------------------------------------------------
 
 REQUIRED_FORMAT_SNIPPET: dict = {
@@ -130,7 +130,7 @@ USER_PROMPT = json.dumps(USER_CONTEXT, ensure_ascii=False, indent=2)
 
 SYSTEM_PROMPT = f"""You are the PM (product manager) agent for a code factory pipeline.
 
-Produce a complete SpecArtifact JSON that matches the pipeline schema:
+Produce a complete PrdArtifact JSON that matches the pipeline schema:
 - version "1"; profile (match input context.profile.id); revision >= 1 (default 1)
 - title, summary, context (context.language = implementation language, e.g. python)
 - context.storage: required — declare persistence medium explicitly:
@@ -166,10 +166,10 @@ Produce a complete SpecArtifact JSON that matches the pipeline schema:
   Multi-writer or shared storage: set conflict_strategy (not not_applicable)
   consistency_model=custom requires non-empty consistency_profile.notes
 - success_metrics: list of objects {{id, name, description, target, verifiable_by}}
-  — NOT plain strings; may be [] when no business KPI (spec.md §4 renders as 无)
+  — NOT plain strings; may be [] when no business KPI (prd.md §4 renders as 无)
   verifiable_by: automated_test | manual | deploy_check | lint
   Small CLI / goals already in summary + acceptance_criteria: prefer success_metrics: []
-  KPI = business outcome (spec.md §4); do NOT put engineering gates
+  KPI = business outcome (prd.md §4); do NOT put engineering gates
   (pytest pass, lint clean) in success_metrics — put them in acceptance_criteria
 - acceptance_criteria: non-empty list of objects {{id, description, verifiable_by}}
   — NOT plain strings
@@ -178,13 +178,13 @@ Produce a complete SpecArtifact JSON that matches the pipeline schema:
   include verifiable_by automated_test where profile test toolchain applies
 - constraints (e.g. no_secrets_in_repo)
 
-When spec_validation is present in the input context, fix every listed violation.
+When prd_validation is present in the input context, fix every listed violation.
 When review is present with next_stage pm, address scope issues from review findings.
 
-Output only structured data matching the SpecArtifact schema.
+Output only structured data matching the PrdArtifact schema.
 
-Human-readable artifact language (spec.json, design.json, review.json,
-and rendered spec.md / design.md / review.md):
+Human-readable artifact language (prd.json, design.json, review.json,
+and rendered prd.md / design.md / review.md):
 
 - Write all descriptive and narrative text in Simplified Chinese (简体中文).
   Examples: title, summary, feature/user_story/requirement/AC descriptions,
@@ -194,7 +194,7 @@ and rendered spec.md / design.md / review.md):
 - Keep machine identifiers in English: id fields (FEAT-*, US-*, AC-*, REQ-*, KPI-*,
   ERR-*, TC-*), error_catalog[].code (not id), code_domain, file paths,
   API/operation names, enum literal values.
-- spec.context.language is the implementation programming language (e.g. python),
+- prd.context.language is the implementation programming language (e.g. python),
   NOT the prose language of PRD/design documents.
 
 Output ONLY one JSON object. No markdown fences, no commentary.
@@ -212,7 +212,7 @@ def _print_prompts() -> None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description="Debug PM SpecArtifact LLM call")
+    parser = argparse.ArgumentParser(description="Debug PM PrdArtifact LLM call")
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -269,7 +269,7 @@ def main(argv: list[str] | None = None) -> int:
     print(json.dumps(payload, ensure_ascii=False, indent=2))
 
     try:
-        spec = SpecArtifact.model_validate(payload)
+        spec = PrdArtifact.model_validate(payload)
     except ValidationError as exc:
         print("\nValidation failed:")
         print(exc)

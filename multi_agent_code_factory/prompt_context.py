@@ -12,8 +12,8 @@ from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.prompt_context_trim import trim_context_for_role
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.dev_manifest import DevManifest
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from multi_agent_code_factory.schemas.review import ReviewReport
-from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.schemas.test_report import TestReport
 from multi_agent_code_factory.schemas.validation_report import ValidationReport
 from multi_agent_code_factory.state import PipelineState
@@ -21,26 +21,26 @@ from multi_agent_code_factory.tools.git_diff import git_diff
 from multi_agent_code_factory.tools.read_file import read_file
 
 DEFAULT_WATCH: dict[AgentRole, list[str]] = {
-    AgentRole.PM: ["user_request", "profile", "spec_validation", "review"],
+    AgentRole.PM: ["user_request", "profile", "prd_validation", "review"],
     AgentRole.ARCHITECT: [
-        "spec",
+        "prd",
         "profile",
         "review",
         "test_report",
         "design_validation",
     ],
-    AgentRole.DEVELOPER: ["spec", "design", "profile"],
+    AgentRole.DEVELOPER: ["prd", "design", "profile"],
     AgentRole.QA: ["design", "dev_manifest", "profile"],
-    AgentRole.REVIEWER: ["spec", "design", "test_report", "dev_manifest"],
+    AgentRole.REVIEWER: ["prd", "design", "test_report", "dev_manifest"],
     AgentRole.DEPLOY_HITL: ["review", "design", "dev_manifest", "profile"],
     AgentRole.ESCALATION_HITL: [
         "run_meta",
         "impl_retry_count",
         "design_revision_count",
-        "spec_revision_count",
+        "prd_revision_count",
         "test_report",
         "review",
-        "spec_validation",
+        "prd_validation",
         "design_validation",
     ],
     AgentRole.DEPLOY: ["review", "hitl", "profile"],
@@ -53,7 +53,7 @@ class CodeSnippet(BaseModel):
 
 
 class RetryBundle(BaseModel):
-    spec: SpecArtifact
+    prd: PrdArtifact
     design: DesignArtifact
     test_report: TestReport
     dev_manifest: DevManifest
@@ -98,7 +98,7 @@ def build_retry_bundle(
     if state.impl_retry_count <= 0:
         return None
     if (
-        state.spec is None
+        state.prd is None
         or state.design is None
         or state.test_report is None
         or state.dev_manifest is None
@@ -108,7 +108,7 @@ def build_retry_bundle(
     if state.dev_manifest.reflection is not None:
         reflection = state.dev_manifest.reflection.model_dump(mode="json")
     return RetryBundle(
-        spec=state.spec,
+        prd=state.prd,
         design=state.design,
         test_report=state.test_report,
         dev_manifest=state.dev_manifest,
@@ -141,20 +141,20 @@ def build_prompt_context(
                 "task_id": state.task_id,
                 "impl_retry_count": state.impl_retry_count,
                 "design_revision_count": state.design_revision_count,
-                "spec_revision_count": state.spec_revision_count,
+                "prd_revision_count": state.prd_revision_count,
             }
         elif key == "impl_retry_count":
             context[key] = state.impl_retry_count
         elif key == "design_revision_count":
             context[key] = state.design_revision_count
-        elif key == "spec_revision_count":
-            context[key] = state.spec_revision_count
+        elif key == "prd_revision_count":
+            context[key] = state.prd_revision_count
         else:
             value = getattr(state, key, None)
             if isinstance(
                 value,
                 (
-                    SpecArtifact,
+                    PrdArtifact,
                     DesignArtifact,
                     DevManifest,
                     TestReport,

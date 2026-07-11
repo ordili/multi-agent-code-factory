@@ -8,25 +8,25 @@ from langgraph.runtime import Runtime
 
 from multi_agent_code_factory.graph.pipeline_run_context import PipelineRunContext
 from multi_agent_code_factory.nodes.design_validate import run_design_validate
-from multi_agent_code_factory.nodes.spec_validate import run_spec_validate
+from multi_agent_code_factory.nodes.prd_validate import run_prd_validate
 from multi_agent_code_factory.state import PipelineState
 
 
-def node_spec_validate(
+def node_prd_validate(
     state: PipelineState,
     *,
     runtime: Runtime[PipelineRunContext],
 ) -> dict[str, Any]:
-    """规格校验：对 ``state.spec`` 执行规则校验，写入 ``spec_validation``。"""
+    """PRD 校验：对 ``state.prd`` 执行规则校验，写入 ``prd_validation``。"""
     ctx = runtime.context
     profile = ctx.profile
-    if state.spec is None:
-        msg = "spec_validate requires spec"
+    if state.prd is None:
+        msg = "prd_validate requires prd"
         raise ValueError(msg)
-    report = run_spec_validate(
-        state.spec, profile, writer=ctx.writer, run_dir=ctx.writer.directory
+    report = run_prd_validate(
+        state.prd, profile, writer=ctx.writer, run_dir=ctx.writer.directory
     )
-    return {"spec_validation": report}
+    return {"prd_validation": report}
 
 
 def node_design_validate(
@@ -43,7 +43,7 @@ def node_design_validate(
     report = run_design_validate(
         state.design,
         profile,
-        spec=state.spec,
+        spec=state.prd,
         writer=ctx.writer,
         run_dir=ctx.writer.directory,
     )

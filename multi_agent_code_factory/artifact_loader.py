@@ -12,9 +12,9 @@ from multi_agent_code_factory.log import get_logger
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.dev_manifest import DevManifest
 from multi_agent_code_factory.schemas.hitl import HitlDecision
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from multi_agent_code_factory.schemas.review import ReviewReport
 from multi_agent_code_factory.schemas.run_meta import RunMeta
-from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.schemas.test_report import TestReport
 from multi_agent_code_factory.schemas.validation_report import ValidationReport
 from multi_agent_code_factory.state import PipelineState
@@ -22,8 +22,8 @@ from multi_agent_code_factory.state import PipelineState
 logger = get_logger("artifact_loader")
 
 _ARTIFACT_FILES: dict[str, str] = {
-    "spec.json": "spec",
-    "spec_validation.json": "spec_validation",
+    "prd.json": "prd",
+    "prd_validation.json": "prd_validation",
     "design.json": "design",
     "design_validation.json": "design_validation",
     "dev_manifest.json": "dev_manifest",
@@ -33,8 +33,8 @@ _ARTIFACT_FILES: dict[str, str] = {
 }
 
 ARTIFACT_MODEL_BY_FIELD: dict[str, type[BaseModel]] = {
-    "spec": SpecArtifact,
-    "spec_validation": ValidationReport,
+    "prd": PrdArtifact,
+    "prd_validation": ValidationReport,
     "design": DesignArtifact,
     "design_validation": ValidationReport,
     "dev_manifest": DevManifest,
@@ -69,15 +69,15 @@ def load_artifact_json(
     return model.model_validate(data)
 
 
-def _resolve_user_request(meta: RunMeta, spec: SpecArtifact | None) -> str:
+def _resolve_user_request(meta: RunMeta, prd: PrdArtifact | None) -> str:
     if meta.user_request:
         return meta.user_request
-    if spec is not None:
-        parts = [spec.title, spec.summary]
+    if prd is not None:
+        parts = [prd.title, prd.summary]
         fallback = " ".join(part for part in parts if part).strip()
         if fallback:
             logger.warning(
-                "run_meta.user_request missing for task %s; using spec fallback",
+                "run_meta.user_request missing for task %s; using prd fallback",
                 meta.task_id,
             )
             return fallback
@@ -90,7 +90,7 @@ def hydrate_state(run_dir: Path, meta: RunMeta) -> PipelineState:
         "task_id": meta.task_id,
         "impl_retry_count": meta.impl_retry_count,
         "design_revision_count": meta.design_revision_count,
-        "spec_revision_count": meta.spec_revision_count,
+        "prd_revision_count": meta.prd_revision_count,
     }
 
     for filename, field_name in _ARTIFACT_FILES.items():
@@ -101,8 +101,8 @@ def hydrate_state(run_dir: Path, meta: RunMeta) -> PipelineState:
         if loaded is not None:
             fields[field_name] = loaded
 
-    spec = fields.get("spec")
-    spec_model = spec if isinstance(spec, SpecArtifact) else None
-    fields["user_request"] = _resolve_user_request(meta, spec_model)
+    prd = fields.get("prd")
+    prd_model = prd if isinstance(prd, PrdArtifact) else None
+    fields["user_request"] = _resolve_user_request(meta, prd_model)
 
     return PipelineState(**fields)

@@ -19,9 +19,9 @@ from multi_agent_code_factory.schemas.dev_manifest import (
     ChangeType,
     DevManifest,
 )
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from multi_agent_code_factory.schemas.review import ReviewNextStage, ReviewReport
 from multi_agent_code_factory.schemas.run_meta import RunStatus
-from multi_agent_code_factory.schemas.spec import SpecArtifact
 from multi_agent_code_factory.schemas.test_report import TestReport, TestSummary
 from multi_agent_code_factory.state import PipelineState
 
@@ -34,7 +34,7 @@ def default_profile():
 
 
 def test_resolve_watch_uses_defaults(default_profile) -> None:
-    assert "spec" in resolve_watch(AgentRole.ARCHITECT, default_profile)
+    assert "prd" in resolve_watch(AgentRole.ARCHITECT, default_profile)
     assert (
         resolve_watch(AgentRole.ARCHITECT, default_profile)
         == DEFAULT_WATCH[AgentRole.ARCHITECT]
@@ -42,8 +42,8 @@ def test_resolve_watch_uses_defaults(default_profile) -> None:
 
 
 def test_build_retry_bundle_when_retrying(default_profile, snippets_dir: Path) -> None:
-    spec = SpecArtifact.model_validate(
-        load_snippet_json(snippets_dir, "spec-default.json")
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
     )
     design = DesignArtifact.model_validate(
         load_snippet_json(Path(__file__).parent / "fixtures", "design-todo-valid.json")
@@ -65,7 +65,7 @@ def test_build_retry_bundle_when_retrying(default_profile, snippets_dir: Path) -
     state = PipelineState(
         task_id="t",
         user_request="todo",
-        spec=spec,
+        prd=spec,
         design=design,
         test_report=report,
         dev_manifest=manifest,
@@ -73,7 +73,7 @@ def test_build_retry_bundle_when_retrying(default_profile, snippets_dir: Path) -
     )
     bundle = build_retry_bundle(state, default_profile)
     assert bundle is not None
-    assert bundle.spec.title == spec.title
+    assert bundle.prd.title == spec.title
     ctx = build_prompt_context(AgentRole.DEVELOPER, state, default_profile)
     assert "retry_bundle" in ctx
 
@@ -89,8 +89,8 @@ def test_stub_pipeline_happy_path(tmp_path: Path, default_profile) -> None:
     )
     assert result.status == RunStatus.COMPLETED
     run_dir = result.run_dir
-    assert (run_dir / "spec.json").is_file()
-    assert (run_dir / "spec.md").is_file()
+    assert (run_dir / "prd.json").is_file()
+    assert (run_dir / "prd.md").is_file()
     assert (run_dir / "design.json").is_file()
     assert (run_dir / "design.md").is_file()
     assert (run_dir / "flow.mmd").is_file()
@@ -98,7 +98,7 @@ def test_stub_pipeline_happy_path(tmp_path: Path, default_profile) -> None:
     assert (run_dir / "test_report.json").is_file()
     assert (run_dir / "review.json").is_file()
     assert (run_dir / "review.md").is_file()
-    assert (run_dir / "spec_validation.json").is_file()
+    assert (run_dir / "prd_validation.json").is_file()
     assert (run_dir / "design_validation.json").is_file()
     assert (run_dir / "run_meta.json").is_file()
 

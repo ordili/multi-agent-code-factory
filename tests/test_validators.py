@@ -4,12 +4,12 @@ from pathlib import Path
 
 import pytest
 from multi_agent_code_factory.config import LoopLimits
-from multi_agent_code_factory.graph_routing import route_after_spec_validate
+from multi_agent_code_factory.graph_routing import route_after_prd_validate
 from multi_agent_code_factory.nodes.design_validate import run_design_validate
-from multi_agent_code_factory.nodes.spec_validate import run_spec_validate
+from multi_agent_code_factory.nodes.prd_validate import run_prd_validate
 from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.schemas.design import DesignArtifact
-from multi_agent_code_factory.schemas.spec import SpecArtifact
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from multi_agent_code_factory.state import PipelineState
 
 from tests.conftest import load_snippet_json
@@ -25,48 +25,48 @@ def limits() -> LoopLimits:
     return LoopLimits()
 
 
-def test_spec_default_passes_validate(default_profile, snippets_dir: Path) -> None:
-    spec = SpecArtifact.model_validate(
-        load_snippet_json(snippets_dir, "spec-default.json")
+def test_prd_default_passes_validate(default_profile, snippets_dir: Path) -> None:
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
     )
-    report = run_spec_validate(spec, default_profile)
+    report = run_prd_validate(spec, default_profile)
     assert report.passed is True
     assert report.error_count == 0
 
 
-def test_spec_missing_acceptance_criteria_fails(
+def test_prd_missing_acceptance_criteria_fails(
     default_profile, snippets_dir: Path
 ) -> None:
-    data = load_snippet_json(snippets_dir, "spec-default.json")
+    data = load_snippet_json(snippets_dir, "prd-default.json")
     data["acceptance_criteria"] = []
-    spec = SpecArtifact.model_validate(data)
-    report = run_spec_validate(spec, default_profile)
+    spec = PrdArtifact.model_validate(data)
+    report = run_prd_validate(spec, default_profile)
     assert report.passed is False
-    assert any(v.rule_id == "SPEC-001" for v in report.violations)
+    assert any(v.rule_id == "PRD-001" for v in report.violations)
 
 
-def test_spec_wrong_profile_fails(default_profile, snippets_dir: Path) -> None:
-    data = load_snippet_json(snippets_dir, "spec-default.json")
+def test_prd_wrong_profile_fails(default_profile, snippets_dir: Path) -> None:
+    data = load_snippet_json(snippets_dir, "prd-default.json")
     data["profile"] = "other"
-    spec = SpecArtifact.model_validate(data)
-    report = run_spec_validate(spec, default_profile)
-    assert any(v.rule_id == "SPEC-005" for v in report.violations)
+    spec = PrdArtifact.model_validate(data)
+    report = run_prd_validate(spec, default_profile)
+    assert any(v.rule_id == "PRD-005" for v in report.violations)
 
 
-def test_spec_validate_failure_routes_to_pm(
+def test_prd_validate_failure_routes_to_pm(
     default_profile, limits, snippets_dir: Path
 ) -> None:
-    data = load_snippet_json(snippets_dir, "spec-default.json")
+    data = load_snippet_json(snippets_dir, "prd-default.json")
     data["acceptance_criteria"] = []
-    spec = SpecArtifact.model_validate(data)
-    report = run_spec_validate(spec, default_profile)
-    state = PipelineState(spec_validation=report)
-    assert route_after_spec_validate(state, default_profile, limits) == "pm"
+    spec = PrdArtifact.model_validate(data)
+    report = run_prd_validate(spec, default_profile)
+    state = PipelineState(prd_validation=report)
+    assert route_after_prd_validate(state, default_profile, limits) == "pm"
 
 
 def test_design_todo_valid_passes(default_profile, snippets_dir: Path) -> None:
-    spec = SpecArtifact.model_validate(
-        load_snippet_json(snippets_dir, "spec-default.json")
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
     )
     design = DesignArtifact.model_validate(
         load_snippet_json(Path(__file__).parent / "fixtures", "design-todo-valid.json")

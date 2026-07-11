@@ -7,7 +7,7 @@ from pathlib import Path
 
 from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.schemas.design import DesignArtifact
-from multi_agent_code_factory.schemas.spec import SpecArtifact
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from multi_agent_code_factory.validators.design_rules import validate_design_rules
 
 from tests.conftest import load_snippet_json
@@ -21,8 +21,8 @@ def _load_design(name: str) -> DesignArtifact:
 
 
 def test_todo_fixture_passes_des_035_036(snippets_dir: Path) -> None:
-    spec = SpecArtifact.model_validate(
-        load_snippet_json(snippets_dir, "spec-default.json")
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
     )
     design = _load_design("design-todo-valid.json")
     profile = load_profile("python")
@@ -33,8 +33,8 @@ def test_todo_fixture_passes_des_035_036(snippets_dir: Path) -> None:
 
 
 def test_empty_design_goals_triggers_des_035(snippets_dir: Path) -> None:
-    spec = SpecArtifact.model_validate(
-        load_snippet_json(snippets_dir, "spec-default.json")
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
     )
     design = _load_design("design-todo-valid.json").model_copy(
         update={"design_goals": []}
@@ -45,8 +45,8 @@ def test_empty_design_goals_triggers_des_035(snippets_dir: Path) -> None:
 
 
 def test_missing_code_delta_triggers_des_036(snippets_dir: Path) -> None:
-    spec = SpecArtifact.model_validate(
-        load_snippet_json(snippets_dir, "spec-default.json")
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
     )
     design = _load_design("design-todo-valid.json")
     architecture = design.architecture

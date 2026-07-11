@@ -1,4 +1,4 @@
-"""spec_hitl 图节点（MVP：需要时自动批准，不中断流水线）。"""
+"""prd_hitl ????MVP?????????????????"""
 
 from __future__ import annotations
 
@@ -8,26 +8,26 @@ from multi_agent_code_factory.state import PipelineState
 from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
 
-def _spec_hitl_required(state: PipelineState, profile: ProfileConfig) -> bool:
-    if profile.validation.spec.require_hitl:
+def _prd_hitl_required(state: PipelineState, profile: ProfileConfig) -> bool:
+    if profile.validation.prd.require_hitl:
         return True
-    validation = state.spec_validation
+    validation = state.prd_validation
     return validation is not None and validation.require_hitl
 
 
-def run_spec_hitl(
+def run_prd_hitl(
     state: PipelineState,
     profile: ProfileConfig,
     writer: RunArtifactWriter,
 ) -> dict[str, object]:
-    """若需要 spec 人工审核则写入自动批准的 HITL 决策；否则无状态更新。"""
-    if not _spec_hitl_required(state, profile):
+    """??? prd ???????????? HITL ???????????"""
+    if not _prd_hitl_required(state, profile):
         return {}
     decision = HitlDecision(
         version="1",
-        stage=HitlStage.SPEC,
+        stage=HitlStage.PRD,
         required=True,
-        reason=["profile or validation requires spec HITL"],
+        reason=["profile or validation requires prd HITL"],
         approved=True,
         reviewer="stub",
         comment="MVP auto-approved (no interrupt)",

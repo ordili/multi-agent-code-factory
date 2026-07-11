@@ -80,13 +80,13 @@ flowchart LR
 
 与主线「MVP 仅 Pydantic + **核心** error 规则」对齐；**未列入下表的 rule_id 一律 P1**，实现中不得默认启用。
 
-#### spec（`validators/spec_rules.py`）
+#### spec（`validators/prd_rules.py`）
 
 | 纳入 MVP | rule_id | 说明 |
 |----------|---------|------|
-| 是 | `SPEC-001`–`016` | [spec-validate §3.1](./quality-gates/spec-validate.md#31-结构与必填error) 结构与必填 |
-| 否 | `SPEC-101`–`114`、`SPEC-201`–`202` | §3.2 可测性（多为 warn；P1） |
-| 否 | `SPEC-301`–`308` | §3.3 `spec.md` 格式（P1） |
+| 是 | `PRD-001`–`016` | [spec-validate §3.1](./quality-gates/prd-validate.md#31-结构与必填error) 结构与必填 |
+| 否 | `PRD-101`–`114`、`PRD-201`–`202` | §3.2 可测性（多为 warn；P1） |
+| 否 | `PRD-301`–`308` | §3.3 `prd.md` 格式（P1） |
 
 #### design（`validators/design_rules.py`）
 
@@ -110,7 +110,7 @@ flowchart LR
 
 #### Golden fixture
 
-- [`examples/snippets/spec-default.json`](./examples/snippets/spec-default.json) 已含 `context.language`，与 `default` Profile 的 `language: python` 对齐（`SPEC-006`）。
+- [`examples/snippets/prd-default.json`](./examples/snippets/prd-default.json) 已含 `context.language`，与 `default` Profile 的 `language: python` 对齐（`PRD-006`）。
 - 新增或修改 fixture 时须同步通过 MVP 白名单单测。
 
 ### 3.2 Profile 矩阵 vs Parser（验收分层）
@@ -129,7 +129,7 @@ flowchart LR
 
 | 文件 | MVP 产出方式 |
 |------|----------------|
-| `spec.md` | `renderers/spec_md.py`（P0；可先极简） |
+| `prd.md` | `renderers/prd_md.py`（P0；可先极简） |
 | `design.md` | **Architect Agent 直接写出**（`renderers/design_md.py` 为 P1） |
 | `flow.mmd` | **Architect Agent 直接写出**（见 [examples/snippets/flow-todo.mmd](./examples/snippets/flow-todo.mmd)） |
 | `review.md` | Reviewer Agent 写出或 P1 renderer；MVP 可仅 `review.json` |
@@ -177,7 +177,7 @@ schemas/
 **做法：**
 
 - 先实现 MVP **必填字段**；复杂嵌套可分期补充。
-- 以 [examples/snippets/](./examples/README.md) 下 JSON 为 **golden fixture**（含已修正的 `spec-default.json`）。
+- 以 [examples/snippets/](./examples/README.md) 下 JSON 为 **golden fixture**（含已修正的 `prd-default.json`）。
 - `reflection` 等字段可先最小实现（主线 §1.2）。
 - `run_meta.json` 预留 `budget` 用量字段（若配置则记录；触顶熔断 P1）。
 
@@ -198,7 +198,7 @@ schemas/
 | `tools/test_parsers/junit_xml.py` | MVP **唯一必需** Parser |
 | `tools/test_parsers/exit_code_only.py` | 兜底（未实现 Parser 的 Profile 加载测试用） |
 | `tools/registry.py` | 按 Profile.`tools` 挂载（SWE-agent 式 **少量专用 Tool**） |
-| `renderers/spec_md.py` | `spec.json` → `spec.md`（P0；可先极简） |
+| `renderers/prd_md.py` | `prd.json` → `prd.md`（P0；可先极简） |
 
 **测试：**
 
@@ -216,7 +216,7 @@ schemas/
 | 文件 | 内容 |
 |------|------|
 | `state.py` | [§7 图状态](./multi-agent-pipeline-design.md#7-图状态)（`TypedDict` 或 Pydantic State） |
-| `graph_routing.py` | `route_after_test`、`route_after_review`、`route_after_spec_validate`、`route_after_design_validate` |
+| `graph_routing.py` | `route_after_test`、`route_after_review`、`route_after_prd_validate`、`route_after_design_validate` |
 
 **单测场景（纯函数，无 LLM）：**
 
@@ -224,7 +224,7 @@ schemas/
 |------|------|
 | `route_after_test` | pass / fail / 触顶 |
 | `route_after_review` | `developer` / `architect` / `pm` / `deploy`+`approved` / `deploy`+`not approved` |
-| `route_after_spec_validate` | violations → PM；`require_hitl` 分支 |
+| `route_after_prd_validate` | violations → PM；`require_hitl` 分支 |
 | `route_after_design_validate` | violations → Architect；`require_hitl` 分支 |
 
 **验收对照：** §10「实现环、设计环、需求环路由」「`route_after_review`：`approved=false` 时不进 `deploy_hitl`」**[MVP]**。
@@ -233,24 +233,24 @@ schemas/
 
 ## 8. 阶段 4：Validate 节点
 
-**目标：** `spec_validate` / `design_validate` 跑通 **[§3.1 MVP 规则白名单](#31-mvp-规则白名单)**。
+**目标：** `prd_validate` / `design_validate` 跑通 **[§3.1 MVP 规则白名单](#31-mvp-规则白名单)**。
 
 | 模块 | MVP 范围 |
 |------|----------|
-| `validators/spec_rules.py` | 白名单 `SPEC-001`–`016` |
+| `validators/prd_rules.py` | 白名单 `PRD-001`–`016` |
 | `validators/design_rules.py` | 白名单 `DES-001`–`010`、`DES-101`–`104`、条件 `DES-011`、`DES-301` |
-| `nodes/spec_validate.py` | 调 validator → 写 `spec_validation.json` |
+| `nodes/prd_validate.py` | 调 validator → 写 `prd_validation.json` |
 | `nodes/design_validate.py` | 同上 → `design_validation.json`；`validate_mermaid: false` 时跳过 Mermaid 解析 |
 
 **配置变更（本阶段一并提交）：**
 
 - [`profiles/default.yaml`](../../../multi_agent_code_factory/profiles/default.yaml)：`validation.design.validate_mermaid: false`（MVP；见 [§3.1](#31-mvp-规则白名单)）
 
-**暂不实现（P1）：** `SPEC-101+`、`DES-012`–`033`、`spec_md_rules`、`mermaid.py` 语法校验。
+**暂不实现（P1）：** `PRD-101+`、`DES-012`–`033`、`spec_md_rules`、`mermaid.py` 语法校验。
 
-**测试：** 用 `examples/snippets/spec-default.json` + 故意缺字段 fixture 测 violations 与再入路由。
+**测试：** 用 `examples/snippets/prd-default.json` + 故意缺字段 fixture 测 violations 与再入路由。
 
-**验收对照：** §10「`spec_validate` / `design_validate` MVP 规则跑通」**[MVP]**。
+**验收对照：** §10「`prd_validate` / `design_validate` MVP 规则跑通」**[MVP]**。
 
 ---
 
@@ -261,7 +261,7 @@ schemas/
 **主线：**
 
 ```text
-PM → spec_validate → [spec_hitl?] → Architect → design_validate → [design_hitl?]
+PM → prd_validate → [prd_hitl?] → Architect → design_validate → [design_hitl?]
   → Developer → QA → Reviewer → [deploy_hitl?] → Deploy
 ```
 
@@ -271,7 +271,7 @@ PM → spec_validate → [spec_hitl?] → Architect → design_validate → [des
 | `agents/base.py` | Structured Output、`watch` 注入、**`prompts_dir` 加载** |
 | `agents/pm.py` … `reviewer.py` | 五 Agent；各 prompt 显式列出默认 `watch`（主线 §4.5） |
 | `context.py` | [§4.5](./multi-agent-pipeline-design.md#45-节点上下文watch) 默认 `watch` 表 + [RetryBundle](./multi-agent-pipeline-design.md#451-developer-重试三件套) |
-| `nodes/spec_hitl.py` | 占位：`require_hitl=false` → 直通 Architect |
+| `nodes/prd_hitl.py` | 占位：`require_hitl=false` → 直通 Architect |
 | `nodes/design_hitl.py` | 占位：`require_hitl=false` 且无 `DES-301` → 直通 Developer |
 | `nodes/deploy_hitl.py` | 占位：无敏感 `hitl.flags` / glob 命中 → 直通 Deploy |
 | `nodes/deploy.py` | 图末 Deploy；写 `run_meta.deploy_status`（默认 `skipped`） |
@@ -292,7 +292,7 @@ PM → spec_validate → [spec_hitl?] → Architect → design_validate → [des
 **目标：** 测试失败、Reviewer 升环、validate 失败均可回路；触顶时 `on_limit_exceeded=fail`（MVP 默认）。
 
 - 用 Stub 触发各回边与 **再入点**（Developer 修订后回 QA 等）。
-- State 维护 `impl_retry_count` / `design_revision_count` / `spec_revision_count`。
+- State 维护 `impl_retry_count` / `design_revision_count` / `prd_revision_count`。
 - 升环时按 §4.3 作废 `test_report` / `review`（`run_meta.stale_artifacts`，可先最小实现）。
 
 **测试：**
@@ -319,8 +319,8 @@ python -m multi_agent_code_factory run \
 **§10 [MVP] 核对清单：**
 
 - [ ] 五 Agent + validate / HITL（skip）/ Deploy 图节点全跑通；每步 JSON 通过 Pydantic
-- [ ] `spec_validate` / `design_validate`（[§3.1 白名单](#31-mvp-规则白名单)）失败回 PM/Architect
-- [ ] `docs/runs/<task_id>/` 下 8 类 JSON + `spec.md` / `design.md` / `flow.mmd`
+- [ ] `prd_validate` / `design_validate`（[§3.1 白名单](#31-mvp-规则白名单)）失败回 PM/Architect
+- [ ] `docs/runs/<task_id>/` 下 8 类 JSON + `prd.md` / `design.md` / `flow.mmd`
 - [ ] `TestReport.failures` 含 `test_id`、`file`、`line`
 - [ ] `run_tests` + `junit_xml`（`default` Profile）
 - [ ] 换 `--profile`：`code_root` / `toolchain` 变化（**层级 A** 全矩阵加载；QA 不要求全语言绿）
@@ -376,7 +376,7 @@ LangSmith（`LANGSMITH_*`）可选，用于 Trace 关联 `task_id`（§10 非 MV
 | 项 | 见 |
 |----|-----|
 | checkpoint / `resume`（`checkpoint.py` 仅占位） | 主线 §1.2、§4.6（P1） |
-| `spec_hitl` / `design_hitl` **强制 interrupt** | 主线 §1.2（P1） |
+| `prd_hitl` / `design_hitl` **强制 interrupt** | 主线 §1.2（P1） |
 | `escalation_hitl`（`on_limit_exceeded=escalation_hitl`） | 主线 §1.2（P1） |
 | `go_json` / `cargo_json` / `forge_json` Parser 与多语言 **e2e** | profiles.md（P1）；见 [§3.2](#32-profile-矩阵-vs-parser验收分层) |
 | Docker `sandbox`、MCP | 主线 §1.2 |

@@ -4,7 +4,7 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
-from multi_agent_code_factory.agents.normalizers.spec import normalize_spec
+from multi_agent_code_factory.agents.normalizers.prd import normalize_prd
 from multi_agent_code_factory.agents.pm import run_pm
 from multi_agent_code_factory.config import LoopLimits
 from multi_agent_code_factory.llm import (
@@ -15,7 +15,7 @@ from multi_agent_code_factory.llm import (
 )
 from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.runtime.stub_mode import resolve_stub_mode
-from multi_agent_code_factory.schemas.spec import SpecArtifact
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from multi_agent_code_factory.state import PipelineState
 from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
 
@@ -79,15 +79,15 @@ def test_llm_available_ollama_without_api_key(monkeypatch: pytest.MonkeyPatch) -
     assert llm_available() is True
 
 
-def test_normalize_spec_sets_profile_and_language(
+def test_normalize_prd_sets_profile_and_language(
     snippets_dir: Path,
 ) -> None:
     profile = load_profile("python")
-    raw = load_snippet_json(snippets_dir, "spec-default.json")
+    raw = load_snippet_json(snippets_dir, "prd-default.json")
     raw["profile"] = "wrong"
-    spec = SpecArtifact.model_validate(raw)
+    spec = PrdArtifact.model_validate(raw)
     state = PipelineState(user_request="todo")
-    normalized = normalize_spec(spec, profile, state)
+    normalized = normalize_prd(spec, profile, state)
     assert normalized.profile == "python"
     assert normalized.context.get("language") == "python"
     assert normalized.revision == 1
@@ -263,12 +263,12 @@ def test_pm_live_invokes_llm_runner(
     profile = load_profile("python")
     writer = RunArtifactWriter("t", base_dir=tmp_path)
     writer.init_run_meta(profile, LoopLimits())
-    spec = SpecArtifact.model_validate(
-        load_snippet_json(snippets_dir, "spec-default.json")
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
     )
     llm_runner = MagicMock()
     llm_runner.invoke_structured.return_value = spec
-    state = PipelineState(user_request="实现命令行 Todo", task_id="t")
+    state = PipelineState(user_request="????? Todo", task_id="t")
     result = run_pm(
         state,
         profile,
@@ -277,5 +277,5 @@ def test_pm_live_invokes_llm_runner(
         llm_runner=llm_runner,
     )
     llm_runner.invoke_structured.assert_called_once()
-    assert result["spec"].profile == "python"
-    assert (tmp_path / "spec.json").is_file()
+    assert result["prd"].profile == "python"
+    assert (tmp_path / "prd.json").is_file()

@@ -1,4 +1,4 @@
-Human-readable artifact language (spec.json, design.json, review.json, and rendered spec.md / design.md / review.md):
+Human-readable artifact language (prd.json, design.json, review.json, and rendered prd.md / design.md / review.md):
 
 - Write all descriptive and narrative text in Simplified Chinese (简体中文).
   Examples: title, summary, feature/user_story/requirement/AC descriptions,

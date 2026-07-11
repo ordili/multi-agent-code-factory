@@ -9,9 +9,9 @@ from multi_agent_code_factory.graph.nodes.agent_nodes import (
 )
 from multi_agent_code_factory.graph.nodes.route_nodes import (
     node_route_after_design_validate,
+    node_route_after_prd_validate,
     node_route_after_qa,
     node_route_after_reviewer,
-    node_route_after_spec_validate,
 )
 from multi_agent_code_factory.graph.nodes.terminal_nodes import (
     node_deploy,
@@ -19,11 +19,11 @@ from multi_agent_code_factory.graph.nodes.terminal_nodes import (
     node_design_hitl,
     node_escalation_hitl,
     node_fail,
-    node_spec_hitl,
+    node_prd_hitl,
 )
 from multi_agent_code_factory.graph.nodes.validate_nodes import (
     node_design_validate,
-    node_spec_validate,
+    node_prd_validate,
 )
 
 __all__ = [
@@ -36,12 +36,12 @@ __all__ = [
     "node_escalation_hitl",
     "node_fail",
     "node_pm",
+    "node_prd_hitl",
+    "node_prd_validate",
     "node_qa",
     "node_reviewer",
     "node_route_after_design_validate",
+    "node_route_after_prd_validate",
     "node_route_after_qa",
     "node_route_after_reviewer",
-    "node_route_after_spec_validate",
-    "node_spec_hitl",
-    "node_spec_validate",
 ]

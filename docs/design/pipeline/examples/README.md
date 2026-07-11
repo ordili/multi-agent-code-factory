@@ -24,7 +24,7 @@
 
 | 路径 | 说明 |
 |------|------|
-| [snippets/spec-default.json](./snippets/spec-default.json) | Profile=`default` 的 `SpecArtifact` 节选 |
+| [snippets/prd-default.json](./snippets/prd-default.json) | Profile=`default` 的 `PrdArtifact` 节选 |
 | [snippets/spec-context-rust.json](./snippets/spec-context-rust.json) | Rust `spec.context` + AC 节选 |
 | [snippets/spec-context-solidity.json](./snippets/spec-context-solidity.json) | Solidity `spec.context` + AC 节选 |
 | [snippets/design-todo-excerpt.json](./snippets/design-todo-excerpt.json) | Todo `DesignArtifact` 节选（完整见 [design-spec.md](../artifact-schemas/design-spec.md)） |

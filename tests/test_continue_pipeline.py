@@ -34,7 +34,7 @@ def test_continue_after_qa_limit_completes(tmp_path: Path, default_profile) -> N
     )
     assert meta.impl_retry_count >= 1
 
-    spec_text = (run_dir / "spec.json").read_text(encoding="utf-8")
+    spec_text = (run_dir / "prd.json").read_text(encoding="utf-8")
 
     second = continue_pipeline(
         task_id="continue-qa",
@@ -42,7 +42,7 @@ def test_continue_after_qa_limit_completes(tmp_path: Path, default_profile) -> N
         stub_scenario=StubScenario.HAPPY,
     )
     assert second.status == RunStatus.COMPLETED
-    assert (run_dir / "spec.json").read_text(encoding="utf-8") == spec_text
+    assert (run_dir / "prd.json").read_text(encoding="utf-8") == spec_text
     final_meta = RunMeta.model_validate_json(
         (run_dir / "run_meta.json").read_text(encoding="utf-8")
     )

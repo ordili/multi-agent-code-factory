@@ -17,7 +17,7 @@
 > **状态：** 定稿 · [artifact-templates 索引](./README.md)  
 > **Run 路径：** `docs/runs/<task_id>/design.md`  
 > **范围：** 本文 **只描述 Run `design.md` 怎么写**（面向 Architect / Developer / HITL）。正文 **宜中文**（标识符、路径、错误码等可保留英文）。  
-> **上游需求：** [prd-spec.md](./prd-spec.md) → Run `spec.md`。机器契约见 [artifact-schemas/design-spec.md](../artifact-schemas/design-spec.md)（`design.json` 字段与类型）。**JSON ↔ 人读 § 映射见本文。**  
+> **上游需求：** [prd-spec.md](./prd-spec.md) → Run `prd.md`。机器契约见 [artifact-schemas/design-spec.md](../artifact-schemas/design-spec.md)（`design.json` 字段与类型）。**JSON ↔ 人读 § 映射见本文。**  
 > **配套规范：** [flow-spec.md](./flow-spec.md) → Run `*.mmd`（与 §4.2 / §4.7 引用一致；`design.json` → `diagrams[]` 字段见下游 schemas）。  
 > **程序校验：** 见 [quality-gates/design-validate.md](../quality-gates/design-validate.md)（不在此展开 rule_id）。
 
@@ -323,7 +323,7 @@
 | **§4.5 末追加「错误码一览」小表** | 模块多、ERR 分散；单独小表列码、名称、场景、可重试、处理 |
 
 
-- 须覆盖 spec 中 **用户可感知** 的异常（如除零 US）；与 **§6** `TC-NEG-`* 一一可对照。
+- 须覆盖 prd 中 **用户可感知** 的异常（如除零 US）；与 **§6** `TC-NEG-`* 一一可对照。
 - **不要**另开独立章节重复罗列；无异常场景则 §4.5 不写错误码列即可。
 
 ### §4.6 存储结构（选填）
@@ -375,7 +375,7 @@
 
 **何时写整节：** 多模块协作、异步、跨服务、或 **主要 US** 主路径/异常 **非一眼可读** 时写；线性小 CLI（如计算器）**整节省略**。
 
-**主要 US：** spec 中 **关联 P0 FEAT** 的 **`US-*`**（与 [prd-spec](./prd-spec.md) 一致；US 本身无 P0/P1 标签，以 FEAT 优先级为准）。
+**主要 US：** prd 中 **关联 P0 FEAT** 的 **`US-*`**（与 [prd-spec](./prd-spec.md) 一致；US 本身无 P0/P1 标签，以 FEAT 优先级为准）。
 
 **主要 US（写了 §4.7 时须配图）：** 上列每个主要 US **至少 1 张图**（时序或流程均可，**通常即业务流**）；**不要求** 每个 US 再单独画数据流 / 资金流。
 
@@ -572,12 +572,12 @@
 
 ```text
 docs/runs/<task_id>/
-  spec.md          ← 一份需求
+  prd.md          ← 一份需求
   design.md        ← 一份设计（内含 N 个微服务）
   architecture-*.mmd / flow-*.mmd
 ```
 
-**何时仍用多份 spec / design：** 各服务 **独立需求、独立 AC、独立排期** 时，拆成多个 `task_id`（`parent_task_id` 指向父需求），每份 **1 spec + 1 design**。这与「单需求拆 N 服务、单 design」不矛盾——按 **需求边界** 拆文档，不按「每个服务一份 design」机械拆分。
+**何时仍用多份 prd / design：** 各服务 **独立需求、独立 AC、独立排期** 时，拆成多个 `task_id`（`parent_task_id` 指向父需求），每份 **1 spec + 1 design**。这与「单需求拆 N 服务、单 design」不矛盾——按 **需求边界** 拆文档，不按「每个服务一份 design」机械拆分。
 
 ### 微服务拆分原则
 
@@ -921,7 +921,7 @@ order-api **本地事务** 写 orders；**同步调用** inventory-api `reserve`
 - **US-4 流程图：** flow-order.mmd — 含失败补偿与 ERR-INV-001 路径
 ```
 
-**说明：** 上表覆盖 spec 中全部 **主要 US**（关联 P0 FEAT 的 US-1～US-4）。**每个 US 至少 1 张图**（时序或流程均可）；`时序 + 流程` 表示 **同文件多段** 或 **一张综合图**，**不**要求每个 US 各画两张。流类型列按需填（业务流为主；**不必**三种流都画）。
+**说明：** 上表覆盖 prd 中全部 **主要 US**（关联 P0 FEAT 的 US-1～US-4）。**每个 US 至少 1 张图**（时序或流程均可）；`时序 + 流程` 表示 **同文件多段** 或 **一张综合图**，**不**要求每个 US 各画两张。流类型列按需填（业务流为主；**不必**三种流都画）。
 
 **多微服务 — §4.3 / §4.5 / §6（片段）：**
 

@@ -79,10 +79,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="Override FACTORY_MAX_DESIGN_REVISIONS for this run",
     )
     run_parser.add_argument(
-        "--max-spec-revisions",
+        "--max-prd-revisions",
         type=int,
         default=None,
-        help="Override FACTORY_MAX_SPEC_REVISIONS for this run",
+        help="Override FACTORY_MAX_PRD_REVISIONS for this run",
     )
     run_parser.add_argument(
         "user_request",
@@ -98,7 +98,7 @@ def build_parser() -> argparse.ArgumentParser:
     continue_parser.add_argument(
         "--reenter",
         default=None,
-        help="Explicit reentry node (spec_validate, design_validate, qa, architect)",
+        help="Explicit reentry node (prd_validate, design_validate, qa, architect)",
     )
     continue_parser.add_argument(
         "--no-reset-loops",
@@ -185,7 +185,7 @@ def cmd_run(args: argparse.Namespace) -> int:
         factory_config = load_factory_config(
             max_impl_retries=args.max_impl_retries,
             max_design_revisions=args.max_design_revisions,
-            max_spec_revisions=args.max_spec_revisions,
+            max_prd_revisions=args.max_prd_revisions,
         )
         profile = load_profile(
             args.profile,

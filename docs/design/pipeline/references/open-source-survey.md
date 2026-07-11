@@ -98,7 +98,7 @@ Reviewer Tool `git_diff(code_root)`；§4.7 增量 run 读 `parent_task_id`。
 > **排期与 PR 拆分：** [implementation-plan.md](../implementation-plan.md)
 
 ```text
-P0  watch/RetryBundle + spec_validate/design_validate + Developer Tool 收敛 + reflection + test_parsers（junit_xml）
+P0  watch/RetryBundle + prd_validate/design_validate + Developer Tool 收敛 + reflection + test_parsers（junit_xml）
 P1  Profile.sandbox + go_json/cargo_json/forge_json + git_diff + agents.yaml
 P2  MCP 注册
 P3  AFlow 式工作流调参（离线分析 run_meta）

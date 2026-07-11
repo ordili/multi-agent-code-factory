@@ -15,16 +15,16 @@
 
 > **实现：** `multi_agent_code_factory/schemas/hitl.py`  
 > **Run 路径：** `hitl.json`  
-> **节点：** `spec_hitl`、`design_hitl`、`deploy_hitl`、`escalation_hitl`
+> **节点：** `prd_hitl`、`design_hitl`、`deploy_hitl`、`escalation_hitl`
 
 ## 字段
 
 | 字段 | 类型 | 说明 |
 |------|------|------|
 | `version` | `"1"` | |
-| `stage` | enum | `spec` \| `design` \| `deploy` \| `escalation`（loop 触顶，`escalation_hitl` 节点） |
+| `stage` | enum | `prd` \| `design` \| `deploy` \| `escalation`（loop 触顶，`escalation_hitl` 节点） |
 | `required` | boolean | 本 stage 是否须经人工 |
-| `reason` | string[] | 如 `validation.spec.require_hitl`、`hitl_flag:touches_production` |
+| `reason` | string[] | 如 `validation.prd.require_hitl`、`hitl_flag:touches_production` |
 | `approved` | boolean? | 人工填写 |
 | `reviewer` | string? | 审批人 |
 | `comment` | string? | 驳回/批准说明 |
@@ -35,12 +35,12 @@
 
 | `stage` | 节点 | 审批人阅读 | 驳回回到 |
 |---------|------|------------|----------|
-| `spec` | spec_hitl | `spec.md`、`spec_validation.json` | PM |
+| `spec` | prd_hitl | `prd.md`、`prd_validation.json` | PM |
 | `design` | design_hitl | `design.md`、`flow.mmd`、`design_validation.json` | Architect |
 | `deploy` | deploy_hitl | `review.md`、diff、敏感变更 | 续跑 → Developer（再入 QA）；终止 → `run_meta.status=failed` |
 | `escalation` | escalation_hitl | run 摘要、`loop_limits` 计数 | 终止 run / 重置计数后继续（P1） |
 
-`reason` 取值示例：`validation.spec.require_hitl`、`hitl_flag:touches_production`、`loop_limit:impl_retry`。Profile 中 `validation` / `hitl` 配置见 [profiles.md](../profiles.md) 与主线 [§4.1.2](../multi-agent-pipeline-design.md#412-产物校验与-hitlpm--architect)。
+`reason` 取值示例：`validation.prd.require_hitl`、`hitl_flag:touches_production`、`loop_limit:impl_retry`。Profile 中 `validation` / `hitl` 配置见 [profiles.md](../profiles.md) 与主线 [§4.1.2](../multi-agent-pipeline-design.md#412-产物校验与-hitlpm--architect)。
 
 ## 示例（design 阶段）
 

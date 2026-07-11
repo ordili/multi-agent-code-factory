@@ -8,8 +8,8 @@
 | 分类          | 上游文档                                                                                                   | 定位                                                                                                                                   |
 | ----------- | ------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------ |
 | **总设计**     | [multi-agent-pipeline-design.md](../multi-agent-pipeline-design.md) | 系统的总体设计书 |
-| **spec 基线** | [artifact-schemas/prd-spec.md](../artifact-schemas/prd-spec.md)                                        | Run `spec.json` 字段定义；DES-101/102/011/013/014/017 等交叉校验的 spec 信号来源。                                                                   |
-| **spec 基线** | [spec-validate.md](./spec-validate.md)                                           | spec→design 传导只读对照（§1 条件规则触发基线；字段细节查 prd-spec）。                                                                                 |
+| **prd 基线** | [artifact-schemas/prd-spec.md](../artifact-schemas/prd-spec.md)                                        | Run `prd.json` 字段定义；DES-101/102/011/013/014/017 等交叉校验的 prd 信号来源。                                                                   |
+| **prd 基线** | [prd-validate.md](./prd-validate.md)                                           | prd→design 传导只读对照（§1 条件规则触发基线；字段细节查 prd-spec）。                                                                                 |
 | **JSON 契约** | [artifact-schemas/design-spec.md](../artifact-schemas/design-spec.md)                                  | Run `design.json` 的 JSON 字段、类型、coerce 与 `ERR-*` / `TC-*` 标识符约定（§1 规则依据）。                                                               |
 | **人读模板**    | [artifact-templates/design-spec.md](../artifact-templates/design-spec.md)                              | Run `design.md` 固定章节、附录与 §4.x 子节写作模板（§2.1–2.3 规则依据）。                                                                                 |
 | **人读模板**    | [artifact-templates/flow-spec.md](../artifact-templates/flow-spec.md)                                  | Run `*.mmd` 图种类、命名约定与 `diagrams[]` 登记写法（§2.4 规则依据）。                                                                                  |
@@ -25,7 +25,7 @@
 | 列           | 含义                                                                                                         |
 | ----------- | ---------------------------------------------------------------------------------------------------------- |
 | **必检**      | `是` = 每次 `design_validate` 都评估；`条件` = 仅「触发条件」成立时评估                                                         |
-| **触发条件**    | 何时要求非空；`—` = 无额外前提。未触发时 JSON 可 `[]`、MD 可省略子节（[传导表](./spec-validate.md#spec--design-传导只读) · [空值](#空值与两层校验)） |
+| **触发条件**    | 何时要求非空；`—` = 无额外前提。未触发时 JSON 可 `[]`、MD 可省略子节（[传导表](./prd-validate.md#prd--design-传导只读) · [空值](#空值与两层校验)） |
 | **严重度**     | `error` 默认令 `passed=false` 并回 Architect；`warn` 只写入报告（[README §2](./README.md#2-profile-配置validation)）      |
 | **字段 / 判定** | 查什么 + 怎样算通过                                                                                                |
 
@@ -81,13 +81,13 @@
 | `DES-036` | error | 是   | —                                                              | `architecture.code_delta.summary`                           | 非空（greenfield 可「空仓库」）                                      |
 | `DES-009` | error | 是   | —                                                              | `traceability`                                              | 非空；P0 `FEAT` 须在 `traceability` 或 `dev_tasks[].covers` 中可追溯 |
 | `DES-010` | error | 是   | —                                                              | `cross_cutting`                                             | 须存在（可为 `{}`）                                               |
-| `DES-101` | error | 条件  | Run 含 `spec.json`（[prd-spec](../artifact-schemas/prd-spec.md)） | `traceability`、`dev_tasks[].covers`                         | 覆盖全部 `acceptance_criteria[].id`                            |
+| `DES-101` | error | 条件  | Run 含 `prd.json`（[prd-spec](../artifact-schemas/prd-spec.md)） | `traceability`、`dev_tasks[].covers`                         | 覆盖全部 `acceptance_criteria[].id`                            |
 | `DES-102` | error | 条件  | [prd-spec `scope_out`](../artifact-schemas/prd-spec.md) 非空   | `summary`、`modules[]`                                       | 不得实现 scope_out 项                                           |
 
 
 ### 1.3 依赖、存储与 NFR
 
-> **spec 侧信号：** 字段定义见 [prd-spec.md](../artifact-schemas/prd-spec.md)；与 design 义务对照见 [spec→design 传导](./spec-validate.md#spec--design-传导只读)（只读）。
+> **prd 侧信号：** 字段定义见 [prd-spec.md](../artifact-schemas/prd-spec.md)；与 design 义务对照见 [prd→design 传导](./prd-validate.md#prd--design-传导只读)（只读）。
 
 
 | rule_id   | 严重度   | 必检  | 触发条件                                                                       | 字段                           | 判定                                                              |
@@ -120,7 +120,7 @@
 | --------- | ----- | --- | ------------------------------- | ------------------------------------- | ------------------------------------------------------------------------------- |
 | `DES-015` | error | 是   | —                               | `error_catalog`                       | 非空                                                                              |
 | `DES-016` | error | 是   | —                               | `test_cases`                          | 非空                                                                              |
-| `DES-016` | warn  | 条件  | Run 含 `spec.json`               | `test_cases[].covers`                 | 每个 AC 宜有用例 `covers`（**DES-101** 对缺 cover 报 **error**，本条为温和提示）                   |
+| `DES-016` | warn  | 条件  | Run 含 `prd.json`               | `test_cases[].covers`                 | 每个 AC 宜有用例 `covers`（**DES-101** 对缺 cover 报 **error**，本条为温和提示）                   |
 | `DES-021` | error | 是   | —                               | `error_catalog[].code`、`test_cases[]` | 每 code ≥1 条 `kind=negative` 且 `error_code` 匹配                                   |
 | `DES-022` | warn  | 是   | —                               | `test_cases[]`                        | 含 `happy`、`negative`、`boundary`；P0 FEAT/US 有 happy                              |
 | `DES-023` | error | 是   | —                               | `error_catalog[].code`                | 匹配 `^ERR-[A-Z][A-Z0-9_]{1,11}-\d{3}$`                                           |
@@ -195,7 +195,7 @@ Run `design.md` 须 **中文固定章节**（**§1–§6 + 附录 A–D**）；*
 
 | rule_id   | 严重度  | 必检  | 触发条件                                        | 判定                                             |
 | --------- | ---- | --- | ------------------------------------------- | ---------------------------------------------- |
-| `DES-224` | warn | 条件  | `non_functional` 非空；或传导表 DES-011 同类 spec 信号 | 宜含 5. 非功能性目标（二级标题，见上「DES-201 章节」格式）            |
+| `DES-224` | warn | 条件  | `non_functional` 非空；或传导表 DES-011 同类 prd 信号 | 宜含 5. 非功能性目标（二级标题，见上「DES-201 章节」格式）            |
 | `DES-219` | warn | 条件  | `test_cases` 非空                             | 6. 测试用例列表表宜含「类型」列（happy / negative / boundary） |
 | `DES-208` | warn | 是   | `design.md`                                 | 不得含已移除专章（§5 方案对比、旧 §6–§10、附录 E 等）或 Rollout & Deployment |
 

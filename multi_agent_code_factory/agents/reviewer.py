@@ -43,7 +43,7 @@ def run_reviewer(
                 )
             elif (
                 stub_scenario == StubScenario.REVIEWER_ESCALATE_PM
-                and state.spec_revision_count == 0
+                and state.prd_revision_count == 0
             ):
                 review = ReviewReport.model_validate(
                     load_json_fixture(fixtures.review_pm)

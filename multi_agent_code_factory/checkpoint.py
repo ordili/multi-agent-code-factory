@@ -21,7 +21,7 @@ logger = get_logger("checkpoint")
 
 GATE_REENTRY_NODES = frozenset(
     {
-        PipelineNode.SPEC_VALIDATE,
+        PipelineNode.PRD_VALIDATE,
         PipelineNode.DESIGN_VALIDATE,
         PipelineNode.QA,
     }
@@ -86,15 +86,15 @@ def infer_reentry_node(
         if review is not None:
             stage = review.next_stage
             if stage == ReviewNextStage.PM:
-                return PipelineNode.SPEC_VALIDATE
+                return PipelineNode.PRD_VALIDATE
             if stage == ReviewNextStage.ARCHITECT:
                 return PipelineNode.DESIGN_VALIDATE
             if stage == ReviewNextStage.DEVELOPER:
                 return PipelineNode.QA
 
-    spec_val = _load_validation(run_dir, "spec_validation.json", meta)
+    spec_val = _load_validation(run_dir, "prd_validation.json", meta)
     if spec_val is not None and not spec_val.passed:
-        return PipelineNode.SPEC_VALIDATE
+        return PipelineNode.PRD_VALIDATE
 
     design_val = _load_validation(run_dir, "design_validation.json", meta)
     if design_val is not None and not design_val.passed:
@@ -119,11 +119,11 @@ def infer_reentry_node(
     ):
         return PipelineNode.DESIGN_VALIDATE
 
-    if artifact_available(run_dir, "spec.json", meta):
-        spec_validation = _load_validation(run_dir, "spec_validation.json", meta)
+    if artifact_available(run_dir, "prd.json", meta):
+        prd_validation = _load_validation(run_dir, "prd_validation.json", meta)
         if (
-            spec_validation is not None
-            and spec_validation.passed
+            prd_validation is not None
+            and prd_validation.passed
             and not (run_dir / "design.json").is_file()
         ):
             return PipelineNode.ARCHITECT
@@ -140,8 +140,8 @@ def validate_reentry_preconditions(
     reentry: PipelineNode,
 ) -> None:
     """校验水合 state 是否满足再入点前置条件。"""
-    if reentry == PipelineNode.SPEC_VALIDATE and state.spec is None:
-        msg = "continue at spec_validate requires spec.json"
+    if reentry == PipelineNode.PRD_VALIDATE and state.prd is None:
+        msg = "continue at prd_validate requires prd.json"
         raise ContinueError(msg)
     if reentry == PipelineNode.DESIGN_VALIDATE and state.design is None:
         msg = "continue at design_validate requires design.json"
@@ -152,11 +152,11 @@ def validate_reentry_preconditions(
         msg = "continue at qa requires design.json and dev_manifest.json"
         raise ContinueError(msg)
     if reentry == PipelineNode.ARCHITECT:
-        if state.spec is None:
-            msg = "continue at architect requires spec.json"
+        if state.prd is None:
+            msg = "continue at architect requires prd.json"
             raise ContinueError(msg)
-        if state.spec_validation is not None and not state.spec_validation.passed:
-            msg = "continue at architect requires spec_validation.passed=true"
+        if state.prd_validation is not None and not state.prd_validation.passed:
+            msg = "continue at architect requires prd_validation.passed=true"
             raise ContinueError(msg)
 
 

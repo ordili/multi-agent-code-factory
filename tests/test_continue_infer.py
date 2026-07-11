@@ -40,8 +40,8 @@ def test_infer_qa_when_impl_retry_at_limit_and_dev_manifest(
     snippets_dir: Path,
 ) -> None:
     run_dir = tmp_path
-    spec = load_snippet_json(snippets_dir, "spec-default.json")
-    (run_dir / "spec.json").write_text(__import__("json").dumps(spec), encoding="utf-8")
+    spec = load_snippet_json(snippets_dir, "prd-default.json")
+    (run_dir / "prd.json").write_text(__import__("json").dumps(spec), encoding="utf-8")
     (run_dir / "design.json").write_text("{}", encoding="utf-8")
     (run_dir / "dev_manifest.json").write_text(
         '{"version":"1","changed_files":[]}', encoding="utf-8"

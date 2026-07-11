@@ -10,14 +10,14 @@ from multi_agent_code_factory.graph.nodes._routing import apply_route
 from multi_agent_code_factory.graph.pipeline_run_context import PipelineRunContext
 from multi_agent_code_factory.graph_routing import (
     decide_after_design_validate,
+    decide_after_prd_validate,
     decide_after_review,
-    decide_after_spec_validate,
     decide_after_test,
 )
 from multi_agent_code_factory.state import PipelineState, normalize_pipeline_state
 
 
-def node_route_after_spec_validate(
+def node_route_after_prd_validate(
     state: PipelineState,
     *,
     runtime: Runtime[PipelineRunContext],
@@ -25,7 +25,7 @@ def node_route_after_spec_validate(
     """spec 校验后路由。"""
     state = normalize_pipeline_state(state)
     ctx = runtime.context
-    decision = decide_after_spec_validate(state, ctx.profile, ctx.loop_limits)
+    decision = decide_after_prd_validate(state, ctx.profile, ctx.loop_limits)
     return apply_route(decision, state, ctx)
 
 

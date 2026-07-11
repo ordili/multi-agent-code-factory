@@ -37,7 +37,7 @@ class RunMeta(BaseModel):
     loop_limits: dict[str, Any]
     impl_retry_count: int = Field(default=0, ge=0)
     design_revision_count: int = Field(default=0, ge=0)
-    spec_revision_count: int = Field(default=0, ge=0)
+    prd_revision_count: int = Field(default=0, ge=0)
     budget: BudgetUsage | None = None
     checkpoint_id: str | None = None
     deploy_status: DeployStatus = DeployStatus.SKIPPED

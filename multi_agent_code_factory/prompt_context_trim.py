@@ -36,7 +36,7 @@ def _cap_list_items(items: list[Any], max_items: int) -> tuple[list[Any], int | 
     return items[:max_items], len(items) - max_items
 
 
-def trim_spec(payload: dict[str, Any]) -> dict[str, Any]:
+def trim_prd(payload: dict[str, Any]) -> dict[str, Any]:
     """保留下游 Agent 使用的 spec 字段。"""
     keep = (
         "version",
@@ -194,9 +194,9 @@ def trim_dev_manifest(payload: dict[str, Any]) -> dict[str, Any]:
 def trim_retry_bundle(payload: dict[str, Any]) -> dict[str, Any]:
     """压缩 Developer 重试包并限制 code snippet 数量与行数。"""
     result = dict(payload)
-    spec = result.get("spec")
-    if isinstance(spec, dict):
-        result["spec"] = trim_spec(spec)
+    prd = result.get("prd")
+    if isinstance(prd, dict):
+        result["prd"] = trim_prd(prd)
     design = result.get("design")
     if isinstance(design, dict):
         result["design"] = trim_design(design, compact=True)
@@ -228,9 +228,9 @@ def trim_context_for_role(
     """按角色对组装好的 prompt 上下文做裁剪。"""
     result = dict(context)
 
-    spec = result.get("spec")
-    if isinstance(spec, dict):
-        result["spec"] = trim_spec(spec)
+    prd = result.get("prd")
+    if isinstance(prd, dict):
+        result["prd"] = trim_prd(prd)
 
     design = result.get("design")
     if isinstance(design, dict):
@@ -245,7 +245,7 @@ def trim_context_for_role(
     if isinstance(review, dict):
         result["review"] = trim_review(review)
 
-    for key in ("spec_validation", "design_validation"):
+    for key in ("prd_validation", "design_validation"):
         value = result.get(key)
         if isinstance(value, dict):
             result[key] = trim_validation(value)

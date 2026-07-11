@@ -257,8 +257,8 @@ def _coerce_context(value: Any) -> dict[str, Any]:
     return context
 
 
-def coerce_spec_payload(data: Any) -> Any:
-    """Normalize common LLM JSON shapes before SpecArtifact validation."""
+def coerce_prd_payload(data: Any) -> Any:
+    """Normalize common LLM JSON shapes before PrdArtifact validation."""
     if not isinstance(data, dict):
         return data
     payload = dict(data)
@@ -284,7 +284,7 @@ def coerce_spec_payload(data: Any) -> Any:
     return payload
 
 
-class SpecArtifact(BaseModel):
+class PrdArtifact(BaseModel):
     LLM_PROMPT_SHAPE: ClassVar[LlmPromptShape] = LlmPromptShape(
         json_shape={
             "version": "1",
@@ -376,4 +376,4 @@ class SpecArtifact(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def _coerce_llm_payload(cls, data: Any) -> Any:
-        return coerce_spec_payload(data)
+        return coerce_prd_payload(data)

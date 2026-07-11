@@ -14,7 +14,7 @@
    下次执行应：先对现有 `design.json` / `design.md` 做 **design_validate**（不调 LLM）；若仍失败，再调 Architect 模型根据 violations 修订；通过后进入 Developer。
 
 2. **需求文档已生成，规则校验未通过**  
-   同上，再入点为 **spec_validate**；失败则调 PM 修订。
+   同上，再入点为 **prd_validate**；失败则调 PM 修订。
 
 3. **代码已生成，测试失败（含 `tests_missing` 门禁）**  
    下次执行应：先在 **QA** 对 `code_root` 重跑测试（不调 LLM）；若仍失败，将 `test_report`（failures / `tests_missing`）交给 Developer 调 LLM 修代码；修完再回 QA。符合主线 §4.3 实现环再入规则。
@@ -24,7 +24,7 @@
 
 5. **统一原则：先门禁、后模型**  
    续跑第一步**优先**执行规则校验或测试（无 LLM 成本）；门禁未通过再调对应 Agent 的 LLM。若人工已修改产物/代码使门禁通过，应能零 LLM 调用进入下游。  
-   **例外：** spec 已通过且尚无 `design.json` 时，再入点为 `architect`，第一步生成 design（无门禁可跑）。详见 [§图执行](#图执行门禁先跑再-invoke)。
+   **例外：** prd 已通过且尚无 `design.json` 时，再入点为 `architect`，第一步生成 design（无门禁可跑）。详见 [§图执行](#图执行门禁先跑再-invoke)。
 
 6. **`run` 与续跑语义分离**  
    同一 `task_id` 已有 run 目录时，不应默认覆盖重跑；应提供专用续跑命令，避免误清空进度。
@@ -44,7 +44,7 @@ continue --task-id X
   → 重置 budget；触顶回路计数归零（见 §续跑时的重置策略）
   → 推断再入点
   → 有门禁：显式 run_* → update_state(as_node=门禁) → invoke
-  → 无门禁（architect）：update_state(as_node=route_after_spec_validate) → invoke
+  → 无门禁（architect）：update_state(as_node=route_after_prd_validate) → invoke
   → route_after_* → Agent（按需 LLM）→ …
 ```
 
@@ -63,13 +63,13 @@ continue --task-id X
 
 | 磁盘 / 元数据状态 | 再入点 | 门禁未过后调用的 Agent |
 |-------------------|--------|-------------------------|
-| `spec_validation.passed = false` | `spec_validate` | PM |
+| `prd_validation.passed = false` | `prd_validate` | PM |
 | `design_validation.passed = false` | `design_validate` | Architect |
 | `test_report` 失败 / `tests_missing` / `impl_retry` 触顶且 `failed` | `qa` | Developer |
 | Reviewer `next_stage = architect` | `design_validate` | Architect |
 | Reviewer `next_stage = developer` | `qa` | Developer |
-| Reviewer `next_stage = pm` | `spec_validate` | PM |
-| spec 已通过、无 `design.json` | `architect` | —（第一步即 LLM） |
+| Reviewer `next_stage = pm` | `prd_validate` | PM |
+| prd 已通过、无 `design.json` | `architect` | —（第一步即 LLM） |
 
 **Developer 反馈衔接：** 触顶续跑时 `impl_retry_count` 先归零；QA 失败后 `route_after_qa` 置为 `1` 再进 Developer，`format_qa_retry_feedback` 可注入最新 `test_report`。
 
@@ -82,7 +82,7 @@ continue --task-id X
 | `budget.used_llm_calls` / `used_tokens` | → `0`（**始终**，不受 `--no-reset-loops` 影响） | 新 session 重新计 LLM 用量 |
 | `impl_retry_count` | `failed` 且已达 `max_impl_retries` → `0` | 否则 `route_after_qa` 立即触顶 |
 | `design_revision_count` | `failed` 且已达 `max_design_revisions` 且 design 仍失败 → `0` | 同上 |
-| `spec_revision_count` | `failed` 且已达 `max_spec_revisions` 且 spec 仍失败 → `0` | 同上 |
+| `prd_revision_count` | `failed` 且已达 `max_prd_revisions` 且 prd 仍失败 → `0` | 同上 |
 | `status` / `finished_at` | → `running` / `null` | |
 
 **不重置：** `loop_limits.*`、`profile` 快照、`code_root` 源码、未触顶的回路计数、`llm_usage.json` 历史累计（续跑期间新 LLM 调用照常追加；**未**单独写入 `event=continue` 条目，见 §实现落点）。
@@ -119,9 +119,9 @@ python -m multi_agent_code_factory run --task-id X --force-new "..."
 | 来源 | 映射到 state |
 |------|----------------|
 | `run_meta.json` | `task_id`、`*_count` |
-| `run_meta.user_request` | `user_request`（缺失时从 `spec` 降级，打 warning） |
-| `spec.json` | `spec` |
-| `spec_validation.json` | `spec_validation` |
+| `run_meta.user_request` | `user_request`（缺失时从 PRD 降级，打 warning） |
+| `prd.json` | `prd` |
+| `prd_validation.json`（回退 `prd_validation.json`） | `prd_validation`（R2：`prd_validation`） |
 | `design.json` | `design` |
 | `design_validation.json` | `design_validation` |
 | `dev_manifest.json` | `dev_manifest` |
@@ -160,23 +160,23 @@ config = {"configurable": {"thread_id": task_id}}
 state = hydrate_state(run_dir, run_meta)
 ctx = rebuild_context(run_meta, ...)
 
-if reentry in ("spec_validate", "design_validate", "qa"):
-    patch = run_gate(reentry, state, ctx)  # run_spec_validate / run_design_validate / run_qa
+if reentry in ("prd_validate", "design_validate", "qa"):
+    patch = run_gate(reentry, state, ctx)  # run_prd_validate / run_design_validate / run_qa
     state = merge(state, patch)
     app.update_state(config, state, as_node=reentry)
 elif reentry == "architect":
-    # spec 已通过，无 design；跳过门禁，从 route 进 architect
+    # prd 已通过，无 design；跳过门禁，从 route 进 architect
     state.pipeline_route = "architect"
-    app.update_state(config, state, as_node="route_after_spec_validate")
+    app.update_state(config, state, as_node="route_after_prd_validate")
 app.invoke(None, config=config, context=ctx)
 ```
 
 | 再入点 | 续跑第一步 | `update_state(as_node=…)` 后 invoke 进入 |
 |--------|------------|------------------------------------------|
-| `spec_validate` | `run_spec_validate` | `route_after_spec_validate` |
+| `prd_validate` | `run_prd_validate` | `route_after_prd_validate` |
 | `design_validate` | `run_design_validate` | `route_after_design_validate` |
 | `qa` | `run_qa` | `route_after_qa` |
-| `architect` | 无（水合 spec + spec_validation.passed=true） | `architect` → `design_validate` → … |
+| `architect` | 无（水合 prd + prd_validation.passed=true） | `architect` → `design_validate` → … |
 
 **依赖：** `langgraph-checkpoint-sqlite`；`state_to_graph_dict()` / `normalize_pipeline_state()`（`state.py`）负责 checkpoint 序列化与 `update_state` 后 dict→Pydantic 还原；`test_infer` 含 round-trip 单测。
 
@@ -186,12 +186,12 @@ app.invoke(None, config=config, context=ctx)
 
 输入：`run_dir`、`run_meta`、`stale_artifacts` 过滤后的磁盘 JSON。优先级：
 
-1. `review.json` 非 stale 且 `next_stage` ∈ `{pm, architect, developer}` → `spec_validate` / `design_validate` / `qa`
-2. `spec_validation` 非 stale 且 `passed=false` → `spec_validate`
+1. `review.json` 非 stale 且 `next_stage` ∈ `{pm, architect, developer}` → `prd_validate` / `design_validate` / `qa`
+2. `prd_validation` 非 stale 且 `passed=false` → `prd_validate`
 3. `design_validation` 非 stale 且 `passed=false` → `design_validate`
 4. `test_report` 非 stale 且（`passed=false` 或 `tests_missing` 非空），**或**（`impl_retry` 触顶 + `status=failed` + **有效（非 stale）** `dev_manifest`）→ `qa`
 5. 有有效 `design.json`、无有效（非 stale）`dev_manifest` → `design_validate`（`dev_manifest` 在 `stale_artifacts` 时规则 4 不适用，落本规则）
-6. `spec` 已校验通过且无 `design.json` → `architect`
+6. `prd` 已校验通过且无 `design.json` → `architect`
 7. 无法推断 → 报错，建议 `--reenter`
 
 `--reenter` 跳过推断，仍校验前置条件。`status=running` 且存在未完成 `checkpoint.db` 时，P1 仍走上述推断；`resume` 优化见 §范围说明。

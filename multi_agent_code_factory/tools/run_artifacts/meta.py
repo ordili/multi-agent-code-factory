@@ -114,9 +114,9 @@ class RunMetaStore:
             design_rev = meta.design_revision_count
             if design_rev >= limits.max_design_revisions:
                 updates["design_revision_count"] = 0
-            spec_rev = meta.spec_revision_count
-            if spec_rev >= limits.max_spec_revisions:
-                updates["spec_revision_count"] = 0
+            spec_rev = meta.prd_revision_count
+            if spec_rev >= limits.max_prd_revisions:
+                updates["prd_revision_count"] = 0
 
         return self.update(**updates)
 

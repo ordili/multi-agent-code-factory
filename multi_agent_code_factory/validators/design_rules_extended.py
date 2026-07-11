@@ -6,7 +6,7 @@ import re
 from typing import Any
 
 from multi_agent_code_factory.schemas.design import DesignArtifact, DiagramKind
-from multi_agent_code_factory.schemas.spec import SpecArtifact
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from multi_agent_code_factory.schemas.validation_report import Violation
 from multi_agent_code_factory.validators._report import error, warn
 from multi_agent_code_factory.validators.design_triggers import (
@@ -65,7 +65,7 @@ def _is_relational_storage(storage: str) -> bool:
 
 def validate_design_extended_rules(
     design: DesignArtifact,
-    spec: SpecArtifact | None = None,
+    spec: PrdArtifact | None = None,
 ) -> list[Violation]:
     """DES-012 至 DES-034 扩展 JSON 规则。"""
     violations: list[Violation] = []

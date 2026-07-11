@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 from multi_agent_code_factory.schemas.design import DesignArtifact
-from multi_agent_code_factory.schemas.spec import SpecArtifact
+from multi_agent_code_factory.schemas.prd import PrdArtifact
 from multi_agent_code_factory.schemas.validation_report import Violation
 from multi_agent_code_factory.validators._report import warn
 from multi_agent_code_factory.validators.design_triggers import (
@@ -51,7 +51,7 @@ def _has_real_external_deps(design: DesignArtifact) -> bool:
 def validate_design_md_rules(
     design: DesignArtifact,
     md_text: str,
-    spec: SpecArtifact | None = None,
+    spec: PrdArtifact | None = None,
 ) -> list[Violation]:
     """对照 design.json 与定稿模板校验 design.md 章节。"""
     violations: list[Violation] = []
@@ -214,7 +214,7 @@ def validate_design_md_rules(
 def validate_design_md_file(
     design: DesignArtifact,
     run_dir: Path | None,
-    spec: SpecArtifact | None = None,
+    spec: PrdArtifact | None = None,
 ) -> list[Violation]:
     """读取 run 目录 design.md 并执行格式校验。"""
     if run_dir is None:
