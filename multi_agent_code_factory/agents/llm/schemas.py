@@ -9,7 +9,7 @@ from pydantic import BaseModel, Field
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.llm_prompt_shape import LlmPromptShape
 
-_ARCHITECT_DIAGRAM_SHAPE_NOTES = (
+_ARCHITECT_SHAPE_NOTES = (
     "When spec implies persistence OR you add design.diagrams[], also set:\n"
     '  design.diagrams: [{"path":"flow.mmd","kind":"sequence"},'
     '{"path":"flow.mmd","kind":"flowchart"}]\n'
@@ -27,8 +27,19 @@ _ARCHITECT_DIAGRAM_SHAPE_NOTES = (
     "design.transaction_constraints (NOT {name}; required id, scope, boundary):\n"
     '  "transaction_constraints": [{"id":"TX-STORE-001","scope":"save",'
     '"boundary":"single-file atomic write"}]\n'
+    "When persistence applies, set BOTH data_model (logical fields) and table_schemas "
+    "(storage columns). Do NOT mix shapes:\n"
+    '  "data_model": [{"name":"Todo","storage":"todos.json","fields":['
+    '{"name":"id","type":"string"}]}]\n'
+    '  "table_schemas": [{"name":"todos","storage":"todos.json","columns":['
+    '{"name":"id","type":"string","nullable":false,"description":"primary key"}]}]\n'
+    "table_schemas.columns require nullable and description on every column; "
+    "indexes require purpose. file_plan[].path must equal a dev_tasks[].path.\n"
+    "cross_cutting.test_strategy when present: "
+    '{"approach":"pytest","paths":["tests/..."]}.\n'
     "For stateless personal CLI with local_only and no custom performance tier: "
-    "keep non_functional and transaction_constraints as []."
+    "keep non_functional, transaction_constraints, data_model, and table_schemas "
+    "as []."
 )
 
 
@@ -47,7 +58,7 @@ class ArchitectLLMOutput(BaseModel):
             "design": DesignArtifact.LLM_PROMPT_SHAPE.json_shape,
             "mmd_files": [],
         },
-        notes=_ARCHITECT_DIAGRAM_SHAPE_NOTES,
+        notes=_ARCHITECT_SHAPE_NOTES,
     )
 
     design: DesignArtifact

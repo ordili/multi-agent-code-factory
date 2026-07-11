@@ -49,13 +49,26 @@ def test_architect_instructions_include_nfr_and_transaction_shape() -> None:
     instructions = json_output_instructions(ArchitectLLMOutput)
     assert '"non_functional": []' in instructions
     assert '"transaction_constraints": []' in instructions
+    assert '"data_model": []' in instructions
+    assert '"table_schemas": []' in instructions
+    assert '"file_plan": []' in instructions
     assert "Optional supplement" in instructions
     assert '"metric"' in instructions
     assert '"target"' in instructions
     assert '"scope"' in instructions
     assert '"boundary"' in instructions
+    assert '"nullable"' in instructions
     assert "success_metrics/KPI" in instructions
     assert "NOT {name}" in instructions
+    assert "data_model" in instructions
+    assert "table_schemas.columns" in instructions or '"columns":' in instructions
+
+
+def test_architect_instructions_include_persistence_supplement() -> None:
+    instructions = json_output_instructions(ArchitectLLMOutput)
+    assert "cross_cutting.test_strategy" in instructions
+    assert "file_plan" in instructions
+    assert "design_ref" in instructions
 
 
 def test_llm_prompt_shape_defined_on_domain_schemas() -> None:

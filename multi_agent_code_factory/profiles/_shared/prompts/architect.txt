@@ -9,13 +9,21 @@ Given spec and profile, produce:
    - architecture: {"solution_strategy": "one-line approach summary", "code_delta": {"summary": "..."}}
    - design_goals: non-empty string[] referencing upstream FEAT/US/REQ ids where applicable
    - cross_cutting: object (use {} when nothing special)
+     optional nested test_strategy: {approach, paths?, notes?} — required: approach when present
    - modules: non-empty; each {name, path, responsibility, code_domain}
      modules[].name: stable English identifier (matches module_ref and Mermaid participants)
      code_domain: UPPER_SNAKE 2–12 chars (e.g. CALC, TODO, STORE); unique per module
+   - interfaces[]: one entry per module (except SYS); each {name, module_ref, operations[]}
+     module_ref MUST equal modules[].name exactly (same string, case-sensitive)
+     operations: {name, summary, inputs[], outputs[], errors[]} — errors reference error_catalog codes
+     inputs/outputs items: {name, type, required, description?} — required is mandatory boolean on EVERY item
    - dev_tasks: non-empty; unique paths; acyclic; one task per path
      each {id, path, description, depends_on?, covers?}
      dev_tasks.covers must include every P0 feature id and acceptance criterion id
-   - traceability: non-empty; rows {spec_ref_id, spec_ref_kind} with kind FEAT or AC
+     T1 framework step (depends_on=[]): path = profile dependency manifest (e.g. pyproject.toml, go.mod)
+   - traceability: non-empty; rows {spec_ref_id, spec_ref_kind, design_ref?}
+     kind: FEAT | AC | US; prefer design_ref pointing at module name or design element
+     do NOT use legacy feature_id — use spec_ref_id
    - external_dependencies: never leave empty — use [{"name":"none","kind":"none","purpose":"..."}]
      for stateless CLI; else {name, kind, purpose, code_domain?}
    - error_catalog: non-empty list of objects {code, when?, message?, retryable?, recovery?}
@@ -28,6 +36,29 @@ Given spec and profile, produce:
      each error_catalog[].code needs a negative test_cases entry with matching error_code
      NEG cases set error_code; happy/boundary covers should prefer AC-* ids
      every acceptance_criteria[].id must appear in at least one test_cases[].covers or dev_tasks[].covers
+   - file_plan: array (may be []); each {path, action, reason?} — action: create | modify | delete
+     every file_plan[].path MUST exactly equal some dev_tasks[].path (DES-104); use [] when not needed
+   Conditional fields (use [] when not applicable):
+   - diagrams[]: register each *.mmd with {path, kind}; kind is sequence | flowchart | class | context | deployment
+     IF diagrams[] is non-empty, it MUST include BOTH kind=sequence AND kind=flowchart (same path allowed twice)
+     stateless CLI with no persistence: prefer diagrams=[] and omit *.mmd entirely
+   - data_model: when spec has persistence/filesystem/db; logical entities with fields (NOT DB columns)
+     each {name, description?, storage?, fields?, notes?} — fields use {name, type, ...}; NOT table_schemas.columns
+     may be [] for pure stateless CLI
+   - table_schemas: when spec.context.storage, filesystem/db deps, or relational data
+     each {name, storage, columns[], indexes?, audit_policy?, notes?}
+     columns[]: {name, type, nullable, description, pk?, unique?} — required: nullable, description
+     do NOT put columns under data_model or use fields/attributes inside table_schemas
+     indexes[] when present: {name, columns[], purpose, unique?, type?} — required: purpose
+     may be [] for pure stateless CLI (no persistence)
+   - non_functional: when spec implies non-trivial NFR (custom performance tier,
+     high_concurrency, multi_tenant/internet scale); may be [] for simple personal CLI
+     each {id?, metric, target, verification?, notes?} — required: metric, target
+     do NOT copy success_metrics/KPI shape (no description, source, name, verifiable_by)
+   - transaction_constraints: when spec has persistence/filesystem/db or multi_writer
+     each {id, scope, boundary, isolation?, idempotency?, consistency_ref?, notes?}
+     — required: id, scope, boundary; id pattern TX-{DOMAIN}-###; do NOT use {name}
+     may be [] for stateless in-memory CLI with local_only consistency
    When spec.semantic_constraints is non-empty:
    - test_cases[].covers must include each SEM-* id
    - test_cases with input_shape SEM must include semantic_evidence:
@@ -36,30 +67,13 @@ Given spec and profile, produce:
    - For one_of: dimensions, cover each enum token in happy TC description via input: "..." or request:
    - For excludes: add negative TC referencing the SEM / exclude summary
    - error_catalog when/message: describe semantic violation, not a single literal example (DES-S02)
-   - interfaces[]: one entry per module (except SYS); each {name, module_ref, operations[]}
-     module_ref MUST equal modules[].name exactly (same string, case-sensitive)
-     operations: {name, summary, inputs[], outputs[], errors[]} — errors reference error_catalog codes
-     inputs/outputs items: {name, type, required, description?} — required is mandatory boolean on EVERY item
-   - diagrams[]: register each *.mmd with {path, kind}; kind is sequence | flowchart | class | context | deployment
-     IF diagrams[] is non-empty, it MUST include BOTH kind=sequence AND kind=flowchart (same path allowed twice)
-     stateless CLI with no persistence: prefer diagrams=[] and omit *.mmd entirely
-   - non_functional: array when spec implies non-trivial NFR (custom performance tier,
-     high_concurrency, multi_tenant/internet scale); may be [] for simple personal CLI
-     each {id?, metric, target, verification?, notes?} — required: metric, target
-     do NOT copy success_metrics/KPI shape (no description, source, name, verifiable_by)
-   - transaction_constraints: array when spec has persistence/filesystem/db or multi_writer;
-     may be [] for stateless in-memory CLI with local_only consistency
-     each {id, scope, boundary, isolation?, idempotency?, consistency_ref?, notes?}
-     — required: id, scope, boundary; id pattern TX-{DOMAIN}-###; do NOT use {name}
-   - table_schemas: required when spec.context.storage, filesystem/db deps, or relational data;
-     may be [] for pure stateless CLI (no persistence)
 2. Mermaid diagrams — one or more `*.mmd` files under the run directory:
    - Prefer `mmd_files`: [{ "path": "flow.mmd", "content": "..." }, ...]
    - Legacy fallback: `flow_mmd` for a single flow.mmd
    - Register every diagram in design.diagrams[] with matching path and kind
    - sequenceDiagram participants and flowchart node ids MUST use modules[].name literals (e.g. CalcCore)
    - When you emit mmd_files, also populate design.diagrams[] (sequence + flowchart) for the same paths
-   - Follow the main Example JSON shape for structure; use Optional supplement only when persistence/diagrams apply
+   - Follow the main Example JSON shape for structure; use Optional supplement when persistence/diagrams apply
 
 Cover every acceptance_criteria id in dev_tasks.covers, test_cases.covers, or traceability.
 Use relative paths aligned with the profile language layout; no .. or absolute paths.

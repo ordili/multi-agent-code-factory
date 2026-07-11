@@ -560,7 +560,9 @@ class DesignArtifact(BaseModel):
             ],
             "non_functional": [],
             "transaction_constraints": [],
+            "data_model": [],
             "table_schemas": [],
+            "file_plan": [],
             "error_catalog": [
                 {
                     "code": "ERR-CALC-001",
@@ -620,9 +622,21 @@ class DesignArtifact(BaseModel):
                 },
             ],
             "traceability": [
-                {"spec_ref_id": "FEAT-1", "spec_ref_kind": "FEAT"},
-                {"spec_ref_id": "AC-1", "spec_ref_kind": "AC"},
-                {"spec_ref_id": "AC-2", "spec_ref_kind": "AC"},
+                {
+                    "spec_ref_id": "FEAT-1",
+                    "spec_ref_kind": "FEAT",
+                    "design_ref": "CalcCore",
+                },
+                {
+                    "spec_ref_id": "AC-1",
+                    "spec_ref_kind": "AC",
+                    "design_ref": "CliEntry",
+                },
+                {
+                    "spec_ref_id": "AC-2",
+                    "spec_ref_kind": "AC",
+                    "design_ref": "CalcCore",
+                },
             ],
         },
     )
