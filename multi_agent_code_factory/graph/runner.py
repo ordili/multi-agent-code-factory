@@ -27,7 +27,14 @@ from multi_agent_code_factory.log import (
 )
 from multi_agent_code_factory.nodes.design_validate import run_design_validate
 from multi_agent_code_factory.nodes.prd_validate import run_prd_validate
-from multi_agent_code_factory.observability import build_run_config, is_tracing_enabled
+from multi_agent_code_factory.observability import (
+    build_continue_invoke_input,
+    build_run_config,
+    build_trace_inputs,
+    build_trace_output,
+    invoke_graph_with_trace,
+    is_tracing_enabled,
+)
 from multi_agent_code_factory.pipeline_nodes import PipelineNode
 from multi_agent_code_factory.profile_config import ProfileConfig, load_profile
 from multi_agent_code_factory.run_summary import log_run_outcome
@@ -211,10 +218,37 @@ def run_pipeline(
             user_request=user_request,
         )
         app = build_graph()
-        run_config = build_run_config(task_id=task_id, profile_id=profile.id)
+        agent_mode = mode
+        run_config = build_run_config(
+            task_id=task_id,
+            profile_id=profile.id,
+            pipeline_mode="run",
+            agent_mode=agent_mode,
+            user_request=user_request,
+        )
+        trace_inputs = build_trace_inputs(
+            task_id=task_id,
+            profile_id=profile.id,
+            pipeline_mode="run",
+            agent_mode=agent_mode,
+            user_request=user_request,
+        )
         if is_tracing_enabled():
             logger.info("langsmith tracing enabled task_id=%s", task_id)
-        final_raw = app.invoke(initial, context=run_context, config=run_config)
+
+        def _success_output(final_raw: object) -> dict[str, object]:
+            meta = writer.read_meta()
+            status = meta.status if meta is not None else RunStatus.FAILED
+            return build_trace_output(final_raw, status=status)
+
+        final_raw = invoke_graph_with_trace(
+            app,
+            invoke_input=initial,
+            context=run_context,
+            config=run_config,
+            trace_inputs=trace_inputs,
+            build_success_output=_success_output,
+        )
         result = _finalize_result(writer, final_raw)
         _log_pipeline_finish(task_id, writer, result.status, stub=stub)
         return result
@@ -268,7 +302,23 @@ def continue_pipeline(
         checkpointer_path = writer.directory / "checkpoint.db"
         with sqlite_checkpointer(checkpointer_path) as checkpointer:
             app = build_graph(checkpointer=checkpointer)
-            run_config = build_run_config(task_id=task_id, profile_id=profile.id)
+            agent_mode = "stub" if stub else "live"
+            run_config = build_run_config(
+                task_id=task_id,
+                profile_id=profile.id,
+                pipeline_mode="continue",
+                agent_mode=agent_mode,
+                user_request=state.user_request,
+                reentry=reentry_node.value,
+            )
+            trace_inputs = build_trace_inputs(
+                task_id=task_id,
+                profile_id=profile.id,
+                pipeline_mode="continue",
+                agent_mode=agent_mode,
+                user_request=state.user_request,
+                reentry=reentry_node.value,
+            )
             langgraph_config = {
                 **run_config,
                 "configurable": {
@@ -295,7 +345,7 @@ def continue_pipeline(
                 msg = f"unsupported reentry node: {reentry_node.value}"
                 raise ContinueError(msg)
 
-            mode = "stub" if stub else "live"
+            mode = agent_mode
             logger.info(
                 "pipeline continue task_id=%s profile=%s mode=%s reentry=%s",
                 task_id,
@@ -306,7 +356,19 @@ def continue_pipeline(
             if is_tracing_enabled():
                 logger.info("langsmith tracing enabled task_id=%s", task_id)
 
-            final_raw = app.invoke(None, context=run_context, config=langgraph_config)
+            def _success_output(final_raw: object) -> dict[str, object]:
+                meta = writer.read_meta()
+                status = meta.status if meta is not None else RunStatus.FAILED
+                return build_trace_output(final_raw, status=status)
+
+            final_raw = invoke_graph_with_trace(
+                app,
+                invoke_input=build_continue_invoke_input(state),
+                context=run_context,
+                config=langgraph_config,
+                trace_inputs=trace_inputs,
+                build_success_output=_success_output,
+            )
             result = _finalize_result(writer, final_raw)
             _log_pipeline_finish(task_id, writer, result.status, stub=stub)
             return result
