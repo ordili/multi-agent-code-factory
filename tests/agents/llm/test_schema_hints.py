@@ -42,7 +42,7 @@ def test_architect_instructions_include_diagram_supplement() -> None:
     instructions = json_output_instructions(ArchitectLLMOutput)
     assert "Optional supplement" in instructions
     assert "stateless CLI" in instructions
-    assert '"mmd_files": []' in instructions
+    assert "mmd_files[].path" in instructions
 
 
 def test_architect_instructions_include_nfr_and_transaction_shape() -> None:

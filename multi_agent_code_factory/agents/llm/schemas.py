@@ -35,6 +35,7 @@ _ARCHITECT_SHAPE_NOTES = (
     '{"name":"id","type":"string","nullable":false,"description":"primary key"}]}]\n'
     "table_schemas.columns require nullable and description on every column; "
     "indexes require purpose. file_plan[].path must equal a dev_tasks[].path.\n"
+    "mmd_files[].path: filename only under run root (flow.mmd) — not docs/design.mmd.\n"
     "cross_cutting.test_strategy when present: "
     '{"approach":"pytest","paths":["tests/..."]}.\n'
     "design.background: 1–2 sentences for design.md §1 (how design meets spec; "
@@ -50,7 +51,9 @@ _ARCHITECT_SHAPE_NOTES = (
 class MermaidFileWrite(BaseModel):
     """Run 目录下的单个 Mermaid 文件。"""
 
-    path: str = Field(description="Relative path under run directory, e.g. flow.mmd")
+    path: str = Field(
+        description="Filename under run directory only (e.g. flow.mmd), no folders"
+    )
     content: str = Field(description="Mermaid diagram source")
 
 

@@ -19,11 +19,34 @@ from multi_agent_code_factory.agents.stub.fixtures import (
 from multi_agent_code_factory.log import agent_run, get_logger
 from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.renderers.design_md import render_design_md
-from multi_agent_code_factory.schemas.design import DesignArtifact
+from multi_agent_code_factory.schemas.design import DesignArtifact, DiagramRef
 from multi_agent_code_factory.state import PipelineState
 from multi_agent_code_factory.tools.run_artifacts import RunArtifactWriter
+from multi_agent_code_factory.tools.run_artifacts.paths import normalize_run_mmd_path
 
 logger = get_logger("agents.architect")
+
+
+def _normalize_design_diagram_paths(design: DesignArtifact) -> DesignArtifact:
+    if not design.diagrams:
+        return design
+    normalized: list[DiagramRef] = []
+    changed = False
+    for diagram in design.diagrams:
+        safe_path = normalize_run_mmd_path(diagram.path)
+        if safe_path != diagram.path:
+            logger.info(
+                "normalized design.diagrams path %r -> %r",
+                diagram.path,
+                safe_path,
+            )
+            normalized.append(diagram.model_copy(update={"path": safe_path}))
+            changed = True
+        else:
+            normalized.append(diagram)
+    if changed:
+        return design.model_copy(update={"diagrams": normalized})
+    return design
 
 
 def _write_mermaid_artifacts(
@@ -43,7 +66,10 @@ def _write_mermaid_artifacts(
                 item.get("content") if isinstance(item, dict) else None
             )
             if isinstance(path, str) and isinstance(content, str):
-                writer.write_text(path, content)
+                safe_path = normalize_run_mmd_path(path)
+                if safe_path != path:
+                    logger.info("normalized mmd_files path %r -> %r", path, safe_path)
+                writer.write_text(safe_path, content)
         return
     text = flow_mmd or fallback_text or ""
     writer.write_text("flow.mmd", text)
@@ -83,7 +109,9 @@ def run_architect(
                 context=agent_context(AgentRole.ARCHITECT, state, profile),
                 extra_system=format_design_validation_feedback(state),
             )
-            design = normalize_design(output.design, state)
+            design = _normalize_design_diagram_paths(
+                normalize_design(output.design, state)
+            )
             flow_text = None
             _write_mermaid_artifacts(
                 writer,

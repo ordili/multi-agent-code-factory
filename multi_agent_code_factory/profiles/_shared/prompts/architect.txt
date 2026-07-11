@@ -75,6 +75,8 @@ Given spec and profile, produce:
    - error_catalog when/message: describe semantic violation, not a single literal example (DES-S02)
 2. Mermaid diagrams — one or more `*.mmd` files under the run directory:
    - Prefer `mmd_files`: [{ "path": "flow.mmd", "content": "..." }, ...]
+   - mmd_files[].path and design.diagrams[].path: **filename only** at run root
+     (e.g. flow.mmd, architecture-arbitrage.mmd) — NO docs/, docs/runs/, or subfolders
    - Legacy fallback: `flow_mmd` for a single flow.mmd
    - Register every diagram in design.diagrams[] with matching path and kind
    - sequenceDiagram participants and flowchart node ids MUST use modules[].name literals (e.g. CalcCore)
