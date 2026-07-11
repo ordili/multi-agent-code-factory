@@ -29,11 +29,16 @@ def test_language_agnostic_roles_use_shared_prompts() -> None:
         assert "acceptance_coverage" in reviewer
 
 
-def test_artifact_language_snippet_injected_for_pm_architect_reviewer() -> None:
+def test_artifact_language_snippet_injected_for_audit_and_developer_roles() -> None:
     from multi_agent_code_factory.agents.llm.prompt.builder import build_llm_messages
 
     profile = load_profile("python")
-    for role in (AgentRole.PM, AgentRole.ARCHITECT, AgentRole.REVIEWER):
+    for role in (
+        AgentRole.PM,
+        AgentRole.ARCHITECT,
+        AgentRole.DEVELOPER,
+        AgentRole.REVIEWER,
+    ):
         system_prompt, _ = build_llm_messages(
             profile, role_id=role, context={}, extra_system=None
         )

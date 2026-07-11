@@ -16,6 +16,7 @@ def test_load_dev_principles_snippet_exists() -> None:
     assert text is not None
     assert "README.md" in text
     assert "Single responsibility" in text
+    assert "简体中文" in text
 
 
 def test_developer_gets_dev_principles_and_language_snippet() -> None:
@@ -28,6 +29,7 @@ def test_developer_gets_dev_principles_and_language_snippet() -> None:
     )
     assert "README.md" in dev_system
     assert "ruff format" in dev_system
+    assert "简体中文" in dev_system
 
 
 def test_pm_does_not_get_dev_principles_snippet() -> None:
@@ -38,7 +40,7 @@ def test_pm_does_not_get_dev_principles_snippet() -> None:
         context={"note": "test"},
         extra_system=None,
     )
-    assert "README.md" not in pm_system
+    assert "Single responsibility" not in pm_system
 
 
 @pytest.mark.parametrize(

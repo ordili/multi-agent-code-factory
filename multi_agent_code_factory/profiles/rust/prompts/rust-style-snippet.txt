@@ -3,7 +3,7 @@
 
 - Rust edition 2021; run rustfmt on all .rs files.
 - Naming: snake_case functions/vars/modules; PascalCase types/traits; SCREAMING_SNAKE_CASE constants.
-- Public items: /// doc comments on exported API.
+- Public items: /// doc comments on exported API (Simplified Chinese prose; identifiers stay English).
 - Single responsibility: one clear job per function/module; split crates/modules by concern.
 - Errors: use Result and ?; avoid unwrap/expect in library paths; meaningful error types.
 - Safety: minimize unsafe; document invariants when unsafe is required.

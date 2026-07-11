@@ -16,3 +16,9 @@
 - Cover every design semantic_evidence equivalence_class and one_of enum token in tests.
 - Public APIs need idiomatic doc comments per language style snippet.
 - README usage examples must match CLI --help and profile toolchain test/lint commands.
+
+Human-readable project documentation (code_root — for humans):
+- Write README.md, CLI --help text, user-facing error messages, and public API doc comments
+  in Simplified Chinese (简体中文).
+- Keep machine-readable content in English: source identifiers, JSON/config keys and enum values,
+  dependency manifest names (package/crate/module), env var names, and serialized API payloads.

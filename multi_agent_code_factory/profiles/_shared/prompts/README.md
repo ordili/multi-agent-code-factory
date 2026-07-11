@@ -10,7 +10,7 @@
 | PM        | `pm.txt` + `artifact-language-snippet.txt`        | 可选 `pm.txt` 覆盖主 System Prompt                    |
 | Architect | `architect.txt` + `artifact-language-snippet.txt` | 可选 `architect.txt` 覆盖                             |
 | Reviewer  | `reviewer.txt` + `artifact-language-snippet.txt`  | 可选 `reviewer.txt` 覆盖                              |
-| Developer | `developer-principles-snippet.txt`                | `developer.txt` + `{language}-style-snippet.txt` |
+| Developer | `developer-principles-snippet.txt` + `artifact-language-snippet.txt` | `developer.txt` + `{language}-style-snippet.txt` |
 | QA 等      | —                                                 | —                                                |
 
 
@@ -30,7 +30,7 @@
 | 文件                                          | 用于                                    |
 | ------------------------------------------- | ------------------------------------- |
 | `pm.txt` / `architect.txt` / `reviewer.txt` | 对应角色主 System Prompt |
-| `artifact-language-snippet.txt`             | PM、Architect、Reviewer（产物叙述简体中文，id 英文） |
-| `developer-principles-snippet.txt`          | Developer（README、SRP、测试、安全等）          |
+| `artifact-language-snippet.txt`             | PM、Architect、Developer、Reviewer（产物与 code_root 人读简体中文，id/JSON 英文） |
+| `developer-principles-snippet.txt`          | Developer（README、SRP、测试、安全；code_root 人读文档简体中文） |
 
 

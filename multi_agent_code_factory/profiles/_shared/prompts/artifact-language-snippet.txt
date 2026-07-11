@@ -13,3 +13,7 @@ Human-readable artifact language (prd.json, design.json, review.json, and render
   Do not use a different alias in diagrams (DES-204).
 - spec.context.language is the implementation programming language (e.g. python),
   NOT the prose language of PRD/design documents.
+
+Generated project output (code_root, Developer — same human/machine split):
+- Human docs: README.md, CLI --help, user-facing errors, public API doc comments → 简体中文.
+- Machine content: identifiers, source code, JSON keys/values, manifest metadata → English.

@@ -14,5 +14,5 @@ def test_python_style_snippet_not_injected_for_pm() -> None:
         profile, role_id=AgentRole.PM, context=context, extra_system=None
     )
     assert "ruff format" not in pm_system
-    assert "README.md" not in pm_system
+    assert "Single responsibility" not in pm_system
     assert pm_user

@@ -5,7 +5,7 @@
 - Python >= 3.11; follow PEP 8 (enforced by Ruff).
 - Format: ruff format (Black-compatible, line length 88, double quotes).
 - Naming: snake_case functions/vars, PascalCase classes, UPPER constants.
-- Public functions/classes: type hints + Google-style docstrings.
+- Public functions/classes: type hints + Google-style docstrings (Simplified Chinese prose).
 - Error handling: catch specific exceptions; use `raise ... from e`; never bare `except:` or silent `pass`.
 - Resources: use context managers (`with`) for files, locks, and connections.
 - Dependencies: prefer stdlib; add third-party packages only when spec requires them.

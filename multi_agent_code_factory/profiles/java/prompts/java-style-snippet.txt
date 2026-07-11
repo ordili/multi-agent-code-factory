@@ -3,7 +3,7 @@
 
 - Java 21; Maven project layout (src/main/java, src/test/java).
 - Naming: packages lowercase; classes PascalCase; methods/fields camelCase; constants UPPER_SNAKE_CASE.
-- Public classes/methods: Javadoc on exported API where non-obvious.
+- Public classes/methods: Javadoc on exported API where non-obvious (Simplified Chinese prose).
 - Single responsibility: one clear job per class/method; split services by concern.
 - Error handling: specific exceptions; preserve cause chains; no empty catch blocks.
 - Security: no eval/script engines on untrusted input; validate external input; no hardcoded secrets.
