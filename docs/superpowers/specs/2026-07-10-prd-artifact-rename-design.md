@@ -214,7 +214,7 @@ LEGACY_SPEC_VALIDATION_JSON = "spec_validation.json"
 ### 代码 `multi_agent_code_factory/`
 
 - [x] `schemas/prd.py`（自 `spec.py`）
-- [~] `schemas/spec.py` — shim，R6 删除
+- [x] `schemas/spec.py` — shim，R6 已删除
 - [x] `schemas/__init__.py`、`validation_report.py`（`ValidationTarget.PRD`）
 - [x] `schemas/hitl.py`（`HitlStage.PRD`）
 - [x] `state.py`、`schemas/run_meta.py`

@@ -110,6 +110,38 @@ class AcceptanceCriterion(BaseModel):
     verifiable_by: VerifiableBy
 
 
+class SemanticConstraintKind(StrEnum):
+    INPUT_SHAPE = "input_shape"
+    COMMAND_SHAPE = "command_shape"
+    OUTPUT_SHAPE = "output_shape"
+    STATE_TRANSITION = "state_transition"
+    INVARIANT = "invariant"
+
+
+class SemanticSourceKind(StrEnum):
+    US = "US"
+    FEAT = "FEAT"
+    REQ = "REQ"
+
+
+class SemanticExclude(BaseModel):
+    id: str
+    dimension: str
+    rule: str
+    summary: str
+
+
+class SemanticConstraint(BaseModel):
+    id: str
+    source_ref: str
+    source_kind: SemanticSourceKind
+    kind: SemanticConstraintKind
+    summary: str
+    dimensions: dict[str, str]
+    excludes: list[SemanticExclude] = Field(default_factory=list)
+    notes: str | None = None
+
+
 class PerformanceSpec(BaseModel):
     tier: PerformanceTier
     latency: str | None = None
@@ -281,7 +313,22 @@ def coerce_prd_payload(data: Any) -> Any:
         payload["consistency_profile"] = _coerce_consistency_profile(
             payload["consistency_profile"]
         )
+    payload.setdefault("semantic_constraints", [])
     return payload
+
+
+_PRD_LLM_SEMANTIC_NOTES = (
+    "semantic_constraints: leave [] for subcommand CLI / Todo-style tasks. "
+    "When narrow trigger applies (free-form input, expression parsing, "
+    "api|web|form), each SEM-* must reference US/FEAT/REQ and appear in AC "
+    "or requirement_pool text. Example entry:\n"
+    '{"id":"SEM-IN-1","source_ref":"US-1","source_kind":"US",'
+    '"kind":"input_shape","summary":"binary arithmetic input",'
+    '"dimensions":{"operand_count":"exactly:2","operator_count":"exactly:1",'
+    '"operator_set":"one_of:+, -, *, /","operand_type":"type:number"},'
+    '"excludes":[{"id":"SEM-EX-1","dimension":"operand_count",'
+    '"rule":"gte:3","summary":"chained/mixed operands"}]}'
+)
 
 
 class PrdArtifact(BaseModel):
@@ -352,7 +399,9 @@ class PrdArtifact(BaseModel):
                 }
             ],
             "constraints": ["no_secrets_in_repo"],
+            "semantic_constraints": [],
         },
+        notes=_PRD_LLM_SEMANTIC_NOTES,
     )
 
     version: ARTIFACT_VERSION
@@ -372,6 +421,7 @@ class PrdArtifact(BaseModel):
     consistency_profile: ConsistencyProfile
     acceptance_criteria: list[AcceptanceCriterion]
     constraints: list[str] = Field(default_factory=list)
+    semantic_constraints: list[SemanticConstraint] = Field(default_factory=list)
 
     @model_validator(mode="before")
     @classmethod

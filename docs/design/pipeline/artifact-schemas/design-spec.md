@@ -153,7 +153,7 @@
 | `transaction_constraints` | 否    | TransactionConstraint[] | 多写者/跨存储、spec 一致性非 trivial 时**须填**                                                                                        |
 | `error_catalog`           | 是    | ErrorCatalogItem[]      | 全局 `ERR-*`；与接口/用例联动                                                                                                      |
 | `non_functional`          | 否    | NfrSpec[]?              | `prd.json` 的 `operational_profile` 有设计侧量化增量时**须填**                                                                      |
-| `test_cases`              | 是    | TestCase[]              | 含 `happy` / `negative` / `boundary`；`covers` 宜含 `AC-*`                                                                   |
+| `test_cases`              | 是    | TestCase[]              | 含 `happy` / `negative` / `boundary`；`covers` 宜含 `AC-*`；PRD 有 `SEM-*` 时宜含对应 id 并填 `semantic_evidence`（见 [§semantic_evidence](#semantic_evidence)）                         |
 
 
 
@@ -211,7 +211,7 @@
 | 事务   | `TX-{域}-{序号}`      | 可选，用于 `transaction_constraints[].id`                                                                      |
 
 
-**联动：** `OperationSpec.errors[]` 与 `error_catalog[].code` 一致；`TestCase.error_code`（NEG）须引用已定义的 `ERR-`*；`TestCase.covers[]` 宜含上游 `US-`* / `AC-*`。
+**联动：** `OperationSpec.errors[]` 与 `error_catalog[].code` 一致；`TestCase.error_code`（NEG）须引用已定义的 `ERR-`*；`TestCase.covers[]` 宜含上游 `US-`* / `AC-*` / `SEM-*`（当 [prd.json](./prd-spec.md#semantic_constraints) 声明语义约束时）。`error_catalog[].when` / `message` 宜描述语义违规而非单一示例字面量（**DES-S02**）。
 
 `code_domain`**：** 每模块唯一；字面量 `SYS` 表示横切/基础设施模块，**DES-032** 下可无对应 `interfaces[]` 条目；`ExternalDependency.code_domain` 在 `kind≠none` 时必填，且非 `filesystem` 依赖须使用独立域（与封装模块域不重复）。
 
@@ -287,7 +287,9 @@
 
 **DevTask：** `{ "id", "path", "description", "depends_on"?: string[], "covers"?: string[] }` — `covers` 宜含上游 `AC-`*
 
-**TestCase：** `{ "id", "kind", "title"?, "steps"?, "expected"?, "covers"?, "error_code"? }` — `kind`**：** `happy` | `negative` | `boundary`（与 id 中 HAP/NEG/BND 对应，见 [标识符约定](#标识符约定)）
+**SemanticEvidence：** `{ "constraint_ref", "equivalence_class"?, "proves_dimensions"? }` — 引用 `prd.json` 中 `semantic_constraints[].id`
+
+**TestCase：** `{ "id", "kind", "title"?, "description"?, "steps"?, "expected"?, "covers"?, "error_code"?, "semantic_evidence"? }` — `kind`**：** `happy` | `negative` | `boundary`（与 id 中 HAP/NEG/BND 对应）；`description` 对 `input_shape` happy TC 宜含 `input:` 或 `request:` 前缀（**DES-S05**）
 
 **TraceRow：** `{ "spec_ref_id", "spec_ref_kind", "design_ref" }` — `spec_ref_kind` 如 `FEAT` / `US` / `AC`；宜使用 canonical 键名（勿用旧键 `feature_id`）
 
@@ -298,6 +300,72 @@
 ---
 
 
+
+
+
+## semantic_evidence
+
+当 Run `prd.json` 含非空 `semantic_constraints` 时，Architect 在 `test_cases[]` 中提供可机器检查的证据链。校验见 [design-validate §1.7](../quality-gates/design-validate.md#17-语义校验des-s01s05)。
+
+### SemanticEvidence
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `constraint_ref` | string | 引用 `SEM-*` id |
+| `equivalence_class` | string? | 同一约束下的句法变体标识（非 TC id） |
+| `proves_dimensions` | string[] | 本 TC 证明哪些 `dimensions` 键 |
+
+### TestCase 扩展字段
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `description` | string? | 可解析字面量；`input_shape` happy TC 须 `input: "..."` 或 `request: {...}` |
+| `semantic_evidence` | SemanticEvidence? | PRD 有对应 `SEM-*` 时应填 |
+
+**按 PRD `kind` 分支（DES-S01）：**
+
+| PRD `kind` | 要求 |
+|------------|------|
+| `input_shape` | ≥2 条 happy TC，`equivalence_class` 不同；`proves_dimensions` 并集 = 该 constraint 的 `dimensions` 键 |
+| `input_shape` + `one_of:` | 每个枚举值在 happy TC `description` 中至少出现一次（DES-S01b） |
+| `invariant` | ≥1 happy/boundary + ≥1 negative |
+| `state_transition` | ≥1 TC 且 `steps` 非空 |
+| `output_shape` | ≥1 TC 体现输出约束（V1 warn） |
+
+PRD `excludes[]` 非空时，每条 exclude 须有对应 negative TC（DES-S03）。
+
+```json
+"test_cases": [
+  {
+    "id": "TC-HAP-CALC-008",
+    "kind": "happy",
+    "title": "乘法紧凑写法",
+    "description": "input: \"7*8\"",
+    "expected": "56",
+    "covers": ["AC-1", "REQ-3", "SEM-IN-1"],
+    "semantic_evidence": {
+      "constraint_ref": "SEM-IN-1",
+      "equivalence_class": "multiply-compact",
+      "proves_dimensions": ["operand_count", "operator_count", "operator_set"]
+    }
+  },
+  {
+    "id": "TC-HAP-CALC-009",
+    "kind": "happy",
+    "title": "乘法空格写法",
+    "description": "input: \"7 * 8\"",
+    "expected": "56",
+    "covers": ["AC-1", "REQ-3", "SEM-IN-1"],
+    "semantic_evidence": {
+      "constraint_ref": "SEM-IN-1",
+      "equivalence_class": "multiply-spaced",
+      "proves_dimensions": ["operand_count", "operator_count", "operator_set"]
+    }
+  }
+]
+```
+
+---
 
 ## 示例 — default Profile（CLI Todo）
 

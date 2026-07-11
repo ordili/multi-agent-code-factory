@@ -10,6 +10,7 @@ from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.prompt_context import build_prompt_context
 from multi_agent_code_factory.prompt_context_trim import (
     trim_design,
+    trim_prd,
     trim_retry_bundle,
     trim_test_report,
 )
@@ -26,6 +27,12 @@ from multi_agent_code_factory.schemas.test_report import (
 from multi_agent_code_factory.schemas.test_report import (
     TestReport,
     TestSummary,
+)
+from multi_agent_code_factory.schemas.validation_report import (
+    ValidationReport,
+    ValidationTarget,
+    Violation,
+    ViolationSeverity,
 )
 from multi_agent_code_factory.state import PipelineState
 
@@ -47,6 +54,49 @@ def test_trim_design_caps_heavy_lists() -> None:
     trimmed = trim_design(payload)
     assert len(trimmed["test_cases"]) == 30
     assert trimmed["test_cases_truncated_count"] == 10
+
+
+def test_trim_design_compact_keeps_test_cases() -> None:
+    payload = {
+        "version": "1",
+        "spec_ref": "demo",
+        "revision": 1,
+        "modules": [{"id": "m1"}],
+        "test_cases": [
+            {
+                "id": "TC-HAP-CALC-001",
+                "kind": "happy",
+                "title": "compact",
+                "description": 'input: "1*2"',
+                "expected": "2",
+                "covers": ["AC-1", "SEM-IN-1"],
+                "semantic_evidence": {
+                    "constraint_ref": "SEM-IN-1",
+                    "equivalence_class": "multiply-compact",
+                    "proves_dimensions": ["operand_count"],
+                },
+                "notes": "drop me",
+            }
+        ],
+        "traceability": [{"id": "row-1"}],
+    }
+    trimmed = trim_design(payload, compact=True)
+    assert "test_cases" in trimmed
+    assert trimmed["test_cases"][0]["description"] == 'input: "1*2"'
+    assert trimmed["test_cases"][0]["semantic_evidence"]["constraint_ref"] == "SEM-IN-1"
+    assert "notes" not in trimmed["test_cases"][0]
+    assert "traceability" not in trimmed
+
+
+def test_trim_prd_keeps_semantic_constraints() -> None:
+    payload = {
+        "title": "Demo",
+        "semantic_constraints": [{"id": "SEM-IN-1", "kind": "input_shape"}],
+        "noise": "drop",
+    }
+    trimmed = trim_prd(payload)
+    assert trimmed["semantic_constraints"][0]["id"] == "SEM-IN-1"
+    assert "noise" not in trimmed
 
 
 def test_trim_test_report_caps_failures_and_output() -> None:
@@ -189,3 +239,48 @@ def test_build_prompt_context_is_trimmed(
     ctx = build_prompt_context(AgentRole.DEVELOPER, state, default_profile)
     assert "retry_bundle" in ctx
     assert len(ctx["retry_bundle"]["test_report"]["failures"][0]["message"]) <= 300
+    assert "test_cases" in ctx["design"]
+
+
+def test_build_prompt_context_injects_semantic_advisories(default_profile) -> None:
+    state = PipelineState(
+        task_id="t",
+        user_request="calc",
+        prd_validation=ValidationReport(
+            version="1",
+            target=ValidationTarget.PRD,
+            passed=True,
+            error_count=0,
+            warn_count=1,
+            violations=[
+                Violation(
+                    rule_id="PRD-S01",
+                    severity=ViolationSeverity.WARN,
+                    message="missing semantic_constraints",
+                )
+            ],
+        ),
+        design_validation=ValidationReport(
+            version="1",
+            target=ValidationTarget.DESIGN,
+            passed=True,
+            error_count=0,
+            warn_count=1,
+            violations=[
+                Violation(
+                    rule_id="DES-S02",
+                    severity=ViolationSeverity.WARN,
+                    message="error message too literal",
+                )
+            ],
+        ),
+    )
+    dev_ctx = build_prompt_context(AgentRole.DEVELOPER, state, default_profile)
+    assert "semantic_advisories_prd" in dev_ctx
+    assert "PRD-S01" in dev_ctx["semantic_advisories_prd"]
+    assert "semantic_advisories_design" in dev_ctx
+    assert "DES-S02" in dev_ctx["semantic_advisories_design"]
+
+    arch_ctx = build_prompt_context(AgentRole.ARCHITECT, state, default_profile)
+    assert "semantic_advisories_prd" in arch_ctx
+    assert "semantic_advisories_design" not in arch_ctx

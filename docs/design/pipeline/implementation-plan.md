@@ -164,7 +164,7 @@ flowchart LR
 ```
 schemas/
 ├── __init__.py          # 统一导出
-├── spec.py
+├── prd.py
 ├── design.py
 ├── dev_manifest.py
 ├── test_report.py
@@ -391,7 +391,7 @@ LangSmith（`LANGSMITH_*`）可选，用于 Trace 关联 `task_id`（§10 非 MV
 从 **PR-1 + PR-2 + PR-4（路由 TDD）** 并行起手：
 
 1. `profiles.py` 加载 `default.yaml` 并解析 `../generated/default`；矩阵内其它 Profile **层级 A** 单测
-2. `schemas/spec.py` + `schemas/test_report.py` 通过 `examples/snippets/` fixture（含 `context.language`）
+2. `schemas/prd.py` + `schemas/test_report.py` 通过 `examples/snippets/` fixture（含 `context.language`）
 3. `graph_routing.py` + 2–3 个路由单测（与 §4.3 对齐）
 
 完成 PR-1 后 CI 固定 Profile 行为；完成 PR-4 后路由与设计双向可追溯；完成 PR-5 后 validate 范围以 [§3.1 白名单](#31-mvp-规则白名单) 为据。

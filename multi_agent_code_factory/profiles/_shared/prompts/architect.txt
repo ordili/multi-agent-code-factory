@@ -28,6 +28,14 @@ Given spec and profile, produce:
      each error_catalog[].code needs a negative test_cases entry with matching error_code
      NEG cases set error_code; happy/boundary covers should prefer AC-* ids
      every acceptance_criteria[].id must appear in at least one test_cases[].covers or dev_tasks[].covers
+   When spec.semantic_constraints is non-empty:
+   - test_cases[].covers must include each SEM-* id
+   - test_cases with input_shape SEM must include semantic_evidence:
+     {constraint_ref, equivalence_class, proves_dimensions[]}
+   - For input_shape: plan >=2 happy TC with different equivalence_class (compact vs spaced input)
+   - For one_of: dimensions, cover each enum token in happy TC description via input: "..." or request:
+   - For excludes: add negative TC referencing the SEM / exclude summary
+   - error_catalog when/message: describe semantic violation, not a single literal example (DES-S02)
    - interfaces[]: one entry per module (except SYS); each {name, module_ref, operations[]}
      module_ref MUST equal modules[].name exactly (same string, case-sensitive)
      operations: {name, summary, inputs[], outputs[], errors[]} — errors reference error_catalog codes

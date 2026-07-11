@@ -8,6 +8,61 @@ from multi_agent_code_factory.schemas.prd import PrdArtifact
 from tests.conftest import load_snippet_json
 
 
+def test_render_prd_md_semantic_constraints_section() -> None:
+    spec = PrdArtifact.model_validate(
+        {
+            "version": "1",
+            "profile": "python",
+            "revision": 1,
+            "title": "Calc",
+            "summary": "Calc",
+            "context": {"language": "python", "interface": "cli", "storage": "none"},
+            "success_metrics": [],
+            "features": [
+                {
+                    "id": "FEAT-1",
+                    "name": "Calc",
+                    "description": "parse",
+                    "priority": "P0",
+                }
+            ],
+            "scope_in": ["CLI"],
+            "operational_profile": {
+                "user_scale": "personal",
+                "high_concurrency": False,
+                "performance": {"tier": "best_effort"},
+            },
+            "consistency_profile": {
+                "consistency_model": "local_only",
+                "delivery": "best_effort",
+                "multi_writer": False,
+                "idempotency_required": False,
+            },
+            "acceptance_criteria": [
+                {
+                    "id": "AC-1",
+                    "description": "SEM-IN-1 passes",
+                    "verifiable_by": "automated_test",
+                }
+            ],
+            "semantic_constraints": [
+                {
+                    "id": "SEM-IN-1",
+                    "source_ref": "US-1",
+                    "source_kind": "US",
+                    "kind": "input_shape",
+                    "summary": "binary input",
+                    "dimensions": {"operand_count": "exactly:2"},
+                }
+            ],
+        }
+    )
+    md = render_prd_md(spec)
+    assert "## 语义约束" in md
+    assert "SEM-IN-1" in md
+    assert "operand_count=exactly:2" in md
+
+
 def test_render_prd_md_contains_sections(snippets_dir: Path) -> None:
     data = load_snippet_json(snippets_dir, "prd-default.json")
     spec = PrdArtifact.model_validate(data)

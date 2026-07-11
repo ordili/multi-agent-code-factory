@@ -59,6 +59,37 @@ def format_llm_parse_retry_feedback(exc: LlmParseError) -> str:
     )
 
 
+_SEMANTIC_RULE_PREFIXES = ("PRD-S", "DES-S")
+
+
+def _is_semantic_rule_id(rule_id: str) -> bool:
+    return any(rule_id.startswith(prefix) for prefix in _SEMANTIC_RULE_PREFIXES)
+
+
+def semantic_violations(report: ValidationReport | None) -> list[Violation]:
+    """Return PRD-S*/DES-S* violations regardless of passed."""
+    if report is None or not report.violations:
+        return []
+    return [item for item in report.violations if _is_semantic_rule_id(item.rule_id)]
+
+
+def format_semantic_advisories(
+    report: ValidationReport | None,
+    *,
+    headline: str,
+) -> str | None:
+    """Format semantic violations for downstream prompt injection (warn or error)."""
+    items = semantic_violations(report)
+    if not items:
+        return None
+    ordered = sorted(
+        items,
+        key=lambda item: _SEVERITY_ORDER.get(item.severity, 99),
+    )
+    lines = [headline, *(_format_violation_line(item) for item in ordered)]
+    return "\n".join(lines)
+
+
 def format_prd_validation_feedback(state: PipelineState) -> str | None:
     """将上次 spec 校验失败项格式化为 PM 重试时的 extra_system 提示。"""
     footer = None

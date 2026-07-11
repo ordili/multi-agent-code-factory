@@ -166,6 +166,32 @@ def build_prompt_context(
             elif value is not None:
                 context[key] = value
 
+    if role_id in {AgentRole.ARCHITECT, AgentRole.DEVELOPER, AgentRole.REVIEWER}:
+        from multi_agent_code_factory.agents.llm.prompt.validation_feedback import (
+            format_semantic_advisories,
+        )
+
+        prd_advisories = format_semantic_advisories(
+            state.prd_validation,
+            headline=(
+                "PRD semantic validation advisories "
+                "(address before downstream work when possible):"
+            ),
+        )
+        if prd_advisories:
+            context["semantic_advisories_prd"] = prd_advisories
+
+    if role_id in {AgentRole.DEVELOPER, AgentRole.REVIEWER}:
+        design_advisories = format_semantic_advisories(
+            state.design_validation,
+            headline=(
+                "Design semantic validation advisories "
+                "(address before implementation when possible):"
+            ),
+        )
+        if design_advisories:
+            context["semantic_advisories_design"] = design_advisories
+
     if role_id == AgentRole.DEVELOPER:
         bundle = build_retry_bundle(state, profile)
         if bundle is not None:

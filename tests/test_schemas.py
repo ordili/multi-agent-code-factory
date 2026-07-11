@@ -98,6 +98,102 @@ def test_prd_coerces_llm_simplified_shapes() -> None:
     assert spec.consistency_profile.consistency_model.value == "local_only"
 
 
+def test_prd_semantic_constraints_optional() -> None:
+    spec = PrdArtifact.model_validate(
+        {
+            "version": "1",
+            "profile": "python",
+            "revision": 1,
+            "title": "Calc",
+            "summary": "CLI calculator",
+            "context": {"language": "python", "interface": "cli", "storage": "none"},
+            "success_metrics": [],
+            "features": [
+                {
+                    "id": "FEAT-1",
+                    "name": "Calc",
+                    "description": "parse expression",
+                    "priority": "P0",
+                }
+            ],
+            "scope_in": ["CLI"],
+            "operational_profile": {
+                "user_scale": "personal",
+                "high_concurrency": False,
+                "performance": {"tier": "best_effort"},
+            },
+            "consistency_profile": {
+                "consistency_model": "local_only",
+                "delivery": "best_effort",
+                "multi_writer": False,
+                "idempotency_required": False,
+            },
+            "acceptance_criteria": [
+                {
+                    "id": "AC-1",
+                    "description": "pytest passes",
+                    "verifiable_by": "automated_test",
+                }
+            ],
+            "semantic_constraints": [
+                {
+                    "id": "SEM-IN-1",
+                    "source_ref": "US-1",
+                    "source_kind": "US",
+                    "kind": "input_shape",
+                    "summary": "binary arithmetic input",
+                    "dimensions": {
+                        "operand_count": "exactly:2",
+                        "operator_count": "exactly:1",
+                        "operator_set": "one_of:+, -, *, /",
+                        "operand_type": "type:number",
+                    },
+                    "excludes": [
+                        {
+                            "id": "EX-CHAIN",
+                            "dimension": "operand_count",
+                            "rule": "gte:3",
+                            "summary": "chained operands",
+                        }
+                    ],
+                }
+            ],
+        }
+    )
+    assert spec.semantic_constraints[0].id == "SEM-IN-1"
+    assert spec.semantic_constraints[0].dimensions["operand_count"] == "exactly:2"
+
+
+def test_design_test_case_semantic_evidence() -> None:
+    design = DesignArtifact.model_validate(
+        {
+            "spec_ref": "Calc",
+            "test_cases": [
+                {
+                    "id": "TC-HAP-CALC-008",
+                    "kind": "happy",
+                    "description": 'input: "7*8"',
+                    "expected": "56",
+                    "covers": ["AC-1", "SEM-IN-1"],
+                    "semantic_evidence": {
+                        "constraint_ref": "SEM-IN-1",
+                        "equivalence_class": "multiply-compact",
+                        "proves_dimensions": [
+                            "operand_count",
+                            "operator_count",
+                            "operator_set",
+                        ],
+                    },
+                }
+            ],
+        }
+    )
+    evidence = design.test_cases[0].semantic_evidence
+    assert evidence is not None
+    assert evidence.constraint_ref == "SEM-IN-1"
+    assert evidence.equivalence_class == "multiply-compact"
+
+
 def test_design_todo_excerpt_fixture(snippets_dir: Path) -> None:
     data = load_snippet_json(snippets_dir, "design-todo-excerpt.json")
     design = DesignArtifact.model_validate(data)

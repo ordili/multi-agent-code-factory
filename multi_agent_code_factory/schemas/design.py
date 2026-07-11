@@ -216,6 +216,12 @@ class TestCaseKind(StrEnum):
     BOUNDARY = "boundary"
 
 
+class SemanticEvidence(BaseModel):
+    constraint_ref: str
+    equivalence_class: str | None = None
+    proves_dimensions: list[str] = Field(default_factory=list)
+
+
 class TestCase(BaseModel):
     id: str
     kind: TestCaseKind | str
@@ -225,6 +231,7 @@ class TestCase(BaseModel):
     covers: list[str] = Field(default_factory=list)
     error_code: str | None = None
     description: str | None = None
+    semantic_evidence: SemanticEvidence | None = None
 
 
 class TraceRow(BaseModel):
@@ -565,15 +572,44 @@ class DesignArtifact(BaseModel):
                 {
                     "id": "TC-HAP-CALC-001",
                     "kind": "happy",
-                    "title": "正常路径",
-                    "covers": ["AC-1"],
+                    "title": "乘法紧凑写法",
+                    "description": 'input: "7*8"',
+                    "expected": "56",
+                    "covers": ["AC-1", "SEM-IN-1"],
+                    "semantic_evidence": {
+                        "constraint_ref": "SEM-IN-1",
+                        "equivalence_class": "multiply-compact",
+                        "proves_dimensions": [
+                            "operand_count",
+                            "operator_count",
+                            "operator_set",
+                        ],
+                    },
+                },
+                {
+                    "id": "TC-HAP-CALC-002",
+                    "kind": "happy",
+                    "title": "乘法空格写法",
+                    "description": 'input: "7 * 8"',
+                    "expected": "56",
+                    "covers": ["AC-1", "SEM-IN-1"],
+                    "semantic_evidence": {
+                        "constraint_ref": "SEM-IN-1",
+                        "equivalence_class": "multiply-spaced",
+                        "proves_dimensions": [
+                            "operand_count",
+                            "operator_count",
+                            "operator_set",
+                        ],
+                    },
                 },
                 {
                     "id": "TC-NEG-CALC-001",
                     "kind": "negative",
                     "title": "非法输入",
+                    "description": 'input: "1+2+3"',
                     "error_code": "ERR-CALC-001",
-                    "covers": ["AC-2"],
+                    "covers": ["AC-2", "SEM-IN-1"],
                 },
                 {
                     "id": "TC-BND-CALC-001",

@@ -16,6 +16,17 @@ MAX_TEXT_CHARS = 800
 MAX_FAILURE_OUTPUT_CHARS = 500
 MAX_FAILURE_MESSAGE_CHARS = 300
 
+_TEST_CASE_KEEP = (
+    "id",
+    "kind",
+    "title",
+    "description",
+    "expected",
+    "covers",
+    "semantic_evidence",
+    "steps",
+)
+
 
 def _truncate_text(text: str, max_chars: int) -> str:
     if len(text) <= max_chars:
@@ -36,8 +47,19 @@ def _cap_list_items(items: list[Any], max_items: int) -> tuple[list[Any], int | 
     return items[:max_items], len(items) - max_items
 
 
+def _trim_test_case_item(item: Any) -> Any:
+    if not isinstance(item, dict):
+        return item
+    return {key: item[key] for key in _TEST_CASE_KEEP if key in item}
+
+
+def _cap_test_cases(items: list[Any]) -> tuple[list[Any], int | None]:
+    trimmed = [_trim_test_case_item(item) for item in items]
+    return _cap_list_items(trimmed, MAX_HEAVY_LIST_ITEMS)
+
+
 def trim_prd(payload: dict[str, Any]) -> dict[str, Any]:
-    """保留下游 Agent 使用的 spec 字段。"""
+    """保留下游 Agent 使用的 prd 字段（含语义契约）。"""
     keep = (
         "version",
         "profile",
@@ -56,6 +78,7 @@ def trim_prd(payload: dict[str, Any]) -> dict[str, Any]:
         "consistency_profile",
         "acceptance_criteria",
         "constraints",
+        "semantic_constraints",
     )
     return {key: payload[key] for key in keep if key in payload}
 
@@ -79,14 +102,25 @@ def trim_design(payload: dict[str, Any], *, compact: bool = False) -> dict[str, 
             "diagrams",
             "interfaces",
             "file_plan",
+            "test_cases",
         )
-        return {key: payload[key] for key in keep if key in payload}
+        result = {key: payload[key] for key in keep if key in payload}
+        test_cases = result.get("test_cases")
+        if isinstance(test_cases, list):
+            capped, extra = _cap_test_cases(test_cases)
+            result["test_cases"] = capped
+            if extra:
+                result["test_cases_truncated_count"] = extra
+        return result
 
     result = dict(payload)
     for key in ("test_cases", "table_schemas", "traceability", "file_plan"):
         value = result.get(key)
         if isinstance(value, list):
-            capped, extra = _cap_list_items(value, MAX_HEAVY_LIST_ITEMS)
+            if key == "test_cases":
+                capped, extra = _cap_test_cases(value)
+            else:
+                capped, extra = _cap_list_items(value, MAX_HEAVY_LIST_ITEMS)
             result[key] = capped
             if extra:
                 result[f"{key}_truncated_count"] = extra

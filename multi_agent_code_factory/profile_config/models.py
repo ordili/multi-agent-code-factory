@@ -47,8 +47,9 @@ class ValidationGateConfig(BaseModel):
     require_hitl: bool = False
     validate_mermaid: bool = False
     require_hitl_if_flags: list[str] = Field(default_factory=list)
+    semantic_block_on: ValidationBlockOn | None = None
 
-    @field_validator("block_on", mode="before")
+    @field_validator("block_on", "semantic_block_on", mode="before")
     @classmethod
     def _coerce_block_on(cls, value: object) -> object:
         if isinstance(value, str):

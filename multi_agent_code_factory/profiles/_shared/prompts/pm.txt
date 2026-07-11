@@ -44,6 +44,13 @@ Produce a complete PrdArtifact JSON that matches the pipeline schema:
   verifiable_by: automated_test | manual | deploy_check | lint
   include verifiable_by automated_test where profile test toolchain applies
 - constraints (e.g. no_secrets_in_repo)
+- semantic_constraints: when free-form input / expression parsing / api|web|form interface
+  is implied, emit non-empty [{id, source_ref, source_kind, kind, summary, dimensions, excludes?}]
+  id pattern SEM-{DOMAIN}-###; dimensions values use rule syntax only:
+  exactly:N | gte:N | lte:N | one_of:a,b,c | type:number|string|boolean
+  Put SEM ids in requirement_pool (REQ-SEM-*) or AC description for traceability (PRD-S05)
+  Do NOT encode surface separators (spaces vs compact) in dimensions — use excludes for
+  semantic boundaries (e.g. chained operands)
 
 When prd_validation is present in the input context, fix every listed violation.
 When review is present with next_stage pm, address scope issues from review findings.

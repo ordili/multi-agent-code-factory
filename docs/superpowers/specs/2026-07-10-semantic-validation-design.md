@@ -12,6 +12,7 @@
 | v2 | 修正 TC id 与 DES-024 冲突；统一 dimensions 语法；收窄触发条件；SPEC-S05 去掉不存在的 `covers`；DES-S01 按 `kind` 分支 + DES-S01b 枚举覆盖；回归表拆分 spec/design；补充 `prompt_context_trim` |
 | v3 | Run 产物统一为 `prd.json` / `prd.md` |
 | v4 | rule_id **`SPEC-*` → `PRD-*`**、**`SPEC-S*` → `PRD-S*`**；`PrdArtifact`；节点 `prd_validate`（见 PRD 全栈命名设计） |
+| v4.1 | **双层 enforcement**：blocking / advisory 分级 + `semantic_block_on`；**语义 warn 主动注入下游 prompt**；`trim_design(compact)` 保留 `test_cases` |
 
 ## 背景
 
@@ -36,7 +37,7 @@
 1. 机器可判定：用户输入/行为的**语义约束**（元数、类型、排除项），不绑定具体分隔符或示例字面量。
 2. PRD（`prd.json`）为语义契约**唯一来源**；Design 产出可审计的**语义证据**（test_cases）。
 3. 通用：适用于自由格式输入、API 请求体、表单等任务；**不**因 `interface=cli`  alone 强迫子命令型 CLI 套用 `input_shape`。
-4. V1 新规则默认 **warn**，稳定后升为 **error**。
+4. 语义规则分 **blocking（硬门禁）** 与 **advisory（启发式）**；P2 起 blocking 默认 **error**，advisory 默认 **warn**；未达标时 **warn 亦注入下游 Agent prompt**（见 §双层 enforcement）。
 
 ## 非目标
 
@@ -50,7 +51,8 @@
 | 项 | 决策 |
 |----|------|
 | 语义契约存放 | **PRD 层**（`prd.json`）`semantic_constraints[]`；Design 只引用 + 产出 evidence |
-| 规则严格度 V1 | **warn**（不挡流水线）；P2 起在 profile 增 `validation.prd.semantic_errors` / `validation.design.semantic_errors` 可升为 error |
+| 规则严格度 | **双层**：blocking 规则 P2 起默认 **error**；advisory 默认 **warn** 至 P4；Profile `validation.*.semantic_block_on` 可整体降级为 warn（legacy 兼容） |
+| 软 enforcement | **`passed=true` 且存在 PRD-S\*/DES-S\* warn 时**，仍写入 `semantic_advisories_*` 注入 Architect / Developer / Reviewer prompt（P2 必做） |
 | 与格式规则关系 | 独立 rule_id 段 **PRD-S\*** / **DES-S\***；PRD 环结构规则为 **PRD-001～PRD-316**（由原 SPEC-* 整体改号） |
 | 触发策略 | **窄触发**强制 SEM；`interface=cli`  alone 不强制（见 §触发条件） |
 | `SEM-*` 追溯 | 不进 `traceability`（仅 FEAT/AC）；通过 `test_cases.covers` + `semantic_evidence.constraint_ref` 追溯 |
@@ -269,8 +271,8 @@ V1 门禁与示例以 **`input_shape`** 为主；`command_shape` 的 dimensions 
 
 ### 证据规则按 `kind` 分支（DES-S01 / DES-S01b）
 
-| spec `kind` | 规则 | 判定 |
-|-------------|------|------|
+| constraint `kind` | 规则 | 判定 |
+|-------------------|------|------|
 | `input_shape` | **DES-S01** | 每个 `SEM-*`：≥2 happy TC 的 `equivalence_class` 不同；`proves_dimensions` 并集 = 该 constraint 的 `dimensions` 键集 |
 | `input_shape` + `one_of:` 维度 | **DES-S01b** | 对每个 `one_of:a,b,c` 维度，`description` 中 `input:`/`request:` 须覆盖 **每个枚举值至少一次**（如四个运算符各至少一条 happy TC） |
 | `invariant` | **DES-S01**（invariant 分支） | 每个 `SEM-*`：≥1 happy 或 boundary TC + ≥1 negative TC 引用该 constraint；**不要求**等价类 |
@@ -294,30 +296,30 @@ V1 门禁与示例以 **`input_shape`** 为主；`command_shape` 的 dimensions 
 
 （由 `prd_validate` 节点执行；报告写入 `prd_validation.json`。）
 
-| rule_id | 严重度 V1 | 触发 | 判定 |
-|---------|-----------|------|------|
-| **PRD-S01** | warn | §窄触发条件 | `semantic_constraints` 非空 |
-| **PRD-S02** | warn | 有 `semantic_constraints` | 每条 `source_ref` 引用存在的 US/FEAT/REQ |
-| **PRD-S02b** | warn | 有 `semantic_constraints` | 每条 `dimensions` / `excludes[].rule` 符合规则语法白名单 |
-| **PRD-S03** | warn | `scope_out` 非空 | 每条 scope_out 在**任一** `semantic_constraints[].excludes` 或**任一** `requirement_pool[].description` 有可匹配关键词（中英启发式：链式/混合/GUI/持久化/chained/mixed 等） |
-| **PRD-S04** | warn | P0 FEAT 有 `user_story_ids` | FEAT.description 不得宽于 US.want（启发式：FEAT 含「解析/表达式引擎/parse expression」而 US 含「两个/一个/two/one」→ violation） |
-| **PRD-S05** | warn | `semantic_constraints` 非空 | 每个 `SEM-*` id 出现在 **任一** `acceptance_criteria[].description` 或 `requirement_pool[].description` 文本中（V1 **无** `requirement_pool.covers` 字段） |
-| **PRD-S06** | warn | `semantic_constraints` 非空 | `prd.md` 须含 `## 语义约束` 且表内 id 与 `prd.json` 一致 |
+| rule_id | 分级 | 严重度 P2 默认 | 触发 | 判定 |
+|---------|------|----------------|------|------|
+| **PRD-S01** | blocking | error | §窄触发条件 | `semantic_constraints` 非空 |
+| **PRD-S02** | blocking | error | 有 `semantic_constraints` | 每条 `source_ref` 引用存在的 US/FEAT/REQ |
+| **PRD-S02b** | advisory | warn | 有 `semantic_constraints` | 每条 `dimensions` / `excludes[].rule` 符合规则语法白名单 |
+| **PRD-S03** | advisory | warn | `scope_out` 非空 | 每条 scope_out 在**任一** `semantic_constraints[].excludes` 或**任一** `requirement_pool[].description` 有可匹配关键词（中英启发式：链式/混合/GUI/持久化/chained/mixed 等） |
+| **PRD-S04** | advisory | warn | P0 FEAT 有 `user_story_ids` | FEAT.description 不得宽于 US.want（启发式：FEAT 含「解析/表达式引擎/parse expression」而 US 含「两个/一个/two/one」→ violation） |
+| **PRD-S05** | advisory | warn | `semantic_constraints` 非空 | 每个 `SEM-*` id 出现在 **任一** `acceptance_criteria[].description` 或 `requirement_pool[].description` 文本中（V1 **无** `requirement_pool.covers` 字段）；**推荐**用 `REQ-SEM-*` 条目承载 id |
+| **PRD-S06** | advisory | warn | `semantic_constraints` 非空 | `prd.md` 须含 `## 语义约束` 且表内 id 与 `prd.json` 一致 |
 
 实现：`validators/prd_semantic_rules.py`（新模块），由 `prd_validate` 节点在 extended rules 之后调用。
 
 ### Design 环 — `DES-S01`～`DES-S01b` · `DES-S02`～`DES-S05`
 
-| rule_id | 严重度 V1 | 触发 | 判定 |
-|---------|-----------|------|------|
-| **DES-S01** | warn | PRD 有 `SEM-*` | 按 constraint `kind` 应用 §证据规则分支 |
-| **DES-S01b** | warn | PRD 有 `one_of:` 维度 | 枚举值在 happy TC 的 `input:`/`request:` 中逐项覆盖 |
-| **DES-S02** | warn | 存在 `ERR-*` 且 when 含格式/输入/input/format | when/message 不得仅含单一示例字面量（启发式：`如.*\d` 且无 operand/operator/操作数 等维度词） |
-| **DES-S03** | warn | PRD **任一** constraint 的 `excludes` 非空 | 每个 exclude 有 negative TC；`semantic_evidence.constraint_ref` 或 description 含 exclude.summary 关键词 |
-| **DES-S04** | warn | PRD 有 `SEM-*` | `test_cases[].covers` 须含每个 `SEM-*` id |
-| **DES-S05** | warn | PRD 有 `kind=input_shape` 的 `SEM-*` | 对应 happy TC 的 `description` 须匹配 `input:` 或 `request:` 前缀 |
+| rule_id | 分级 | 严重度 P2 默认 | 触发 | 判定 |
+|---------|------|----------------|------|------|
+| **DES-S01** | blocking | error | PRD 有 `SEM-*` | 按 constraint `kind` 应用 §证据规则分支 |
+| **DES-S01b** | blocking | error | PRD 有 `one_of:` 维度 | 枚举值在 happy TC 的 `input:`/`request:` 中逐项覆盖 |
+| **DES-S02** | advisory | warn | 存在 `ERR-*` 且 when 含格式/输入/input/format | when/message 不得仅含单一示例字面量（启发式：`如.*\d` 且无 operand/operator/操作数 等维度词） |
+| **DES-S03** | blocking | error | PRD **任一** constraint 的 `excludes` 非空 | 每个 exclude 有 negative TC；`semantic_evidence.constraint_ref` 或 description 含 exclude.summary 关键词 |
+| **DES-S04** | blocking | error | PRD 有 `SEM-*` | `test_cases[].covers` 须含每个 `SEM-*` id |
+| **DES-S05** | blocking | error | PRD 有 `kind=input_shape` 的 `SEM-*` | 对应 happy TC 的 `description` 须匹配 `input:` 或 `request:` 前缀 |
 
-**DES-S01～S05 前提：** run 目录 `prd.json` 可加载且含 `semantic_constraints`（实现期可回退读 `spec.json`）；若 PRD 无 SEM，设计环语义规则**不触发**（与现网 calculator design 一致）。
+**DES-S01～S05 前提：** run 目录 `prd.json` 可加载且含 `semantic_constraints`；若 PRD 无 SEM，设计环语义规则**不触发**（与现网 calculator design 一致）。
 
 实现：`validators/design_semantic_rules.py`（新模块），由 `design_validate` 读取 run 目录 `prd.json` 做交叉校验。
 
@@ -332,10 +334,32 @@ V1 门禁与示例以 **`input_shape`** 为主；`command_shape` 的 dimensions 
 
 写入 `prd-validate.md` 传导表与 `design-validate.md` 依赖说明。
 
-### V1 warn 与流水线行为
+### 双层 enforcement 与流水线行为
 
-- `graph_routing` 仅在 `validation.passed=false`（含 **error**）时挡流；**warn 不挡** PM → Architect → Developer。
-- 语义规则 V1 默认 warn → **允许**在 SEM 缺失时继续跑通（与 calculator 现网一致）；升 error 后 PM/Architect 必须修完才能前进。
+语义校验采用 **硬挡流 + 软注入** 双轨，避免「全 warn 则无人修复」：
+
+```text
+prd_validate / design_validate
+    ├─ blocking 违规 (PRD-S01/S02, DES-S01/S01b/S03/S04/S05)
+    │     → severity=error（默认）→ passed=false → 路由回 PM / Architect
+    └─ advisory 违规 (PRD-S02b/S03/S04/S05/S06, DES-S02)
+          → severity=warn → passed 仍可 true
+                ↓
+          build_prompt_context 注入 semantic_advisories_*（P2 必做，不依赖 retry）
+                ↓
+          Architect / Developer / Reviewer 在首轮即看到语义缺口
+```
+
+| 机制 | 说明 |
+|------|------|
+| **blocking** | 契约缺失 / 证据链断裂 — P2 默认 **error**，`graph_routing` 挡流 |
+| **advisory** | 启发式质量 — P2 默认 **warn**，不挡流但 **必须** 注入下游 prompt |
+| **`semantic_block_on`** | Profile `validation.prd` / `validation.design` 新增字段；默认 **`error`**（与 blocking 缺省一致）。设为 **`warn`** 时 **全部** PRD-S\*/DES-S\* 降为 warn（legacy run / calculator-10-01 回归用） |
+| **升 error（advisory）** | P4 prompt 稳定后，将 advisory 表内规则逐条升为 error；或整体设 `semantic_block_on: error` 且 advisory 改分级 |
+
+**与格式规则关系：** `validation.*.block_on` 仍只管 PRD-001～316 / DES-001～224；语义规则单独看 **`semantic_block_on`**（未设则与 `block_on` 相同，但 violation 自带 severity 优先）。
+
+**闭环说明：** P2 起 **blocking 规则即形成 enforcement 闭环**；advisory 靠 prompt 注入补全；P4 后 advisory 升 error 收敛为全硬门禁。
 
 ---
 
@@ -345,7 +369,25 @@ V1 门禁与示例以 **`input_shape`** 为主；`command_shape` 的 dimensions 
 
 ### `prompt_context_trim.py`（P1 必改）
 
-`trim_prd()` 的 keep 列表须加入 `semantic_constraints`，否则 Architect/Developer 收不到语义契约，与 DES-S / Developer 原则矛盾。
+下游 Agent **必须**能读到 PRD 语义契约 **与** Design 测试证据；两处裁剪缺一不可：
+
+| 函数 | 必保留字段 | 原因 |
+|------|-----------|------|
+| **`trim_prd()`** | `semantic_constraints` | Architect / Developer 按 dimensions 实现 |
+| **`trim_design(compact=True)`** | `test_cases[]`（限量） | Developer 从 `description` 复制 `input:`/`request:` 字面量写测试 |
+| **`trim_retry_bundle()`** | 同上（经 `trim_prd` / `trim_design`） | 实现环重试仍须语义证据 |
+
+**`test_cases` 裁剪规则（compact）：**
+
+- 保留字段：`id`、`kind`、`title`、`description`、`expected`、`covers`、`semantic_evidence`、`steps`
+- 列表上限：与现网 `MAX_HEAVY_LIST_ITEMS`（30）一致；超出写 `test_cases_truncated_count`
+- **不**截断 `description` 内 `input:`/`request:` 行（整条 TC 保留；必要时只丢 `notes` 等非关键键）
+
+**主动注入（P2，`prompt_context.py`）：**
+
+- 从 `prd_validation` / `design_validation` 提取 rule_id 前缀 `PRD-S` / `DES-S` 的 violations
+- **`passed=true` 且仅有 warn 时也注入** — 键名 `semantic_advisories_prd` / `semantic_advisories_design`
+- 受众：Architect（prd）、Developer + Reviewer（prd + design）
 
 ### PM（`pm.txt` + `LLM_PROMPT_SHAPE`）
 
@@ -385,14 +427,16 @@ V1 门禁与示例以 **`input_shape`** 为主；`command_shape` 的 dimensions 
 
 | 阶段 | 交付物 | 验收 |
 |------|--------|------|
-| **P1** | 本文定稿；`artifact-schemas/prd-spec.md` + `schemas/prd.py` + **`prompt_context_trim.py`** | schema 单测；trim 保留 SEM |
-| **P2** | `prd_semantic_rules.py` + profile `validation.prd.semantic_errors` + `prd-validate.md` | 见 §回归预期（现网 PRD） |
+| **P1** | 本文定稿；`schemas/prd.py` + **`prompt_context_trim.py`**（`semantic_constraints` + compact `test_cases`） | schema 单测；Developer compact context 含 TC |
+| **P2** | `prd_semantic_rules.py` + Profile **`semantic_block_on`** + `semantic_advisories_*` 注入 + `prd-validate.md` | blocking 挡流；advisory warn 仍注入 prompt |
 | **P3** | `design.py` + `design_semantic_rules.py` + `design-validate.md` | 见 §回归预期（补 SEM 后 design） |
 | **P4** | PM/Architect prompt + `prd_md` 渲染 `prd.md` §语义约束 | 新 run 产出 SEM + evidence |
 | **P5** | Developer 原则 + Reviewer 补充 | 新 run `1*2` 通过 |
 | **P6** | 可选 `semantic_review` | profile 可开关 |
 
-**V1 升 error 条件：** P4 prompt 稳定后；连续 3 个 profile 任务 semantic warn 为 0，且 golden run 通过。不在 P2 结束即对 PRD-S01 升 error（避免 PM 未适配时全量挡流）。
+**advisory 升 error 条件：** P4 prompt 稳定后；连续 3 个 profile 任务 semantic warn 为 0，且 golden run 通过。
+
+**Legacy 回归（calculator-10-01）：** Profile 或单次 run 设 `validation.prd.semantic_block_on: warn`（及 design 同理），则 PRD-S01 等 blocking 规则亦以 warn 报告，与 §回归预期一致。
 
 ---
 
@@ -400,20 +444,21 @@ V1 门禁与示例以 **`input_shape`** 为主；`command_shape` 的 dimensions 
 
 ### 现网 `calculator-10-01`（不修改 run 产物）
 
-**PRD 环**（`prd.json` 无 `semantic_constraints`，窄触发成立；现网文件仍为 `spec.json` 直至 [R1 改名](./2026-07-10-prd-artifact-rename-design.md)）：
+**PRD 环**（`prd.json` 无 `semantic_constraints`，窄触发成立；Profile `semantic_block_on: warn`）：
 
 | 规则 | 预期 |
 |------|------|
-| PRD-S01 | warn — 缺 `semantic_constraints` |
+| PRD-S01 | warn — 缺 `semantic_constraints`（默认 profile 为 **error** 挡 PM） |
 | PRD-S04 | warn — FEAT「解析表达式」宽于 US「两数一符」 |
 | PRD-S03 | warn — scope_out「混合运算」无结构化 excludes |
 
-**Design 环**（PRD 无 SEM，**DES-S01～S05 不触发**）：
+**Design 环**（PRD 无 SEM，**DES-S01～S05 均不触发**，含 DES-S02）：
 
 | 规则 | 预期 |
 |------|------|
-| DES-S02 | warn — ERR-CLI-001 message 锚定 `3 + 5` |
-| DES-S01 / S01b | **不触发** |
+| DES-S01 / S01b / S02 / S03 / S04 / S05 | **不触发** — V1 实现仅在 `prd.json` 含非空 `semantic_constraints` 时运行 `design_semantic_rules` |
+
+> legacy `calculator-10-01` design 的 ERR 字面量问题（原 DES-S02 启发式）在 V1 **不单独 lint**；待 PRD 补 SEM 后由 DES-S01/S01b 与 error_catalog prompt 一并收敛。
 
 ### 新 run（PM 产出 SEM-IN-1 + Architect 满足 S01/S01b）
 
@@ -438,7 +483,9 @@ V1 门禁与示例以 **`input_shape`** 为主；`command_shape` 的 dimensions 
 |------|------|
 | `docs/superpowers/specs/2026-07-10-semantic-validation-design.md` | 本文 |
 | `docs/design/pipeline/artifact-schemas/prd-spec.md` | 增 `semantic_constraints` |
+| `docs/design/pipeline/artifact-schemas/design-spec.md` | 增 `semantic_evidence` + `TestCase` 扩展 |
 | `docs/design/pipeline/artifact-templates/prd-spec.md` | 增 `## 语义约束` 写作规范 |
+| `docs/design/pipeline/artifact-templates/design-spec.md` | §6 语义证据写作规范 |
 | `docs/design/pipeline/quality-gates/prd-validate.md` | 增 §3.4 Semantic + 传导 |
 | `docs/design/pipeline/quality-gates/design-validate.md` | 增 §1.7 Semantic |
 | `multi_agent_code_factory/schemas/prd.py` | 模型 + `LLM_PROMPT_SHAPE` |
@@ -448,7 +495,10 @@ V1 门禁与示例以 **`input_shape`** 为主；`command_shape` 的 dimensions 
 | `multi_agent_code_factory/nodes/prd_validate.py` | 挂载 S 规则 |
 | `multi_agent_code_factory/nodes/design_validate.py` | 已读 prd；挂载 S 规则 |
 | `multi_agent_code_factory/renderers/prd_md.py` | 渲染语义约束章 |
-| **`multi_agent_code_factory/prompt_context_trim.py`** | **`trim_prd` 保留 `semantic_constraints`** |
+| **`multi_agent_code_factory/prompt_context_trim.py`** | **`trim_prd` 保留 `semantic_constraints`；`trim_design(compact)` 保留 `test_cases`** |
+| **`multi_agent_code_factory/prompt_context.py`** | **注入 `semantic_advisories_*`（warn 亦注入）** |
+| **`multi_agent_code_factory/agents/llm/prompt/validation_feedback.py`** | **`format_semantic_advisories()`** |
+| `multi_agent_code_factory/profile_config/models.py` | `ValidationGateConfig.semantic_block_on` |
 | `profiles/_shared/prompts/pm.txt` | 产出指引 |
 | `profiles/_shared/prompts/architect.txt` | evidence 指引 |
 | `profiles/_shared/prompts/developer-principles-snippet.txt` | 解析语义原则 |

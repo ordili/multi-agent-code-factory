@@ -13,7 +13,9 @@ def test_prompt_shape_for_schema_returns_llm_prompt_shape() -> None:
     shape = prompt_shape_for_schema(PrdArtifact)
     assert shape is not None
     assert shape.json_shape["title"] == "CLI Todo App"
-    assert shape.notes is None
+    assert shape.notes is not None
+    assert "semantic_constraints" in shape.notes
+    assert "SEM-IN-1" in shape.notes
 
 
 def test_llm_prompt_shape_is_frozen() -> None:

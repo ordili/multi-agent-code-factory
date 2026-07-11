@@ -186,6 +186,25 @@ def render_prd_md(spec: PrdArtifact) -> str:
         lines.append("—")
     lines.append("")
 
+    if spec.semantic_constraints:
+        lines.extend(["## 语义约束", ""])
+        lines.extend(["| ID | 来源 | 类型 | 摘要 |", "|----|------|------|------|"])
+        for constraint in spec.semantic_constraints:
+            lines.append(
+                f"| {constraint.id} | {constraint.source_ref} | "
+                f"{constraint.kind.value} | {constraint.summary} |"
+            )
+        lines.append("")
+        for constraint in spec.semantic_constraints:
+            dim_text = "；".join(
+                f"{key}={value}" for key, value in constraint.dimensions.items()
+            )
+            lines.append(f"**{constraint.id} 维度：** {dim_text}")
+            if constraint.excludes:
+                exclude_text = "；".join(item.summary for item in constraint.excludes)
+                lines.append(f"**{constraint.id} 明确排除：** {exclude_text}")
+            lines.append("")
+
     lines.extend(["## 范围", ""])
     lines.append("**本次包含**")
     lines.append("")

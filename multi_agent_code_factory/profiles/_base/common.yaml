@@ -5,10 +5,12 @@ validation:
   prd:
     enabled: true
     block_on: error
+    semantic_block_on: warn
     require_hitl: false
   design:
     enabled: true
     block_on: error
+    semantic_block_on: warn
     require_hitl: false
     validate_mermaid: false
     require_hitl_if_flags: [touches_production]

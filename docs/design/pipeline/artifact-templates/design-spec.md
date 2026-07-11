@@ -452,7 +452,7 @@
 | **类型**   | `happy` / `negative` / `boundary`（对应 HAP / NEG / BND） |
 | **标题**   | 一句话测什么                                                |
 | **期望结果** | 可判定通过/失败                                              |
-| **覆盖**   | `US-`*、`AC-`*、`FEAT-*` 等                              |
+| **覆盖**   | `US-`*、`AC-`*、`FEAT-*`；PRD 有 `SEM-*` 时必须含对应 id                              |
 | **错误码**  | 异常用例填对应 `ERR-`*；正向填 `—`                               |
 
 
@@ -462,6 +462,14 @@
 - 每个 **错误码**（§4.5 或 §4.3 接口约定处）至少 1 条 **NEG** 用例
 - **须含 BND**（边界）用例；spec 无显式边界场景时，至少 1 条与主路径相关的 BND（如空值、极值）
 - **不要**写测试策略散文（层次、工具、框架由 Profile / CI 决定；用例表即交付物）
+
+
+**语义证据（当上游 prd.json 含 `semantic_constraints` 时）：**
+
+- happy TC 对 `input_shape` 约束：`description` 须可解析（`input: "..."` 或 `request: {...}`）；≥2 种句法等价类
+- `covers` 含对应 `SEM-*`；JSON 侧填 `semantic_evidence.constraint_ref` 与 `proves_dimensions`
+- PRD `excludes` 非空时：每条排除项至少 1 条 NEG TC
+- 详见 [artifact-schemas/design-spec.md §semantic_evidence](../artifact-schemas/design-spec.md#semantic_evidence)
 
 ### 附录写法（A～D）
 

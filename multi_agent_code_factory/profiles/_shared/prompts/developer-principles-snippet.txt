@@ -11,5 +11,8 @@
 - No hardcoded secrets; use environment variables; never commit real credentials.
 - No eval/exec on untrusted input; prefer subprocess without shell unless spec requires shell.
 - Each business module needs corresponding tests covering P0 acceptance_criteria and design test cases.
+- When prd.semantic_constraints is present: implement parsing against dimensions rule syntax,
+  not the first AC example literal; copy input:/request: literals from design.test_cases into tests.
+- Cover every design semantic_evidence equivalence_class and one_of enum token in tests.
 - Public APIs need idiomatic doc comments per language style snippet.
 - README usage examples must match CLI --help and profile toolchain test/lint commands.

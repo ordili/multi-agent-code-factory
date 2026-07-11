@@ -146,6 +146,19 @@
 
 > **字段** 列与 [artifact-schemas/design-spec.md](../artifact-schemas/design-spec.md) JSON 契约一致（英文键名）。
 
+### 1.7 语义校验（DES-S01～S05）
+
+> 前提：Run `prd.json` 含非空 `semantic_constraints`。实现：`validators/design_semantic_rules.py`。
+
+| rule_id | 分级 | 严重度 | 触发 | 判定 |
+|---------|------|--------|------|------|
+| `DES-S01` | blocking | error | PRD 有 `SEM-*` | 按 constraint `kind` 检查等价类 / proves_dimensions / invariant / transition |
+| `DES-S01b` | blocking | error | PRD 有 `one_of:` 维度 | happy TC 的 `input:`/`request:` 覆盖每个枚举值 |
+| `DES-S02` | advisory | warn | ERR when/message 含 format/input | 不得仅锚定单一示例字面量 |
+| `DES-S03` | blocking | error | PRD `excludes` 非空 | 每个 exclude 有 negative TC |
+| `DES-S04` | blocking | error | PRD 有 `SEM-*` | `test_cases.covers` 含每个 SEM id |
+| `DES-S05` | blocking | error | PRD 有 `input_shape` SEM | happy TC `description` 含 `input:` 或 `request:` 前缀 |
+
 ---
 
 ## 2. design.md / `*.mmd` 格式（P1）

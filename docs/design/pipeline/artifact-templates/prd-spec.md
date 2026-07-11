@@ -33,6 +33,7 @@
 | 5   | `## 功能`      | 必填  | 能力级清单（FEAT-*）                                  |
 | 6   | `## 用户故事`    | 必填  | 场景级（US-*）；建议 ≥2 条                              |
 | 7   | `## 需求池`     | 必填  | 可排期交付细项（REQ-*）；建议 ≥1 条                         |
+| 7.5 | `## 语义约束` | 狭触发时必填 | 机器可判定边界；无 SEM 时省略本节 |
 | 8   | `## 范围`      | 必填  | 纳入 / 排除边界                                      |
 | 9   | `## 非功能性需求`  | 必填  | 性能、稳定性、一致性等；子标题不涉及时可写 **「无」**                  |
 | 10  | `## 验收标准`    | 必填  | 可执行门禁（AC-*）                                    |
@@ -222,6 +223,21 @@ As a {role}, I want {observable behavior}, so that {value}.
 
 
 
+
+
+
+### §7.5 语义约束
+
+宽触发（自由输入、表达式解析、api|web|form 界面）时必填；与 `prd.json` 中 `semantic_constraints[]` 一一对应。放在 `§7 需求池` 之后、`§8 范围` 之前。
+
+表格列：**ID | 来源 | 类型 | 摘要**
+
+每条约束补充：
+
+- **维度：** `键=规则`，多键用 `；` 分隔（如 `operand_count=exactly:2`）
+- **明确排除：** 若 `excludes[]` 非空，列出人读摘要
+
+示例见 [artifact-schemas/prd-spec.md §semantic_constraints](../artifact-schemas/prd-spec.md#semantic_constraints)。
 
 ### §8 范围
 

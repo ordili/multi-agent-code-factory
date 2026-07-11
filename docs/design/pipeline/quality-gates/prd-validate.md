@@ -124,4 +124,29 @@ Run `prd.md` 章节写法见 [artifact-templates/prd-spec.md](../artifact-templa
 | `PRD-315` | warn | 是 | — | `prd.md` | 须含 `### 数据一致性` |
 | `PRD-316` | warn | 是 | — | `prd.md` | `## 范围` 下须含 `**本次包含**`、`**明确不做**` |
 
+
+
+### PRD → design 传导（语义）
+
+| PRD 信号 | design 义务 |
+|-----------|-------------|
+| 窄触发且 `semantic_constraints[]` 非空 | [DES-S01～S05](./design-validate.md#17-语义校验des-s01s05)（按 `kind` 分支） |
+| `excludes[]` 非空 | DES-S03 |
+| `dimensions` 含 `one_of:` | DES-S01b |
+| `SEM-*` id | `test_cases.covers` + `semantic_evidence.constraint_ref` |
+
 **失败：** `route_after_prd_validate` → **pm**；violations 注入 PM prompt。
+
+## 3.4 语义校验（PRD-S01～S06）
+
+> 实现：`validators/prd_semantic_rules.py` · 默认 **blocking=error / advisory=warn** · Profile `validation.prd.semantic_block_on: warn` 可整体降级（legacy 兼容）。
+
+| rule_id | 分级 | 严重度 | 触发 | 判定 |
+|---------|------|--------|------|------|
+| `PRD-S01` | blocking | error | 窄触发（见 semantic-validation 设计） | `semantic_constraints` 非空 |
+| `PRD-S02` | blocking | error | 有 `semantic_constraints` | `source_ref` 引用存在的 US/FEAT/REQ |
+| `PRD-S02b` | advisory | warn | 有 `semantic_constraints` | `dimensions` / `excludes[].rule` 符合规则语法白名单 |
+| `PRD-S03` | advisory | warn | `scope_out` 非空 | scope_out 在 excludes 或 requirement_pool 有可匹配描述 |
+| `PRD-S04` | advisory | warn | P0 FEAT 有 `user_story_ids` | FEAT 不得宽于 US（启发式） |
+| `PRD-S05` | advisory | warn | 有 `semantic_constraints` | 每个 `SEM-*` 出现在 AC 或 requirement_pool 文本 |
+| `PRD-S06` | advisory | warn | 有 `semantic_constraints` | `prd.md` 含 `## 语义约束` 且 id 一致 |
