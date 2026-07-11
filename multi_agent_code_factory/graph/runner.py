@@ -23,6 +23,7 @@ from multi_agent_code_factory.graph.pipeline_run_context import PipelineRunConte
 from multi_agent_code_factory.log import (
     ERROR_LOG_FILENAME,
     RUN_LOG_FILENAME,
+    WARNING_LOG_FILENAME,
     attach_run_file_logging,
     detach_run_file_logging,
     get_logger,
@@ -344,8 +345,11 @@ def _log_pipeline_finish(
             usage.totals.total_tokens,
         )
     run_log = writer.directory / RUN_LOG_FILENAME
+    warning_log = writer.directory / WARNING_LOG_FILENAME
     error_log = writer.directory / ERROR_LOG_FILENAME
     if run_log.is_file():
         logger.info("run log file=%s", run_log)
+    if warning_log.is_file():
+        logger.info("warning log file=%s", warning_log)
     if error_log.is_file():
         logger.info("error log file=%s", error_log)

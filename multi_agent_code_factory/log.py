@@ -20,7 +20,19 @@ _CONFIGURED = False
 _RUN_FILE_HANDLERS: list[logging.Handler] = []
 
 RUN_LOG_FILENAME = "run.log"
+WARNING_LOG_FILENAME = "warn.log"
 ERROR_LOG_FILENAME = "error.log"
+
+
+class _ExactLevelFilter(logging.Filter):
+    """仅放行指定级别的日志记录。"""
+
+    def __init__(self, level: int) -> None:
+        super().__init__()
+        self._level = level
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        return record.levelno == self._level
 
 
 def _resolve_level(level: str | int | None) -> int:
@@ -68,8 +80,8 @@ def configure_logging(*, level: str | int | None = None, force: bool = False) ->
 
 def attach_run_file_logging(
     run_dir: Path, *, append: bool = False
-) -> tuple[Path, Path]:
-    """将日志同时写入 run 目录下的 ``run.log`` 与 ``error.log``。"""
+) -> tuple[Path, Path, Path]:
+    """将日志写入 run 目录下的 ``run.log``、``warn.log`` 与 ``error.log``。"""
     detach_run_file_logging()
 
     directory = run_dir.resolve()
@@ -77,6 +89,7 @@ def attach_run_file_logging(
     mode = "a" if append else "w"
 
     run_log_path = directory / RUN_LOG_FILENAME
+    warning_log_path = directory / WARNING_LOG_FILENAME
     error_log_path = directory / ERROR_LOG_FILENAME
 
     run_handler = logging.FileHandler(
@@ -85,6 +98,15 @@ def attach_run_file_logging(
         encoding="utf-8",
     )
     run_handler.setFormatter(_log_formatter())
+
+    warning_handler = logging.FileHandler(
+        warning_log_path,
+        mode=mode,
+        encoding="utf-8",
+    )
+    warning_handler.setLevel(logging.WARNING)
+    warning_handler.addFilter(_ExactLevelFilter(logging.WARNING))
+    warning_handler.setFormatter(_log_formatter())
 
     error_handler = logging.FileHandler(
         error_log_path,
@@ -96,9 +118,10 @@ def attach_run_file_logging(
 
     root = logging.getLogger()
     root.addHandler(run_handler)
+    root.addHandler(warning_handler)
     root.addHandler(error_handler)
-    _RUN_FILE_HANDLERS.extend([run_handler, error_handler])
-    return run_log_path, error_log_path
+    _RUN_FILE_HANDLERS.extend([run_handler, warning_handler, error_handler])
+    return run_log_path, warning_log_path, error_log_path
 
 
 def detach_run_file_logging() -> None:
