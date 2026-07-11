@@ -119,12 +119,12 @@
 |------|-----|---------|------|
 | [x] | `junit_xml` | python, java | `tools/test_parsers/junit_xml.py` |
 | [x] | `exit_code_only` | — | `tools/test_parsers/exit_code_only.py` |
-| [ ] | **`go_json`** | go | `tools/test_parsers/go_json.py` |
+| [x] | **`go_json`** | go | `tools/test_parsers/go_json.py` |
 | [x] | **`cargo_json`** | rust | `tools/test_parsers/cargo_json.py` |
 | [x] | **`forge_json`** | solidity | `tools/test_parsers/forge_json.py` |
 | [ ] | Go / Rust / Solidity **live e2e** 各一例 | — | `tests/integration/` |
 | [x] | 多语言 **Developer prompt** + **style snippet** | go/java/rust/solidity/python | `profiles/*/prompts/developer.txt`、`{language}-style-snippet.txt` |
-| [x] | **共享** PM / Architect / Reviewer prompt（语言无关） | 全部 V1 Profile | `profiles/_shared/prompts/`；`agents/llm/prompt/loader.py` |
+| [x] | **Developer 重试上下文**（RetryBundle 瘦身 + `failure_contexts` + patch-only） | 全部 V1 Profile | [developer-retry-context-spec.md](./developer-retry-context-spec.md) · `retry_context.py` · `prompt_context.py` |
 
 ---
 
@@ -189,7 +189,7 @@
 
 - [ ] `prd_hitl` / `design_hitl` interrupt 可暂停与恢复
 - [x] `docs/runs/<task_id>/` 含 **`design.md`**
-- [ ] `go_json` Parser + Profile 跑通一例
+- [x] `go_json` Parser + Profile 注册（单元测试；live e2e 待补）
 - [x] `cargo_json` / `forge_json` Parser（单元测试 + Profile 注册）
 - [ ] Rust / Solidity **live e2e** 各一例
 - [ ] `resume --task-id` 从 checkpoint 续跑
@@ -198,4 +198,4 @@
 
 ---
 
-*最后更新：2026-07-11（`cargo_json` / `forge_json` Parser 落地；PRD 语义校验）*
+*最后更新：2026-07-11（Developer 重试上下文 R0–R2 已实现；`go_json` Parser 落地）*

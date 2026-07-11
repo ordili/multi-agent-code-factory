@@ -31,6 +31,7 @@ _KNOWN_TEST_PARSERS = {
     "python": "junit_xml",
     "java": "junit_xml",
     "rust": "cargo_json",
+    "go": "go_json",
     "solidity": "forge_json",
 }
 

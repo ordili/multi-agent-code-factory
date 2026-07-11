@@ -9,9 +9,13 @@ Required layout for default Rust profile:
 - tests/*.rs or inline #[cfg(test)] modules covering acceptance criteria
 
 When retry_bundle is present:
-- read test_report.failures and fix failing tests/files
+- read retry_bundle.failure_contexts for call-path snippets and omitted_frames
+- read test_report.failures and review_feedback (if any) for what to fix
 - if tests_missing is set, add tests for each listed source path
 - if auto_generate_tests is true, prioritize creating missing test files
+When impl_mode is retry_patch:
+- return ONLY new or modified source_files (do not resend unchanged files)
+- tasks_completed must list all dev_task ids satisfied so far (including prior passes)
 Do not add secrets. Prefer std unless spec requires otherwise.
 
 Return tasks_completed (dev_task ids) and source_files with full file contents.

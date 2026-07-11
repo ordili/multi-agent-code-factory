@@ -141,7 +141,7 @@ Override the code directory with `--code-root`, e.g. `--code-root ../generated/c
 | `rust` | Rust toolchain (`cargo test --message-format=json`; inline `#[cfg(test)]` supported) |
 | `solidity` | Foundry (`forge test --json`) |
 | `java` | JDK + Maven or Gradle |
-| `go` | Go + `go test` (parser `go_json` still P1) |
+| `go` | Go + `go test -json` (`go_json` parser) |
 
 Common CLI flags: `--live`, `--log-level`, `--code-root`, `--max-impl-retries`, `--max-design-revisions`, `--max-prd-revisions`.
 
@@ -187,7 +187,7 @@ Python style guide: [docs/design/pipeline/python-style.md](docs/design/pipeline/
 | [docs/README.md](docs/README.md) | Doc index and run artifact map |
 | [docs/design/pipeline/multi-agent-pipeline-design.md](docs/design/pipeline/multi-agent-pipeline-design.md) | Pipeline architecture, routing, artifacts |
 | [docs/design/pipeline/artifact-continue-design.md](docs/design/pipeline/artifact-continue-design.md) | Artifact-based `continue` resume |
-| [docs/design/pipeline/qa-gates-spec.md](docs/design/pipeline/qa-gates-spec.md) | QA layers: toolchain, `tests_missing`, coverage |
+| [docs/design/pipeline/developer-retry-context-spec.md](docs/design/pipeline/developer-retry-context-spec.md) | Developer retry: `failure_contexts`, patch-only, slim RetryBundle |
 | [multi_agent_code_factory/profiles/README.md](multi_agent_code_factory/profiles/README.md) | Profile fields and built-in language stacks |
 | [docs/design/pipeline/P1-backlog.md](docs/design/pipeline/P1-backlog.md) | Maintainers: P1 backlog checklist |
 

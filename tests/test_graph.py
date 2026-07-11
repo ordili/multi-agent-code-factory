@@ -73,7 +73,7 @@ def test_build_retry_bundle_when_retrying(default_profile, snippets_dir: Path) -
     )
     bundle = build_retry_bundle(state, default_profile)
     assert bundle is not None
-    assert bundle.prd.title == spec.title
+    assert bundle.retry_cause == "qa_failure"
     ctx = build_prompt_context(AgentRole.DEVELOPER, state, default_profile)
     assert "retry_bundle" in ctx
 

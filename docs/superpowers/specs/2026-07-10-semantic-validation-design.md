@@ -375,7 +375,7 @@ prd_validate / design_validate
 |------|-----------|------|
 | **`trim_prd()`** | `semantic_constraints` | Architect / Developer 按 dimensions 实现 |
 | **`trim_design(compact=True)`** | `test_cases[]`（限量） | Developer 从 `description` 复制 `input:`/`request:` 字面量写测试 |
-| **`trim_retry_bundle()`** | 同上（经 `trim_prd` / `trim_design`） | 实现环重试仍须语义证据 |
+| **`trim_retry_bundle()`** | `test_report`、`failure_contexts`（snippet 已在提取阶段预算化，**不**头截断） | 实现环重试；`prd`/`design` 由顶层 `trim_prd` / `trim_design` 处理，**不在** bundle 内 |
 
 **`test_cases` 裁剪规则（compact）：**
 

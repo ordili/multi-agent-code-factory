@@ -13,6 +13,7 @@ from multi_agent_code_factory.tools.test_parsers.exit_code_only import (
     parse_exit_code_only,
 )
 from multi_agent_code_factory.tools.test_parsers.forge_json import parse_forge_json
+from multi_agent_code_factory.tools.test_parsers.go_json import parse_go_json
 from multi_agent_code_factory.tools.test_parsers.junit_xml import parse_junit_xml
 
 ParserFn = Callable[[CommandResult, ProfileConfig, Path], TestReport]
@@ -23,6 +24,7 @@ _PARSERS: dict[str, ParserFn] = {
     "exit_code_only": parse_exit_code_only,
     "cargo_json": parse_cargo_json,
     "forge_json": parse_forge_json,
+    "go_json": parse_go_json,
 }
 
 

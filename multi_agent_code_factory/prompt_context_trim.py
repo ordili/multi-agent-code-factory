@@ -6,7 +6,7 @@ from typing import Any
 
 from multi_agent_code_factory.agent_roles import AgentRole
 
-MAX_SNIPPET_LINES = 120
+MAX_SNIPPET_LINES = 500
 MAX_SNIPPET_FILES = 3
 MAX_FAILURE_ITEMS = 10
 MAX_VIOLATION_ITEMS = 20
@@ -248,32 +248,27 @@ def trim_dev_manifest(payload: dict[str, Any]) -> dict[str, Any]:
 
 
 def trim_retry_bundle(payload: dict[str, Any]) -> dict[str, Any]:
-    """压缩 Developer 重试包并限制 code snippet 数量与行数。"""
+    """压缩 Developer 重试包（snippet 已在提取阶段预算化，不再头截断）。"""
     result = dict(payload)
-    prd = result.get("prd")
-    if isinstance(prd, dict):
-        result["prd"] = trim_prd(prd)
-    design = result.get("design")
-    if isinstance(design, dict):
-        result["design"] = trim_design(design, compact=True)
     test_report = result.get("test_report")
     if isinstance(test_report, dict):
         result["test_report"] = trim_test_report(test_report)
     dev_manifest = result.get("dev_manifest")
     if isinstance(dev_manifest, dict):
         result["dev_manifest"] = trim_dev_manifest(dev_manifest)
-
-    snippets = result.get("code_snippets")
-    if isinstance(snippets, list):
-        trimmed: list[Any] = []
-        for item in snippets[:MAX_SNIPPET_FILES]:
-            if isinstance(item, dict) and isinstance(item.get("content"), str):
-                item = dict(item)
-                item["content"] = _truncate_lines(item["content"], MAX_SNIPPET_LINES)
-            trimmed.append(item)
-        result["code_snippets"] = trimmed
-        if len(snippets) > MAX_SNIPPET_FILES:
-            result["code_snippets_truncated_count"] = len(snippets) - MAX_SNIPPET_FILES
+    review_feedback = result.get("review_feedback")
+    if isinstance(review_feedback, dict):
+        findings = review_feedback.get("findings")
+        if isinstance(findings, list):
+            capped, extra = _cap_list_items(findings, MAX_FINDING_ITEMS)
+            review_feedback = dict(review_feedback)
+            review_feedback["findings"] = capped
+            if extra:
+                review_feedback["findings_truncated_count"] = extra
+            summary = review_feedback.get("summary")
+            if isinstance(summary, str):
+                review_feedback["summary"] = _truncate_text(summary, MAX_TEXT_CHARS)
+            result["review_feedback"] = review_feedback
     return result
 
 

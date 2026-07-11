@@ -115,7 +115,7 @@ flowchart LR
 
 ### 3.2 Profile 矩阵 vs Parser（验收分层）
 
-主线 §1.2 **纳入** 多语言 Profile YAML，但 **不纳入** `go_json` / `cargo_json` / `forge_json`（P1）。实现计划区分两层验收：
+主线 §1.2 **纳入** 多语言 Profile YAML；`go_json` / `cargo_json` / `forge_json` Parser **已实现**（单元测试 + 注册）。实现计划区分两层验收：
 
 | 层级 | 范围 | 验收方式 |
 |------|------|----------|
@@ -328,7 +328,7 @@ python -m multi_agent_code_factory run \
 - [ ] 实现/设计/需求环路由与 `loop_limits` 配置
 - [ ] `route_after_review`：`deploy` + `approved=false` 回 Developer
 - [ ] `run_meta.json` 含 `loop_limits` 与 `profile` 快照
-- [ ] §4.5 `watch` 注入；Developer 重试含 RetryBundle
+- [x] §4.5 `watch` 注入；Developer 重试含瘦身 RetryBundle（[developer-retry-context-spec.md](./developer-retry-context-spec.md)）
 
 **集成测试：** `tests/integration/test_todo_cli_e2e.py`（`@pytest.mark.integration`，CI 可选）。
 
@@ -378,7 +378,7 @@ LangSmith（`LANGSMITH_*`）可选，用于 Trace 关联 `task_id`（§10 非 MV
 | checkpoint / `resume`（`checkpoint.py` 仅占位） | 主线 §1.2、§4.6（P1） |
 | `prd_hitl` / `design_hitl` **强制 interrupt** | 主线 §1.2（P1） |
 | `escalation_hitl`（`on_limit_exceeded=escalation_hitl`） | 主线 §1.2（P1） |
-| `go_json` / `cargo_json` / `forge_json` Parser 与多语言 **e2e** | profiles.md（P1）；见 [§3.2](#32-profile-矩阵-vs-parser验收分层) |
+| `go_json` / `cargo_json` / `forge_json` Parser 与多语言 **e2e** | profiles.md；Parser 已实现，e2e 仍 P1；见 [§3.2](#32-profile-矩阵-vs-parser验收分层) |
 | Docker `sandbox`、MCP | 主线 §1.2 |
 | **V2** `domains/*/profile/`、`arb` | [domains/](../../../domains/README.md) |
 | `solidity-hardhat` Profile | profiles.md（P2） |

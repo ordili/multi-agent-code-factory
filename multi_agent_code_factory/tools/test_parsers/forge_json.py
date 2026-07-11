@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,10 @@ from multi_agent_code_factory.tools.test_parsers._report_builder import (
 )
 from multi_agent_code_factory.tools.test_parsers._types import CommandResult
 
+_SOL_FILE_LINE_RE = re.compile(
+    r"(?P<file>[\w./\\-]+\.sol):(?P<line>\d+)",
+)
+
 _FAILURE_STATUSES = frozenset({"failure", "fail", "revert", "panic"})
 
 
@@ -30,6 +35,12 @@ def _extract_json_object(text: str) -> dict[str, Any] | None:
     except json.JSONDecodeError:
         return None
     return payload if isinstance(payload, dict) else None
+
+
+def _first_file_line(text: str) -> tuple[str | None, int | None]:
+    for match in _SOL_FILE_LINE_RE.finditer(text):
+        return match.group("file"), int(match.group("line"))
+    return None, None
 
 
 def _test_passed(result: dict[str, Any]) -> bool | None:
@@ -75,12 +86,26 @@ def _parse_forge_payload(
             message = (
                 reason if isinstance(reason, str) and reason.strip() else "test failed"
             )
+            decoded = test_result.get("decoded")
+            output_parts: list[str] = []
+            if isinstance(reason, str) and reason.strip():
+                output_parts.append(reason)
+            if isinstance(decoded, dict):
+                for key in ("reason", "revertReason", "panic"):
+                    value = decoded.get(key)
+                    if isinstance(value, str) and value.strip():
+                        output_parts.append(value)
+            output_text = "\n".join(output_parts)
+            file_path, line = _first_file_line(output_text)
             failures.append(
                 TestFailure(
                     test_id=test_id,
                     suite=str(suite_path),
                     name=str(test_name),
                     message=message,
+                    file=file_path,
+                    line=line,
+                    output=output_text or None,
                 )
             )
 

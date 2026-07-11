@@ -161,62 +161,49 @@ def test_trim_test_report_keeps_coverage_summary() -> None:
     assert trimmed["coverage"]["line_percent"] == 84.2
 
 
-def test_trim_retry_bundle_truncates_code_snippets() -> None:
+def test_trim_retry_bundle_trims_nested_reports() -> None:
     payload = {
-        "prd": PrdArtifact.model_validate(
-            {
-                "version": "1",
-                "profile": "python",
-                "revision": 1,
-                "title": "Demo",
-                "summary": "demo",
-                "success_metrics": [],
-                "features": [],
-                "scope_in": ["a"],
-                "operational_profile": {
-                    "user_scale": "personal",
-                    "high_concurrency": False,
-                    "performance": {"tier": "best_effort"},
-                },
-                "consistency_profile": {
-                    "consistency_model": "local_only",
-                    "delivery": "best_effort",
-                    "multi_writer": False,
-                    "idempotency_required": False,
-                },
-                "acceptance_criteria": [],
-            }
-        ).model_dump(mode="json"),
-        "design": DesignArtifact.model_validate(
-            {
-                "version": "1",
-                "spec_ref": "Demo",
-                "revision": 1,
-            }
-        ).model_dump(mode="json"),
+        "retry_cause": "qa_failure",
         "test_report": {
             "version": "1",
             "passed": False,
             "exit_code": 1,
             "summary": {"total": 1, "passed": 0, "failed": 1, "skipped": 0},
-            "failures": [],
+            "failures": [
+                {
+                    "test_id": "t1",
+                    "message": "m" * 400,
+                    "output": "o" * 900,
+                }
+            ],
             "duration_sec": 0.1,
             "command": "pytest",
             "parser": "junit_xml",
         },
         "dev_manifest": DevManifest(version="1").model_dump(mode="json"),
-        "code_snippets": [
+        "failure_contexts": [
             {
-                "path": f"src/f{index}.py",
-                "content": "\n".join(f"line {line}" for line in range(200)),
+                "test_id": "t1",
+                "message": "err",
+                "traceback_parse_ok": False,
+                "snippets": [
+                    {
+                        "path": "src/f0.py",
+                        "content": "\n".join(f"line {line}" for line in range(600)),
+                        "line_start": 1,
+                        "line_end": 600,
+                        "frame_order": 0,
+                        "truncated": True,
+                    }
+                ],
             }
-            for index in range(5)
         ],
     }
     trimmed = trim_retry_bundle(payload)
-    assert len(trimmed["code_snippets"]) == 3
-    assert trimmed["code_snippets_truncated_count"] == 2
-    assert trimmed["code_snippets"][0]["content"].endswith("... (已截断)")
+    assert "prd" not in trimmed
+    assert "design" not in trimmed
+    assert len(trimmed["test_report"]["failures"][0]["message"]) <= 300
+    assert trimmed["failure_contexts"][0]["snippets"][0]["content"].endswith("line 599")
 
 
 def test_build_prompt_context_is_trimmed(

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from multi_agent_code_factory.agents.llm.errors import LlmParseError
 from multi_agent_code_factory.profile_config import ProfileConfig
+from multi_agent_code_factory.schemas.review import ReviewNextStage
 from multi_agent_code_factory.schemas.validation_report import (
     ValidationReport,
     Violation,
@@ -115,6 +116,53 @@ def format_design_validation_feedback(state: PipelineState) -> str | None:
         ),
         footer=footer,
     )
+
+
+def format_review_retry_feedback(state: PipelineState) -> str | None:
+    """将 Reviewer 打回格式化为 Developer 重试时的 extra_system 提示。"""
+    if state.impl_retry_count <= 0:
+        return None
+    review = state.review
+    if review is None or review.approved:
+        return None
+    if review.next_stage != ReviewNextStage.DEVELOPER:
+        return None
+
+    lines = [
+        "Previous review rejected the implementation. Fix every blocking finding:",
+        f"- summary: {review.summary}",
+    ]
+    blocking = [
+        item
+        for item in review.findings
+        if item.blocking or (item.routing and item.routing.value == "developer_fix")
+    ]
+    if blocking:
+        lines.append("- blocking findings:")
+        for item in blocking[:10]:
+            location = item.file or item.id
+            lines.append(f"  - [{item.severity}] {location}: {item.message}")
+        if len(blocking) > 10:
+            lines.append(f"  - ... +{len(blocking) - 10} more")
+    lines.append("Return only files you changed; keep passing behavior intact.")
+    return "\n".join(lines)
+
+
+def format_developer_retry_extra_system(
+    state: PipelineState,
+    profile: ProfileConfig | None = None,
+) -> str | None:
+    """合并 QA 与 Review 重试摘要为 Developer extra_system。"""
+    parts: list[str] = []
+    qa = format_qa_retry_feedback(state, profile)
+    if qa:
+        parts.append(qa)
+    review = format_review_retry_feedback(state)
+    if review:
+        parts.append(review)
+    if not parts:
+        return None
+    return "\n\n".join(parts)
 
 
 def format_qa_retry_feedback(

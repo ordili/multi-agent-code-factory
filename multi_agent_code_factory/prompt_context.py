@@ -2,23 +2,24 @@
 
 from __future__ import annotations
 
-from pathlib import Path
 from typing import Any
-
-from pydantic import BaseModel, Field
 
 from multi_agent_code_factory.agent_roles import AgentRole
 from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.prompt_context_trim import trim_context_for_role
+from multi_agent_code_factory.retry_context import build_failure_contexts
 from multi_agent_code_factory.schemas.design import DesignArtifact
 from multi_agent_code_factory.schemas.dev_manifest import DevManifest
 from multi_agent_code_factory.schemas.prd import PrdArtifact
-from multi_agent_code_factory.schemas.review import ReviewReport
+from multi_agent_code_factory.schemas.retry_context import (
+    RetryBundle,
+    RetryCause,
+    ReviewFeedback,
+)
+from multi_agent_code_factory.schemas.review import ReviewNextStage, ReviewReport
 from multi_agent_code_factory.schemas.test_report import TestReport
 from multi_agent_code_factory.schemas.validation_report import ValidationReport
 from multi_agent_code_factory.state import PipelineState
-from multi_agent_code_factory.tools.git_diff import git_diff
-from multi_agent_code_factory.tools.read_file import read_file
 
 DEFAULT_WATCH: dict[AgentRole, list[str]] = {
     AgentRole.PM: ["user_request", "profile", "prd_validation", "review"],
@@ -47,20 +48,6 @@ DEFAULT_WATCH: dict[AgentRole, list[str]] = {
 }
 
 
-class CodeSnippet(BaseModel):
-    path: str
-    content: str
-
-
-class RetryBundle(BaseModel):
-    prd: PrdArtifact
-    design: DesignArtifact
-    test_report: TestReport
-    dev_manifest: DevManifest
-    reflection: dict[str, Any] | None = None
-    code_snippets: list[CodeSnippet] = Field(default_factory=list)
-
-
 def resolve_watch(role_id: AgentRole, profile: ProfileConfig) -> list[str]:
     """解析角色应订阅的状态字段（Profile 覆盖优先于默认 watch）。"""
     subscriptions = profile.subscriptions or {}
@@ -70,53 +57,67 @@ def resolve_watch(role_id: AgentRole, profile: ProfileConfig) -> list[str]:
     return list(DEFAULT_WATCH.get(role_id, []))
 
 
-def _read_code_snippets(
-    failures: list[Any],
-    *,
-    code_root: Path,
-) -> list[CodeSnippet]:
-    snippets: list[CodeSnippet] = []
-    seen: set[str] = set()
-    for failure in failures:
-        file_path = getattr(failure, "file", None)
-        if not isinstance(file_path, str) or not file_path or file_path in seen:
-            continue
-        seen.add(file_path)
-        try:
-            content = read_file(code_root, file_path)
-        except (OSError, ValueError):
-            continue
-        snippets.append(CodeSnippet(path=file_path, content=content))
-    return snippets
+def _resolve_retry_cause(state: PipelineState) -> RetryCause | None:
+    qa_failed = state.test_report is not None and not state.test_report.passed
+    review_rejected = (
+        state.review is not None
+        and not state.review.approved
+        and state.review.next_stage == ReviewNextStage.DEVELOPER
+    )
+    if qa_failed and review_rejected:
+        return "both"
+    if qa_failed:
+        return "qa_failure"
+    if review_rejected:
+        return "review_rejection"
+    return None
 
 
 def build_retry_bundle(
     state: PipelineState,
     profile: ProfileConfig,
 ) -> RetryBundle | None:
-    """为 Developer 重试组装规格、设计、测试失败与代码片段。"""
+    """为 Developer 重试组装测试失败、review 反馈与 failure_contexts。"""
     if state.impl_retry_count <= 0:
         return None
-    if (
-        state.prd is None
-        or state.design is None
-        or state.test_report is None
-        or state.dev_manifest is None
-    ):
+    if state.dev_manifest is None:
         return None
+
+    retry_cause = _resolve_retry_cause(state)
+    if retry_cause is None and state.test_report is None:
+        return None
+
     reflection = None
     if state.dev_manifest.reflection is not None:
         reflection = state.dev_manifest.reflection.model_dump(mode="json")
-    return RetryBundle(
-        prd=state.prd,
-        design=state.design,
+
+    review_feedback: ReviewFeedback | None = None
+    review_findings = None
+    if state.review is not None and not state.review.approved:
+        review_feedback = ReviewFeedback(
+            approved=state.review.approved,
+            summary=state.review.summary,
+            findings=list(state.review.findings),
+        )
+        review_findings = list(state.review.findings)
+
+    failure_contexts, omitted_paths = build_failure_contexts(
         test_report=state.test_report,
+        language=profile.language,
+        code_root=profile.code_root,
+        design=state.design,
+        dev_manifest=state.dev_manifest,
+        review_findings=review_findings,
+    )
+
+    return RetryBundle(
+        retry_cause=retry_cause or "qa_failure",
+        test_report=state.test_report,
+        review_feedback=review_feedback,
         dev_manifest=state.dev_manifest,
         reflection=reflection,
-        code_snippets=_read_code_snippets(
-            state.test_report.failures,
-            code_root=profile.code_root,
-        ),
+        failure_contexts=failure_contexts,
+        code_snippets_omitted_paths=omitted_paths,
     )
 
 
@@ -193,6 +194,10 @@ def build_prompt_context(
             context["semantic_advisories_design"] = design_advisories
 
     if role_id == AgentRole.DEVELOPER:
+        if state.impl_retry_count > 0:
+            context["impl_mode"] = "retry_patch"
+        else:
+            context["impl_mode"] = "initial"
         bundle = build_retry_bundle(state, profile)
         if bundle is not None:
             context["retry_bundle"] = bundle.model_dump(mode="json")
@@ -207,6 +212,8 @@ def build_prompt_context(
                 item.model_dump(mode="json")
                 for item in state.test_report.acceptance_traceability
             ]
+        from multi_agent_code_factory.tools.git_diff import git_diff
+
         diff_paths: list[str] | None = None
         if state.dev_manifest is not None:
             diff_paths = [

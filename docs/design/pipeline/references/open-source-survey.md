@@ -88,7 +88,7 @@ Reviewer Tool `git_diff(code_root)`；§4.7 增量 run 读 `parent_task_id`。
 | `DevManifest.reflection` | [dev-manifest-spec.md](../artifact-schemas/dev-manifest-spec.md) | P0 schema · P1 Live 填充 |
 | `Profile.toolchain` + `test_parsers/` | [profiles.md](../profiles.md)、[test-report.md](../artifact-schemas/test-report-spec.md) | P0 |
 | `Profile.sandbox` | [profiles.md](../profiles.md) | P1 |
-| Parser：`go_json` / `cargo_json` / `forge_json` | [profiles.md §3](../profiles.md#3-profile-矩阵) | P1 |
+| Parser：`go_json` / `cargo_json` / `forge_json` | [profiles.md §3](../profiles.md#3-profile-矩阵) | 已实现（live e2e 仍 P1） |
 | `Profile.agents.yaml` | [profiles.md](../profiles.md) | P1 |
 | Reviewer Tool `git_diff` | 主线 §4.2 | P1 |
 | `Profile.mcp_servers` | [profiles.md](../profiles.md) | P2 |

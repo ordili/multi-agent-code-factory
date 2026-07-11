@@ -66,7 +66,7 @@ Code = SOP(Team)
 | `prd_validate` / `design_validate` + `validators/` | [quality-gates/](../quality-gates/README.md) | P0 |
 | `prd_hitl` / `design_hitl` | 主线 §4.1.2 | P1 |
 | `toolchain` 配置与 Profile 快照 | [profiles.md](../profiles.md) | P0 |
-| `go_json` / `cargo_json` / `forge_json` Parser | [profiles.md §3](../profiles.md#3-profile-矩阵) | P1 |
+| `go_json` / `cargo_json` / `forge_json` Parser | [profiles.md §3](../profiles.md#3-profile-矩阵) | 已实现（单元测试）；live e2e 仍 P1 |
 | LangGraph checkpointer + `resume` CLI | 主线 §4.6 | P1 |
 | `Profile.sandbox`（OpenHands） | [profiles.md](../profiles.md) | P1 |
 | Reviewer `git_diff` Tool（Aider） | [open-source-survey.md](./open-source-survey.md) | P1 |

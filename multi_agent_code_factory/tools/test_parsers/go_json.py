@@ -1,4 +1,4 @@
-"""Cargo test JSON stream parser (``cargo test --message-format=json``)."""
+"""Go test JSON stream parser (``go test -json``)."""
 
 from __future__ import annotations
 
@@ -17,8 +17,8 @@ from multi_agent_code_factory.tools.test_parsers._report_builder import (
 )
 from multi_agent_code_factory.tools.test_parsers._types import CommandResult
 
-_RUST_FILE_LINE_RE = re.compile(
-    r"(?:-->\s+)?(?P<file>[^\s:]+):(?P<line>\d+)(?::\d+)?",
+_GO_FILE_LINE_RE = re.compile(
+    r"(?P<file>[\w./\\-]+\.go):(?P<line>\d+)",
 )
 
 
@@ -38,48 +38,57 @@ def _iter_json_lines(text: str) -> list[dict]:
 
 
 def _first_file_line(output: str) -> tuple[str | None, int | None]:
-    for match in _RUST_FILE_LINE_RE.finditer(output):
-        file_path = match.group("file")
-        if file_path.endswith(".rs"):
-            return file_path, int(match.group("line"))
+    for match in _GO_FILE_LINE_RE.finditer(output):
+        return match.group("file"), int(match.group("line"))
     return None, None
 
 
-def _parse_cargo_test_events(
+def _parse_go_test_events(
     records: list[dict],
 ) -> tuple[TestSummary, list[TestFailure]]:
     passed = failed = skipped = 0
     failures: list[TestFailure] = []
+    outputs: dict[str, list[str]] = {}
 
     for record in records:
-        if record.get("reason") != "test" or record.get("type") != "test":
+        action = record.get("Action") or record.get("action")
+        if not isinstance(action, str):
             continue
-        event = record.get("event")
-        name = str(record.get("name") or "unknown")
-        if event == "ok":
+        test_name = record.get("Test") or record.get("test")
+        pkg = record.get("Package") or record.get("package") or ""
+        test_id = f"{pkg}::{test_name}" if test_name else str(pkg or "unknown")
+
+        if action == "output" and isinstance(test_name, str):
+            output = record.get("Output")
+            if isinstance(output, str):
+                outputs.setdefault(test_name, []).append(output)
+            continue
+
+        if action == "pass":
             passed += 1
             continue
-        if event in {"ignored", "skipped"}:
+        if action == "skip":
             skipped += 1
             continue
-        if event == "failed":
-            failed += 1
-            stdout = record.get("stdout")
-            message = "test failed"
-            output_text = stdout if isinstance(stdout, str) else ""
-            if output_text.strip():
-                message = output_text.strip().splitlines()[0][:500]
-            file_path, line = _first_file_line(output_text)
-            failures.append(
-                TestFailure(
-                    test_id=name,
-                    name=name,
-                    message=message,
-                    file=file_path,
-                    line=line,
-                    output=output_text or None,
-                )
+        if action != "fail":
+            continue
+
+        failed += 1
+        combined_output = "".join(outputs.get(str(test_name), []))
+        message = "test failed"
+        if combined_output.strip():
+            message = combined_output.strip().splitlines()[-1][:500]
+        file_path, line = _first_file_line(combined_output)
+        failures.append(
+            TestFailure(
+                test_id=test_id,
+                name=str(test_name) if test_name else None,
+                message=message,
+                file=file_path,
+                line=line,
+                output=combined_output or None,
             )
+        )
 
     total = passed + failed + skipped
     return TestSummary(
@@ -87,16 +96,16 @@ def _parse_cargo_test_events(
     ), failures
 
 
-def parse_cargo_json(
+def parse_go_json(
     result: CommandResult,
     profile: ProfileConfig,
     code_root: Path,
 ) -> TestReport:
-    """Parse Cargo test NDJSON output into a TestReport."""
+    """Parse ``go test -json`` NDJSON output into a TestReport."""
     del code_root
     combined = "\n".join(part for part in (result.stdout, result.stderr) if part)
     records = _iter_json_lines(combined)
-    summary, failures = _parse_cargo_test_events(records)
+    summary, failures = _parse_go_test_events(records)
 
     if summary.total == 0:
         passed = result.exit_code == 0
@@ -109,15 +118,15 @@ def parse_cargo_json(
         if not passed:
             failures = [
                 TestFailure(
-                    test_id="cargo_json_empty",
-                    message="no cargo test JSON events found in command output",
+                    test_id="go_json_empty",
+                    message="no go test JSON events found in command output",
                 )
             ]
 
     return build_test_report(
         result,
         profile,
-        parser="cargo_json",
+        parser="go_json",
         summary=summary,
         failures=failures,
     )
