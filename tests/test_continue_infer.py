@@ -116,3 +116,29 @@ def test_infer_test_report_failed(tmp_path: Path) -> None:
     )
     meta = _meta(status=RunStatus.FAILED, impl_retry_count=1)
     assert infer_reentry_node(tmp_path, meta) == PipelineNode.QA
+
+
+def test_infer_does_not_reenter_qa_when_passed_with_tests_missing(
+    tmp_path: Path,
+) -> None:
+    report = TestReport(
+        version="1",
+        passed=True,
+        exit_code=0,
+        summary=TestSummary(total=1, passed=1, failed=0, skipped=0),
+        failures=[],
+        duration_sec=0.1,
+        command="cargo test",
+        parser="cargo_json",
+        tests_missing=["src/calc.rs"],
+    )
+    (tmp_path / "test_report.json").write_text(
+        report.model_dump_json(), encoding="utf-8"
+    )
+    (tmp_path / "dev_manifest.json").write_text(
+        '{"version":"1","changed_files":[]}', encoding="utf-8"
+    )
+    (tmp_path / "design.json").write_text("{}", encoding="utf-8")
+    meta = _meta(status=RunStatus.FAILED, impl_retry_count=0)
+    with pytest.raises(ContinueError, match="cannot infer reentry"):
+        infer_reentry_node(tmp_path, meta)

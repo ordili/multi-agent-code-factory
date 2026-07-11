@@ -1,6 +1,12 @@
 id: rust
 extends: _base/common
 language: rust
+tests_missing:
+  block_on: false
+  detector: rust
+  inline_tests: true
+  retry_hint: |
+    For each listed path, add tests/<stem>.rs under tests/ or unit tests via #[cfg(test)] in the same module.
 code_root: ../generated/rust
 prompts_dir: multi_agent_code_factory/profiles/rust/prompts
 toolchain:
@@ -20,6 +26,11 @@ context_schema:
     edition:
       type: string
       default: "2021"
+coverage:
+  enabled: false
+  block_on: false
+  command: cargo llvm-cov report --summary-only --json
+  parser: llvm_cov_json
 hitl:
   sensitive_globs:
     - "**/benches/**"

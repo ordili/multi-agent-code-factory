@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from multi_agent_code_factory.agents.llm.errors import LlmParseError
+from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.validation_report import (
     ValidationReport,
     Violation,
@@ -116,7 +117,10 @@ def format_design_validation_feedback(state: PipelineState) -> str | None:
     )
 
 
-def format_qa_retry_feedback(state: PipelineState) -> str | None:
+def format_qa_retry_feedback(
+    state: PipelineState,
+    profile: ProfileConfig | None = None,
+) -> str | None:
     """将上次 QA test_report 失败格式化为 Developer 重试时的 extra_system 提示。"""
     if state.impl_retry_count <= 0:
         return None
@@ -129,13 +133,19 @@ def format_qa_retry_feedback(state: PipelineState) -> str | None:
     ]
     summary = report.summary
     lines.append(
-        f"- pytest summary: passed={summary.passed} failed={summary.failed} "
+        f"- test summary: passed={summary.passed} failed={summary.failed} "
         f"total={summary.total} skipped={summary.skipped}"
     )
     if report.tests_missing:
-        lines.append(
-            "- tests_missing (add tests/test_<module>.py for each source path):"
-        )
+        hint = None
+        if profile is not None:
+            hint = profile.tests_missing.retry_hint
+        if hint:
+            lines.append(f"- tests_missing ({hint.strip()}):")
+        else:
+            lines.append(
+                "- tests_missing (add matching test files for each source path):"
+            )
         for path in report.tests_missing:
             lines.append(f"  - {path}")
     if report.failures:

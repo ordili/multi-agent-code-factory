@@ -104,7 +104,7 @@ def infer_reentry_node(
         from multi_agent_code_factory.schemas.test_report import TestReport
 
         report = load_artifact_json(run_dir, "test_report.json", TestReport)
-        if report is not None and (not report.passed or bool(report.tests_missing)):
+        if report is not None and not report.passed:
             return PipelineNode.QA
 
     if (

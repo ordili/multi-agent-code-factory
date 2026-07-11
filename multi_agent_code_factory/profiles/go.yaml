@@ -9,5 +9,12 @@ toolchain:
   test_parser: go_json
   lint_command: golangci-lint run ./...
   test_dir_glob: "**/*_test.go"
+coverage:
+  enabled: false
+  block_on: false
+  command: go test -coverprofile=coverage.out ./...
+  parser: go_cover
+  artifacts:
+    - coverage.out
 hitl:
   sensitive_globs: ["**/deploy/**"]

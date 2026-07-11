@@ -97,7 +97,7 @@
 - 每个 **业务模块**（非纯 `__init__` / 配置）须有对应测试文件或测试套件。
 - 测试须覆盖 Spec **`acceptance_criteria`** 与 design **附录 D / test_cases** 中的 P0 场景。
 - 测试命名表达行为与条件；失败信息须能定位到文件与行（配合 QA `TestReport`）。
-- 与 QA **`tests_missing`** 检测一致：缺测路径会导致实现环回 Developer（Profile.`auto_generate_tests` 时提示补测）。
+- 与 QA **`tests_missing`** 检测一致：当 Profile.`tests_missing.block_on=true` 时，缺测路径会导致实现环回 Developer；`block_on=false` 时仅写入 `test_report` 并 WARN（Rust 默认）。`auto_generate_tests=true` 时 Developer context 会提示补测，但 **`block_on=false` 时不触发 impl 环**。
 
 ---
 

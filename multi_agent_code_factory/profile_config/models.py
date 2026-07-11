@@ -41,6 +41,34 @@ class ToolchainConfig(BaseModel):
     test_dir_glob: str | None = None
 
 
+class TestsMissingConfig(BaseModel):
+    """QA 缺测检测：语言感知启发式，是否阻断由 block_on 控制。"""
+
+    enabled: bool = True
+    block_on: bool = True
+    detector: str = "file_stem"
+    inline_tests: bool = False
+    scope: str = "dev_tasks"
+    retry_hint: str | None = None
+
+
+class CoverageThresholds(BaseModel):
+    line_percent: float | None = Field(default=None, ge=0, le=100)
+    branch_percent: float | None = Field(default=None, ge=0, le=100)
+
+
+class CoverageConfig(BaseModel):
+    enabled: bool = False
+    block_on: bool = False
+    command: str | None = None
+    parser: str = "exit_code_only"
+    tool: str | None = None
+    artifacts: list[str] = Field(default_factory=list)
+    thresholds: CoverageThresholds = Field(default_factory=CoverageThresholds)
+    include_globs: list[str] = Field(default_factory=list)
+    exclude_globs: list[str] = Field(default_factory=list)
+
+
 class ValidationGateConfig(BaseModel):
     enabled: bool = True
     block_on: ValidationBlockOn = ValidationBlockOn.ERROR
@@ -90,6 +118,8 @@ class ProfileConfig(BaseModel):
     validation: ValidationConfig = Field(default_factory=ValidationConfig)
     context_schema: dict[str, Any] | None = None
     auto_generate_tests: bool = False
+    tests_missing: TestsMissingConfig = Field(default_factory=TestsMissingConfig)
+    coverage: CoverageConfig = Field(default_factory=CoverageConfig)
     hitl: HitlConfig = Field(default_factory=HitlConfig)
     subscriptions: dict[str, list[str]] | None = None
     sandbox: str | None = None

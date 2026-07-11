@@ -139,6 +139,28 @@ def test_trim_test_report_keeps_tests_missing() -> None:
     assert trimmed["tests_missing"] == ["src/cli.py"]
 
 
+def test_trim_test_report_keeps_coverage_summary() -> None:
+    payload = {
+        "version": "1",
+        "passed": True,
+        "exit_code": 0,
+        "summary": {"total": 1, "passed": 1, "failed": 0, "skipped": 0},
+        "command": "pytest",
+        "duration_sec": 0.1,
+        "parser": "junit_xml",
+        "coverage": {
+            "tool": "pytest-cov",
+            "command": "pytest --cov",
+            "parser": "pytest_cov_json",
+            "line_percent": 84.2,
+            "passed": True,
+            "violations": [],
+        },
+    }
+    trimmed = trim_test_report(payload)
+    assert trimmed["coverage"]["line_percent"] == 84.2
+
+
 def test_trim_retry_bundle_truncates_code_snippets() -> None:
     payload = {
         "prd": PrdArtifact.model_validate(

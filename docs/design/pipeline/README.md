@@ -94,6 +94,7 @@ artifact-schemas/dev-manifest-spec.md     → dev_manifest.json
     ↓
 （实现 / QA）
 artifact-schemas/test-report-spec.md        → test_report.json
+qa-gates-spec.md                            → tests_missing / coverage / passed 判定（Profile + QA）
 artifact-schemas/review-spec.md             → review.json
 artifact-templates/review-spec.md           → review.md
 ```

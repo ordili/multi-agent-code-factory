@@ -28,6 +28,29 @@ class TestFailure(BaseModel):
     output: str | None = None
 
 
+class CoverageThresholdSnapshot(BaseModel):
+    __test__ = False
+
+    line_percent: float | None = Field(default=None, ge=0, le=100)
+    branch_percent: float | None = Field(default=None, ge=0, le=100)
+
+
+class CoverageReport(BaseModel):
+    __test__ = False
+
+    tool: str
+    command: str
+    parser: str
+    line_percent: float | None = Field(default=None, ge=0, le=100)
+    branch_percent: float | None = Field(default=None, ge=0, le=100)
+    lines_covered: int | None = Field(default=None, ge=0)
+    lines_total: int | None = Field(default=None, ge=0)
+    thresholds: CoverageThresholdSnapshot | None = None
+    passed: bool = True
+    violations: list[str] = Field(default_factory=list)
+    raw_summary_path: str | None = None
+
+
 class TestReport(BaseModel):
     __test__ = False
 
@@ -41,4 +64,5 @@ class TestReport(BaseModel):
     parser: str
     language: str | None = None
     tests_missing: list[str] | None = None
+    coverage: CoverageReport | None = None
     raw_output_tail: str | None = None

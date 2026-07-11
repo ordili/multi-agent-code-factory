@@ -52,7 +52,25 @@ def test_python_profile_extends_common() -> None:
     assert "junit.xml" in profile.toolchain.test_artifacts[0]
     assert profile.validation.design.validate_mermaid is False
     assert profile.validation.prd.enabled is True
+    assert profile.tests_missing.block_on is True
+    assert profile.tests_missing.detector == "file_stem"
     assert "read_file" in profile.tools
+
+
+def test_rust_profile_tests_missing_warn_only() -> None:
+    profile = load_profile("rust")
+    assert profile.tests_missing.block_on is False
+    assert profile.tests_missing.detector == "rust"
+    assert profile.tests_missing.inline_tests is True
+    assert profile.coverage.enabled is False
+    assert profile.coverage.parser == "llvm_cov_json"
+
+
+def test_python_profile_coverage_defaults_disabled() -> None:
+    profile = load_profile("python")
+    assert profile.coverage.enabled is False
+    assert profile.coverage.parser == "pytest_cov_json"
+    assert profile.coverage.thresholds.line_percent == 70
 
 
 @pytest.mark.parametrize("legacy_id", ["default", "go-cli", "java-maven", "rust-cli"])

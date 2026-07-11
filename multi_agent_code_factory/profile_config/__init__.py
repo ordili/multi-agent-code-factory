@@ -10,9 +10,12 @@ from multi_agent_code_factory.profile_config.loader import (
 )
 from multi_agent_code_factory.profile_config.models import (
     V1_PROFILE_IDS,
+    CoverageConfig,
+    CoverageThresholds,
     HitlConfig,
     ProfileConfig,
     ProfileLoadError,
+    TestsMissingConfig,
     ToolchainConfig,
     ValidationBlockOn,
     ValidationConfig,
@@ -21,9 +24,12 @@ from multi_agent_code_factory.profile_config.models import (
 
 __all__ = [
     "V1_PROFILE_IDS",
+    "CoverageConfig",
+    "CoverageThresholds",
     "HitlConfig",
     "ProfileConfig",
     "ProfileLoadError",
+    "TestsMissingConfig",
     "ToolchainConfig",
     "ValidationBlockOn",
     "ValidationConfig",

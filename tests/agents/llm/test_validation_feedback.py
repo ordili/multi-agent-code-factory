@@ -9,6 +9,7 @@ from multi_agent_code_factory.agents.llm.prompt.validation_feedback import (
     format_qa_retry_feedback,
     format_semantic_advisories,
 )
+from multi_agent_code_factory.profile_config import load_profile
 from multi_agent_code_factory.schemas.test_report import TestFailure, TestSummary
 from multi_agent_code_factory.schemas.validation_report import (
     ValidationReport,
@@ -65,13 +66,14 @@ def test_format_qa_retry_feedback_lists_tests_missing_and_failures() -> None:
         test_report=report,
     )
 
-    feedback = format_qa_retry_feedback(state)
+    feedback = format_qa_retry_feedback(state, load_profile("python"))
 
     assert feedback is not None
     assert "tests_missing" in feedback
     assert "src/cli.py" in feedback
     assert "tests.test_cli::test_bad" in feedback
-    assert "pytest summary" in feedback
+    assert "test summary" in feedback
+    assert "tests/test_<module>.py" in feedback
 
 
 def test_format_qa_retry_feedback_none_on_first_run() -> None:

@@ -115,6 +115,30 @@ run_tests Tool：setup（可选）→ build（可选）→ test_command → test
 | `lint_command` | Developer / Reviewer 可选；Python 见 [python-style.md](./python-style.md) |
 | `test_dir_glob` | 测试文件 glob；`tests_missing` 检测与 Architect 参考 |
 
+**QA 门禁扩展（设计定稿，实现分期）：** [qa-gates-spec.md](../qa-gates-spec.md) — `tests_missing`（§3）、`coverage`（§4）、`TestReport.passed`（§2）。
+
+### Profile：`tests_missing`（摘要）
+
+| 字段 | 说明 |
+|------|------|
+| `enabled` | 是否运行缺测检测 |
+| `block_on` | `true` 时非空 `tests_missing` 可令 `passed=false`；Rust 建议 `false` |
+| `detector` | `file_stem` \| `rust` \| `go` \| `solidity` |
+| `inline_tests` | Rust：认 `#[cfg(test)]` |
+| `scope` | `dev_tasks`（推荐）\| `manifest` |
+| `retry_hint` | Developer 重试提示（语言相关） |
+
+### Profile：`coverage`（摘要，默认关闭）
+
+| 字段 | 说明 |
+|------|------|
+| `enabled` | 是否跑覆盖率命令 |
+| `block_on` | 建议默认 `false`；阈值未达标时是否 block |
+| `command` / `parser` / `artifacts` | 类似 toolchain 测试层 |
+| `thresholds.line_percent` | 如 `70`；`null` 仅记录 |
+
+详见 [qa-gates-spec.md §4](../qa-gates-spec.md)。
+
 ### Parser 插件
 
 实现：`multi_agent_code_factory/tools/test_parsers/`

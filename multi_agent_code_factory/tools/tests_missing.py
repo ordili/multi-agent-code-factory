@@ -1,4 +1,4 @@
-"""对照 Profile.toolchain.test_dir_glob 检测缺测源码路径。"""
+"""对照 Profile 检测缺测源码路径（语言感知、可配置 scope）。"""
 
 from __future__ import annotations
 
@@ -10,6 +10,8 @@ from multi_agent_code_factory.schemas.dev_manifest import ChangeType, DevManifes
 
 _TEST_DIR_MARKERS = ("tests/", "test/", "__tests__/")
 _TEST_NAME_MARKERS = ("test_", "_test")
+_RUST_INLINE_MARKERS = ("#[cfg(test)]", "#[test]")
+_RUST_EXEMPT_BASENAMES = frozenset({"main.rs", "lib.rs", "mod.rs"})
 
 _LANGUAGE_SOURCE_SUFFIXES: dict[str, frozenset[str]] = {
     "python": frozenset({".py"}),
@@ -66,12 +68,39 @@ def _requires_matching_test(path: str, *, language: str) -> bool:
     return suffix in allowed
 
 
+def _is_rust_exempt(path: str) -> bool:
+    basename = PurePosixPath(_posix(path)).name.lower()
+    return basename in _RUST_EXEMPT_BASENAMES
+
+
+def _has_rust_inline_tests(code_root: Path, source_path: str) -> bool:
+    full = code_root / source_path
+    if not full.is_file():
+        return False
+    text = full.read_text(encoding="utf-8", errors="replace")
+    return any(marker in text for marker in _RUST_INLINE_MARKERS)
+
+
 def _has_matching_test(
-    source_path: str, test_stems: set[str], *, language: str
+    source_path: str,
+    test_stems: set[str],
+    *,
+    language: str,
+    code_root: Path,
+    inline_tests: bool,
 ) -> bool:
     stem = _source_stem(source_path)
     if stem in {"__init__", "main", "mod", "lib"}:
         return True
+    if language == "rust" and _is_rust_exempt(source_path):
+        return True
+    if (
+        language == "rust"
+        and inline_tests
+        and _has_rust_inline_tests(code_root, source_path)
+    ):
+        return True
+
     candidates = {stem, f"test_{stem}", f"{stem}_test"}
     if language == "go":
         candidates.add(f"{stem}_test")
@@ -82,27 +111,70 @@ def _has_matching_test(
     return bool(candidates & test_stems)
 
 
+def _collect_manifest_paths(dev_manifest: DevManifest | None) -> list[str]:
+    if dev_manifest is None:
+        return []
+    paths: list[str] = []
+    for item in dev_manifest.changed_files:
+        if item.change_type == ChangeType.DELETE:
+            continue
+        if not _is_test_path(item.path):
+            paths.append(_posix(item.path))
+    return sorted(set(paths))
+
+
+def _collect_file_plan_paths(design: DesignArtifact | None) -> list[str]:
+    if design is None:
+        return []
+    paths: list[str] = []
+    for entry in design.file_plan:
+        action = entry.get("action")
+        path = entry.get("path")
+        if not isinstance(path, str) or action == "delete":
+            continue
+        if not _is_test_path(path):
+            paths.append(_posix(path))
+    return sorted(set(paths))
+
+
+def _collect_dev_task_paths(
+    design: DesignArtifact | None,
+    dev_manifest: DevManifest | None,
+) -> list[str]:
+    if design is None or not design.dev_tasks:
+        return []
+    task_paths = [
+        _posix(task.path)
+        for task in design.dev_tasks
+        if isinstance(task.path, str) and task.path.strip()
+    ]
+    if not task_paths:
+        return []
+    if dev_manifest is None:
+        return sorted(set(task_paths))
+    manifest_paths = {
+        _posix(item.path)
+        for item in dev_manifest.changed_files
+        if item.change_type != ChangeType.DELETE
+    }
+    scoped = sorted(set(task_paths) & manifest_paths)
+    return scoped if scoped else sorted(set(task_paths))
+
+
 def _collect_source_paths(
     *,
+    scope: str,
     dev_manifest: DevManifest | None,
     design: DesignArtifact | None,
 ) -> list[str]:
-    paths: list[str] = []
-    if dev_manifest is not None:
-        for item in dev_manifest.changed_files:
-            if item.change_type == ChangeType.DELETE:
-                continue
-            if not _is_test_path(item.path):
-                paths.append(_posix(item.path))
-    elif design is not None:
-        for entry in design.file_plan:
-            action = entry.get("action")
-            path = entry.get("path")
-            if not isinstance(path, str) or action == "delete":
-                continue
-            if not _is_test_path(path):
-                paths.append(_posix(path))
-    return sorted(set(paths))
+    if scope == "dev_tasks":
+        dev_task_paths = _collect_dev_task_paths(design, dev_manifest)
+        if dev_task_paths:
+            return dev_task_paths
+    manifest_paths = _collect_manifest_paths(dev_manifest)
+    if manifest_paths:
+        return manifest_paths
+    return _collect_file_plan_paths(design)
 
 
 def detect_tests_missing(
@@ -112,7 +184,11 @@ def detect_tests_missing(
     dev_manifest: DevManifest | None = None,
     design: DesignArtifact | None = None,
 ) -> list[str]:
-    """返回 dev_manifest / design 中尚无对应测试文件的源码相对路径。"""
+    """返回缺测源码路径；是否阻断见 Profile.tests_missing.block_on。"""
+    cfg = profile.tests_missing
+    if not cfg.enabled:
+        return []
+
     test_dir_glob = profile.toolchain.test_dir_glob
     if not test_dir_glob:
         return []
@@ -120,7 +196,11 @@ def detect_tests_missing(
     root = code_root.resolve()
     test_files = _glob_test_files(root, test_dir_glob)
     test_stems = _test_stems(test_files)
-    source_paths = _collect_source_paths(dev_manifest=dev_manifest, design=design)
+    source_paths = _collect_source_paths(
+        scope=cfg.scope,
+        dev_manifest=dev_manifest,
+        design=design,
+    )
     if not source_paths:
         return []
 
@@ -129,6 +209,12 @@ def detect_tests_missing(
         path
         for path in source_paths
         if _requires_matching_test(path, language=language)
-        and not _has_matching_test(path, test_stems, language=language)
+        and not _has_matching_test(
+            path,
+            test_stems,
+            language=language,
+            code_root=root,
+            inline_tests=cfg.inline_tests or cfg.detector == "rust",
+        )
     ]
     return missing

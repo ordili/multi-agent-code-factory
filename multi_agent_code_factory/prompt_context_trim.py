@@ -164,6 +164,25 @@ def trim_test_report(payload: dict[str, Any]) -> dict[str, Any]:
     tests_missing = payload.get("tests_missing")
     if isinstance(tests_missing, list):
         result["tests_missing"] = tests_missing
+    coverage = payload.get("coverage")
+    if isinstance(coverage, dict):
+        result["coverage"] = {
+            key: coverage[key]
+            for key in (
+                "tool",
+                "command",
+                "parser",
+                "line_percent",
+                "branch_percent",
+                "lines_covered",
+                "lines_total",
+                "thresholds",
+                "passed",
+                "violations",
+                "raw_summary_path",
+            )
+            if key in coverage
+        }
     return result
 
 

@@ -195,6 +195,8 @@ def load_profile(
         "validation": normalized.get("validation") or {},
         "context_schema": normalized.get("context_schema"),
         "auto_generate_tests": bool(normalized.get("auto_generate_tests", False)),
+        "tests_missing": normalized.get("tests_missing") or {},
+        "coverage": normalized.get("coverage") or {},
         "hitl": normalized.get("hitl") or {},
         "subscriptions": normalized.get("subscriptions"),
         "sandbox": normalized.get("sandbox"),

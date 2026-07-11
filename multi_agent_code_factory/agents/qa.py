@@ -64,10 +64,25 @@ def run_qa(
             )
         if report.passed:
             logger.info("qa tests passed")
+            if report.tests_missing:
+                logger.warning(
+                    "qa toolchain green with tests_missing count=%s paths=%s "
+                    "block_on=%s",
+                    len(report.tests_missing),
+                    report.tests_missing,
+                    profile.tests_missing.block_on,
+                )
+            if report.coverage is not None and not report.coverage.passed:
+                logger.warning(
+                    "qa toolchain green with coverage violations "
+                    "block_on=%s violations=%s",
+                    profile.coverage.block_on,
+                    report.coverage.violations,
+                )
         elif report.tests_missing and report.summary.failed == 0:
             logger.warning(
                 "qa blocked by tests_missing count=%s paths=%s "
-                "(pytest green: passed=%s)",
+                "(toolchain green: passed=%s)",
                 len(report.tests_missing),
                 report.tests_missing,
                 report.summary.passed,

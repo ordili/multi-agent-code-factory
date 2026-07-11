@@ -48,7 +48,7 @@ def run_developer(
                 role_id=AgentRole.DEVELOPER,
                 output_schema=DeveloperLLMOutput,
                 context=agent_context(AgentRole.DEVELOPER, state, profile),
-                extra_system=format_qa_retry_feedback(state),
+                extra_system=format_qa_retry_feedback(state, profile),
             )
             manifest = apply_developer_output(profile, output)
 

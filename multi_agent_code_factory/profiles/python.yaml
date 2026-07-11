@@ -12,5 +12,14 @@ toolchain:
   test_artifacts: ["reports/junit.xml"]
   lint_command: python -m ruff check . && python -m ruff format --check .
   test_dir_glob: "tests/**"
+coverage:
+  enabled: false
+  block_on: false
+  command: python -m pytest -q --cov=src --cov-report=json:coverage.json
+  parser: pytest_cov_json
+  artifacts:
+    - coverage.json
+  thresholds:
+    line_percent: 70
 hitl:
   sensitive_globs: ["**/auth/**", "**/deploy/**"]
