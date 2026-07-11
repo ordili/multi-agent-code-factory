@@ -39,6 +39,8 @@ _ARCHITECT_SHAPE_NOTES = (
     '{"approach":"pytest","paths":["tests/..."]}.\n'
     "design.background: 1–2 sentences for design.md §1 (how design meets spec; "
     "not only interface/storage bullets).\n"
+    "design.design_goals: verifiable goal sentences with ids in parentheses — "
+    'not bare "FEAT-1" / "REQ-6" only.\n'
     "For stateless personal CLI with local_only and no custom performance tier: "
     "keep non_functional, transaction_constraints, data_model, and table_schemas "
     "as []."

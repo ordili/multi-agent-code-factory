@@ -461,7 +461,10 @@ class DesignArtifact(BaseModel):
             "summary": "无状态命令行工具示例（按实际 spec 替换）",
             "background": "面向终端用户的本地 CLI；无持久化、无联网，单次求值交付。",
             "non_goals": ["Web UI", "持久化"],
-            "design_goals": ["FEAT-1"],
+            "design_goals": [
+                "CLI 解析表达式并输出求值结果（FEAT-1）",
+                "非法输入与除零有明确错误提示（US-4）",
+            ],
             "context_view": {"actors": ["User", "CliEntry"]},
             "architecture": {
                 "solution_strategy": "CLI 解析参数并调用核心模块",

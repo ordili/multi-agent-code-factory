@@ -73,6 +73,35 @@ def test_enrich_design_fills_required_mvp_fields(snippets_dir: Path) -> None:
     assert enriched.traceability[0].spec_ref_id == "feat-01"
 
 
+def test_enrich_design_expands_bare_design_goal_ids(snippets_dir: Path) -> None:
+    design = _minimal_design(
+        design_goals=["FEAT-1", "US-1"],
+    )
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
+    )
+
+    enriched = enrich_design_for_validation(design, spec=spec)
+
+    assert enriched.design_goals[0].startswith("FEAT-1:")
+    assert "add/list" in enriched.design_goals[0]
+    assert enriched.design_goals[1].startswith("US-1:")
+    assert "（" in enriched.design_goals[1]
+    assert enriched.design_goals != ["FEAT-1", "US-1"]
+
+
+def test_enrich_design_preserves_readable_design_goals(snippets_dir: Path) -> None:
+    readable = ["CLI 解析表达式并输出求值结果（FEAT-1）", "异常输入有明确错误提示"]
+    design = _minimal_design(design_goals=readable)
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
+    )
+
+    enriched = enrich_design_for_validation(design, spec=spec)
+
+    assert enriched.design_goals == readable
+
+
 def test_enrich_design_merges_duplicate_dev_task_paths() -> None:
     design = _minimal_design(
         dev_tasks=[

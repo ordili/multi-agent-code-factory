@@ -10,7 +10,10 @@ Given spec and profile, produce:
    - non_goals: list of strings (use spec scope_out when present, else explicit out-of-scope items)
    - context_view: object with actors, e.g. {"actors": ["User", "ServiceCore"]}
    - architecture: {"solution_strategy": "one-line approach summary", "code_delta": {"summary": "..."}}
-   - design_goals: non-empty string[] referencing upstream FEAT/US/REQ ids where applicable
+   - design_goals: non-empty string[] of verifiable goals in natural language;
+     each item MUST include a readable sentence — append upstream ids in parentheses
+     (e.g. "实时拉取两个 DEX 的 Top5 Token 价格（FEAT-1；US-1）");
+     do NOT output bare id-only entries like "FEAT-1" or "REQ-6"
    - cross_cutting: object (use {} when nothing special)
      optional nested test_strategy: {approach, paths?, notes?} — required: approach when present
    - modules: non-empty; each {name, path, responsibility, code_domain}

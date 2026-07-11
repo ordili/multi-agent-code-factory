@@ -1,14 +1,15 @@
-"""DES-001 至 DES-104、DES-011、DES-035–036 校验规则（MVP 白名单）。"""
+"""DES-001 至 DES-104、DES-011、DES-035–037 校验规则（MVP 白名单）。"""
 
 from __future__ import annotations
 
+import re
 from pathlib import PurePosixPath
 
 from multi_agent_code_factory.profile_config import ProfileConfig
 from multi_agent_code_factory.schemas.design import DesignArtifact, DevTask
 from multi_agent_code_factory.schemas.prd import FeaturePriority, PrdArtifact
 from multi_agent_code_factory.schemas.validation_report import Violation
-from multi_agent_code_factory.validators._report import error
+from multi_agent_code_factory.validators._report import error, warn
 from multi_agent_code_factory.validators.design_execution_plan_rules import (
     validate_execution_plan_rules,
 )
@@ -18,6 +19,12 @@ from multi_agent_code_factory.validators.design_rules_extended import (
 from multi_agent_code_factory.validators.design_triggers import (
     spec_requires_non_functional,
 )
+
+_BARE_DESIGN_GOAL_RE = re.compile(r"^(FEAT|US|REQ|AC|KPI|SEM)-\d+$", re.IGNORECASE)
+
+
+def _is_bare_design_goal(goal: str) -> bool:
+    return bool(_BARE_DESIGN_GOAL_RE.match(str(goal).strip()))
 
 
 def _path_escapes(path: str) -> bool:
@@ -155,6 +162,16 @@ def validate_design_rules(
                 field="design_goals",
             )
         )
+    else:
+        for index, goal in enumerate(design.design_goals):
+            if _is_bare_design_goal(goal):
+                violations.append(
+                    warn(
+                        "DES-037",
+                        "design_goals should be readable sentences, not bare spec ids",
+                        field=f"design_goals[{index}]",
+                    )
+                )
 
     code_delta = design.architecture.code_delta if design.architecture else None
     summary = code_delta.summary if code_delta else None

@@ -70,7 +70,21 @@ def test_architect_instructions_include_persistence_supplement() -> None:
     assert "file_plan" in instructions
     assert "design_ref" in instructions
     assert "design.background" in instructions
+    assert "design.design_goals" in instructions
     assert '"background":' in instructions
+
+
+def test_architect_design_prompt_shape_includes_readable_design_goals() -> None:
+    from multi_agent_code_factory.schemas.design import DesignArtifact
+
+    shape = DesignArtifact.LLM_PROMPT_SHAPE.json_shape
+    goals = shape.get("design_goals")
+    assert isinstance(goals, list)
+    assert goals
+    assert all(isinstance(goal, str) and goal.strip() for goal in goals)
+    assert not any(
+        goal.strip().upper().startswith("FEAT-") and "(" not in goal for goal in goals
+    )
 
 
 def test_architect_design_prompt_shape_includes_background() -> None:

@@ -44,6 +44,20 @@ def test_empty_design_goals_triggers_des_035(snippets_dir: Path) -> None:
     assert any(v.rule_id == "DES-035" for v in violations)
 
 
+def test_bare_design_goals_trigger_des_037_warn(snippets_dir: Path) -> None:
+    spec = PrdArtifact.model_validate(
+        load_snippet_json(snippets_dir, "prd-default.json")
+    )
+    design = _load_design("design-todo-valid.json").model_copy(
+        update={"design_goals": ["FEAT-1", "US-1"]}
+    )
+    profile = load_profile("python")
+    violations, _ = validate_design_rules(design, profile, spec)
+    des_037 = [v for v in violations if v.rule_id == "DES-037"]
+    assert len(des_037) == 2
+    assert all(v.severity == "warn" for v in des_037)
+
+
 def test_missing_code_delta_triggers_des_036(snippets_dir: Path) -> None:
     spec = PrdArtifact.model_validate(
         load_snippet_json(snippets_dir, "prd-default.json")

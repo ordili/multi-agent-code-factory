@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from multi_agent_code_factory.schemas.design import (
     ArchitectureOverview,
     CodeDelta,
@@ -11,6 +13,54 @@ from multi_agent_code_factory.schemas.design import (
     TraceRow,
 )
 from multi_agent_code_factory.schemas.prd import FeaturePriority, PrdArtifact
+
+_BARE_SPEC_REF_RE = re.compile(r"^(FEAT|US|REQ|AC|KPI|SEM)-\d+$", re.IGNORECASE)
+
+
+def _is_bare_spec_ref(goal: str) -> bool:
+    return bool(_BARE_SPEC_REF_RE.match(goal.strip()))
+
+
+def _spec_ref_labels(spec: PrdArtifact) -> dict[str, str]:
+    labels: dict[str, str] = {}
+    for feature in spec.features:
+        text = feature.description.strip()
+        if feature.name.strip() and feature.name.strip() not in text:
+            text = f"{feature.name} — {text}"
+        labels[feature.id] = f"{feature.id}: {text}"
+    for story in spec.user_stories:
+        labels[story.id] = f"{story.id}: {story.want.strip()}（{story.as_a.strip()}）"
+    for requirement in spec.requirement_pool:
+        labels[requirement.id] = f"{requirement.id}: {requirement.description.strip()}"
+    for criterion in spec.acceptance_criteria:
+        labels[criterion.id] = f"{criterion.id}: {criterion.description.strip()}"
+    for metric in spec.success_metrics:
+        labels[metric.id] = (
+            f"{metric.id}: {metric.name.strip()} — {metric.target.strip()}"
+        )
+    for constraint in spec.semantic_constraints:
+        labels[constraint.id] = f"{constraint.id}: {constraint.summary.strip()}"
+    return labels
+
+
+def _expand_design_goals(
+    goals: list[str],
+    spec: PrdArtifact | None,
+) -> list[str]:
+    if spec is None:
+        return goals
+    labels = _spec_ref_labels(spec)
+    expanded: list[str] = []
+    for goal in goals:
+        stripped = str(goal).strip()
+        if not stripped:
+            expanded.append(goal)
+            continue
+        if _is_bare_spec_ref(stripped):
+            expanded.append(labels.get(stripped, stripped))
+            continue
+        expanded.append(goal)
+    return expanded
 
 
 def _dedupe_dev_tasks_by_path(tasks: list[DevTask]) -> list[DevTask]:
@@ -129,6 +179,10 @@ def enrich_design_for_validation(
 
     if not any(str(goal).strip() for goal in design.design_goals):
         updates["design_goals"] = _default_design_goals(spec)
+    else:
+        expanded_goals = _expand_design_goals(design.design_goals, spec)
+        if expanded_goals != design.design_goals:
+            updates["design_goals"] = expanded_goals
 
     if not design.context_view:
         updates["context_view"] = _default_context_view(design)
