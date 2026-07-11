@@ -558,6 +558,7 @@ class DesignArtifact(BaseModel):
                     "purpose": "无外部持久化或第三方服务",
                 }
             ],
+            "non_functional": [],
             "transaction_constraints": [],
             "table_schemas": [],
             "error_catalog": [

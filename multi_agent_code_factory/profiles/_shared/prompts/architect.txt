@@ -45,8 +45,12 @@ Given spec and profile, produce:
      stateless CLI with no persistence: prefer diagrams=[] and omit *.mmd entirely
    - non_functional: array when spec implies non-trivial NFR (custom performance tier,
      high_concurrency, multi_tenant/internet scale); may be [] for simple personal CLI
-   - transaction_constraints: array of objects (not strings); required when spec has
-     persistence/filesystem/db; may be [] for stateless in-memory CLI with local_only consistency
+     each {id?, metric, target, verification?, notes?} — required: metric, target
+     do NOT copy success_metrics/KPI shape (no description, source, name, verifiable_by)
+   - transaction_constraints: array when spec has persistence/filesystem/db or multi_writer;
+     may be [] for stateless in-memory CLI with local_only consistency
+     each {id, scope, boundary, isolation?, idempotency?, consistency_ref?, notes?}
+     — required: id, scope, boundary; id pattern TX-{DOMAIN}-###; do NOT use {name}
    - table_schemas: required when spec.context.storage, filesystem/db deps, or relational data;
      may be [] for pure stateless CLI (no persistence)
 2. Mermaid diagrams — one or more `*.mmd` files under the run directory:

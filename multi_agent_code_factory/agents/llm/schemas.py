@@ -17,7 +17,18 @@ _ARCHITECT_DIAGRAM_SHAPE_NOTES = (
     "  participant User\\n  participant CliEntry\\n  participant CalcCore\\n"
     "  User->>CliEntry: request\\n  CliEntry->>CalcCore: evaluate\\n"
     'flowchart LR\\n  CliEntry --> CalcCore"}]\n'
-    "Use modules[].name as Mermaid participants. Omit entirely for stateless CLI."
+    "Use modules[].name as Mermaid participants. Omit entirely for stateless CLI.\n"
+    "\n"
+    "When spec implies non-trivial NFR, set design.non_functional to objects with "
+    "required metric and target (NOT success_metrics/KPI fields like description, "
+    "source, name, or verifiable_by):\n"
+    '  "non_functional": [{"id":"NFR-1","metric":"p99 latency","target":"<=100ms"}]\n'
+    "When spec has persistence/filesystem/db or multi_writer, set "
+    "design.transaction_constraints (NOT {name}; required id, scope, boundary):\n"
+    '  "transaction_constraints": [{"id":"TX-STORE-001","scope":"save",'
+    '"boundary":"single-file atomic write"}]\n'
+    "For stateless personal CLI with local_only and no custom performance tier: "
+    "keep non_functional and transaction_constraints as []."
 )
 
 
