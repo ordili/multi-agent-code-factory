@@ -8,6 +8,7 @@ A **LangGraph** pipeline (PM, Architect, Developer, QA, Reviewer) that turns nat
 
 - Python **3.11+**
 - An LLM provider API key (DeepSeek, OpenAI, Anthropic) or a local [Ollama](https://ollama.com/) setup
+- **Language toolchains** for the profile you run (e.g. Python 3 + pytest for `python`; [Rust](https://rustup.rs/) + Cargo for `rust`; [Foundry](https://book.getfoundry.sh/getting-started/installation) for `solidity`)
 
 ## Quick Start
 
@@ -76,6 +77,14 @@ Override the code directory with `--code-root`, e.g. `--code-root ../generated/c
 ### Profile and language selection
 
 `--profile` is **required**. It selects the **language stack** (test commands, prompts, etc.; in V1, profile id matches the language name). Use **`python`** for your first run. Separate projects with `--task-id` + `--code-root`. Details: [profiles/README.md](multi_agent_code_factory/profiles/README.md).
+
+| Profile | Toolchain (local QA) |
+|---------|----------------------|
+| `python` | Python 3 + `pytest` |
+| `rust` | Rust toolchain (`cargo test --message-format=json`) |
+| `solidity` | Foundry (`forge test --json`) |
+| `java` | JDK + Maven or Gradle |
+| `go` | Go + `go test` (parser `go_json` still P1) |
 
 Common CLI flags: `--live`, `--log-level`, `--code-root`, `--max-impl-retries`, etc.
 

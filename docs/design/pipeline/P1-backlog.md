@@ -120,8 +120,8 @@
 | [x] | `junit_xml` | python, java | `tools/test_parsers/junit_xml.py` |
 | [x] | `exit_code_only` | — | `tools/test_parsers/exit_code_only.py` |
 | [ ] | **`go_json`** | go | `tools/test_parsers/go_json.py` |
-| [ ] | **`cargo_json`** | rust | `tools/test_parsers/cargo_json.py` |
-| [ ] | **`forge_json`** | solidity | `tools/test_parsers/forge_json.py` |
+| [x] | **`cargo_json`** | rust | `tools/test_parsers/cargo_json.py` |
+| [x] | **`forge_json`** | solidity | `tools/test_parsers/forge_json.py` |
 | [ ] | Go / Rust / Solidity **live e2e** 各一例 | — | `tests/integration/` |
 | [x] | 多语言 **Developer prompt** + **style snippet** | go/java/rust/solidity/python | `profiles/*/prompts/developer.txt`、`{language}-style-snippet.txt` |
 | [x] | **共享** PM / Architect / Reviewer prompt（语言无关） | 全部 V1 Profile | `profiles/_shared/prompts/`；`agents/llm/prompt/loader.py` |
@@ -189,11 +189,13 @@
 
 - [ ] `prd_hitl` / `design_hitl` interrupt 可暂停与恢复
 - [x] `docs/runs/<task_id>/` 含 **`design.md`**
-- [ ] `go_json` / `cargo_json` / `forge_json` Parser + Profile 各跑通一例
+- [ ] `go_json` Parser + Profile 跑通一例
+- [x] `cargo_json` / `forge_json` Parser（单元测试 + Profile 注册）
+- [ ] Rust / Solidity **live e2e** 各一例
 - [ ] `resume --task-id` 从 checkpoint 续跑
 - [x] `design.md` 符合 [artifact-templates/design-spec.md](./artifact-templates/design-spec.md)
 - [x] `prd.md` 符合 [artifact-templates/prd-spec.md](./artifact-templates/prd-spec.md)
 
 ---
 
-*最后更新：2026-07-10（prd.md prd-spec 对齐；`design_triggers` 重命名；PRD-017/314–316）*
+*最后更新：2026-07-11（`cargo_json` / `forge_json` Parser 落地；PRD 语义校验）*

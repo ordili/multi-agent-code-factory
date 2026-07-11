@@ -1,0 +1,5 @@
+{"reason":"compiler-artifact","filename":"dummy","executable":null}
+{"reason":"test","type":"test","event":"started","name":"mylib::tests::test_add"}
+{"reason":"test","type":"test","event":"ok","name":"mylib::tests::test_add","exec_time":0.001}
+{"reason":"test","type":"test","event":"started","name":"mylib::tests::test_sub"}
+{"reason":"test","type":"test","event":"failed","name":"mylib::tests::test_sub","stdout":"thread 'tests::test_sub' panicked at 'assertion failed'\n"}

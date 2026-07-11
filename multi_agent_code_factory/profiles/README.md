@@ -56,8 +56,8 @@ profiles/
 | `python.yaml` | python | python | MVP；pytest + JUnit XML |
 | `go.yaml` | go | go | P1 |
 | `java.yaml` | java | java | P1；默认 Maven |
-| `rust.yaml` | rust | rust | P1 |
-| `solidity.yaml` | solidity | solidity | P1；默认 Foundry |
+| `rust.yaml` | rust | rust | P1；需安装 Rust/Cargo |
+| `solidity.yaml` | solidity | solidity | P1；需安装 Foundry（`forge`） |
 
 ## V2 领域 Profile
 

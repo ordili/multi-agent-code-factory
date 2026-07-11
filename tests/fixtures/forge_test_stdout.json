@@ -1,0 +1,16 @@
+{
+  "test/Counter.t.sol:CounterTest": {
+    "duration": {"secs": 0, "nanos": 1000000},
+    "test_results": {
+      "testIncrement()": {
+        "status": "Success",
+        "reason": null
+      },
+      "testFail()": {
+        "status": "Failure",
+        "reason": "EvmError: Revert"
+      }
+    },
+    "warnings": []
+  }
+}

@@ -27,6 +27,24 @@ def test_v1_matrix_profiles_load(profile_id: str) -> None:
     assert_code_root_outside_repo(profile.code_root, repo_root())
 
 
+_KNOWN_TEST_PARSERS = {
+    "python": "junit_xml",
+    "java": "junit_xml",
+    "rust": "cargo_json",
+    "solidity": "forge_json",
+}
+
+
+@pytest.mark.parametrize("profile_id", sorted(_KNOWN_TEST_PARSERS))
+def test_v1_profile_test_parser_is_registered(profile_id: str) -> None:
+    from multi_agent_code_factory.tools.test_parsers.registry import get_parser
+
+    profile = load_profile(profile_id)
+    assert profile.toolchain.test_parser == _KNOWN_TEST_PARSERS[profile_id]
+    parser = get_parser(profile.toolchain.test_parser)
+    assert callable(parser)
+
+
 def test_python_profile_extends_common() -> None:
     profile = load_profile("python")
     assert profile.language == "python"
